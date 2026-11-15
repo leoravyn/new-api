@@ -206,21 +206,32 @@ export function PublicHeader(props: PublicHeaderProps) {
             <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-1 lg:min-w-36'>
               <Link
                 to={homeUrl}
+                aria-label={displaySiteName}
                 className='group flex min-w-0 items-center gap-2.5'
               >
-                <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
-                  {logoContent}
-                </div>
-                <span
-                  className='max-w-48 truncate text-sm font-semibold tracking-tight'
-                  title={displaySiteName}
-                >
-                  {loading ? (
-                    <Skeleton className='h-4 w-16' />
-                  ) : (
-                    displaySiteName
-                  )}
-                </span>
+                {loading ? (
+                  <Skeleton className='h-8 w-28 rounded-lg' />
+                ) : !customLogo && displaySiteName === 'TOKEX' ? (
+                  <img
+                    src='/logo-tokex.svg'
+                    alt='TOKEX'
+                    width={226}
+                    height={64}
+                    className='h-8 w-auto shrink-0 object-contain transition-transform duration-300 select-none group-hover:scale-[1.02]'
+                  />
+                ) : (
+                  <>
+                    <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
+                      {logoContent}
+                    </div>
+                    <span
+                      className='max-w-48 truncate text-sm font-semibold tracking-tight'
+                      title={displaySiteName}
+                    >
+                      {displaySiteName}
+                    </span>
+                  </>
+                )}
               </Link>
             </div>
 
