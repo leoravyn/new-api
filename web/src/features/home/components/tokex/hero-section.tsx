@@ -202,7 +202,7 @@ export function TokexHeroSection() {
   const baseUrl =
     typeof window !== 'undefined'
       ? window.location.origin
-      : 'https://api.tokex.ai'
+      : 'https://tokex.vip'
 
   const snippet = `from openai import OpenAI
 
@@ -623,6 +623,27 @@ res = client.chat.completions.create(
             </div>
           </motion.div>
         </div>
+      </section>
+
+      {/* ── Brand Flagship Visual Banner ── */}
+      <section className='mx-auto max-w-6xl px-6 pb-14 sm:pb-20'>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.65, ease: EASE_LIQUID }}
+          className='overflow-hidden rounded-2xl border border-white/[0.08] bg-[#06080E] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.95),inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-colors duration-300 hover:border-white/[0.15]'
+        >
+          <img
+            src='/banner-tokex.svg'
+            alt='TOKEX — High-Throughput AI Token Exchange'
+            width={1200}
+            height={400}
+            loading='eager'
+            decoding='async'
+            className='block aspect-[3/1] h-auto w-full object-cover select-none'
+          />
+        </motion.div>
       </section>
 
       {/* ── Section 2: OpenRouter Minimalist 4-Metric Typography Strip ── */}

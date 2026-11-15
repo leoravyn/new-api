@@ -64,18 +64,30 @@ export function SystemBrand(props: SystemBrandProps) {
         to='/'
         aria-label={t('Go to home')}
         className={cn(
-          'group inline-flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-1.5 text-sm font-semibold tracking-tight text-white transition-colors outline-none select-none',
+          'group inline-flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-1 text-sm font-semibold tracking-tight text-white transition-colors outline-none select-none',
           'hover:text-white focus-visible:ring-ring/40 focus-visible:ring-2'
         )}
       >
-        <div className='flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105'>
+        {name === 'TOKEX' ? (
           <img
-            src={logo}
-            alt={t('Logo')}
-            className='size-full rounded-lg object-cover'
+            src='/logo-tokex.svg'
+            alt='TOKEX'
+            width={226}
+            height={64}
+            className='h-8 w-auto shrink-0 object-contain transition-transform duration-300 select-none group-hover:scale-[1.02]'
           />
-        </div>
-        <span className='max-w-[12rem] truncate'>{name}</span>
+        ) : (
+          <>
+            <div className='flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105'>
+              <img
+                src={logo}
+                alt={t('Logo')}
+                className='size-full rounded-lg object-cover'
+              />
+            </div>
+            <span className='max-w-[12rem] truncate'>{name}</span>
+          </>
+        )}
       </Link>
     )
   }

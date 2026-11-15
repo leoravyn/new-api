@@ -46,25 +46,32 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <header className='absolute inset-x-0 top-0 z-20 mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8 sm:py-6'>
         <Link
           to='/'
-          className='flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#0a0a0c]/85 px-3 py-1.5 backdrop-blur-xl transition-all duration-200 hover:border-white/[0.16] hover:bg-[#141417]'
+          aria-label={displayName}
+          className='flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#0a0a0c]/85 px-2.5 py-1.5 backdrop-blur-xl transition-all duration-200 hover:border-white/[0.16] hover:bg-[#141417]'
         >
-          <div className='relative h-6 w-6'>
-            {loading ? (
-              <Skeleton className='absolute inset-0 rounded-md' />
-            ) : (
-              <img
-                src={logo || '/logo.png'}
-                alt={t('Logo')}
-                className='h-6 w-6 rounded-md object-contain'
-              />
-            )}
-          </div>
           {loading ? (
-            <Skeleton className='h-4 w-16' />
+            <Skeleton className='h-7 w-24 rounded-md' />
+          ) : displayName === 'TOKEX' ? (
+            <img
+              src='/logo-tokex.svg'
+              alt='TOKEX'
+              width={226}
+              height={64}
+              className='h-7 w-auto object-contain select-none'
+            />
           ) : (
-            <span className='text-sm font-semibold tracking-tight text-[#fafafa]'>
-              {displayName}
-            </span>
+            <>
+              <div className='relative h-6 w-6'>
+                <img
+                  src={logo || '/favicon.svg'}
+                  alt={t('Logo')}
+                  className='h-6 w-6 rounded-md object-contain'
+                />
+              </div>
+              <span className='text-sm font-semibold tracking-tight text-[#fafafa]'>
+                {displayName}
+              </span>
+            </>
           )}
         </Link>
 

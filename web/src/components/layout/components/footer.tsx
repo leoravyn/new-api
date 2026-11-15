@@ -97,7 +97,7 @@ export function Footer(props: FooterProps) {
     normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
     'zhCN'
 
-  const displayLogo = systemLogo || props.logo || '/logo.png'
+  const displayLogo = systemLogo || props.logo || '/favicon.svg'
   const rawName = systemName || props.name || 'TOKEX'
   const displayName =
     rawName.toLowerCase() === 'new api' || rawName.toLowerCase() === 'tokex'
@@ -114,15 +114,27 @@ export function Footer(props: FooterProps) {
     >
       <div className='mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-8 sm:flex-row sm:items-center'>
         <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
-          <Link to='/' className='flex items-center gap-2'>
-            <img
-              src={displayLogo}
-              alt={displayName}
-              className='size-6 rounded-md object-contain'
-            />
-            <span className='text-sm font-semibold tracking-tight text-white'>
-              {displayName}
-            </span>
+          <Link to='/' aria-label={displayName} className='flex items-center gap-2'>
+            {displayName === 'TOKEX' && !props.logo ? (
+              <img
+                src='/logo-tokex.svg'
+                alt='TOKEX'
+                width={226}
+                height={64}
+                className='h-7 w-auto object-contain select-none'
+              />
+            ) : (
+              <>
+                <img
+                  src={displayLogo}
+                  alt={displayName}
+                  className='size-6 rounded-md object-contain'
+                />
+                <span className='text-sm font-semibold tracking-tight text-white'>
+                  {displayName}
+                </span>
+              </>
+            )}
           </Link>
           <span className='text-xs text-zinc-500'>
             &copy; {currentYear} {displayName}.{' '}
