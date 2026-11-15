@@ -45,7 +45,6 @@
 | `/opt/tokex/` | **生产环境容器编排与持久化目录** | 含 `docker-compose.yml`、`mariadb/`、`cpa/`、`data/`、`logs/` |
 | `/opt/tokex/cpa/` | CLIProxyAPI 部署与认证目录 | `docker-compose.yml`、`config/config.yaml`、`auths/` |
 | `/etc/nginx/sites-available/tokex.conf` | Nginx 主站点与 SSL 配置 | 软链至 `/etc/nginx/sites-enabled/tokex.conf`，包含 `tokex.vip` 与 `sub.tokex.vip` |
-| `/home/ubuntu/strata-api/` | 早期（11月10日）SQLite 测试残留 | 容器未运行，**非现网目录**，确认无历史数据需要后可归档/删除 |
 
 ### 运行中 Docker 容器
 - `tokex-web`（`calciumion/new-api:latest`）-> `127.0.0.1:3000`
