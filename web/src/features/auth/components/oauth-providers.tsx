@@ -32,6 +32,22 @@ import { cn } from '@/lib/utils'
 import { useOAuthLogin } from '../hooks/use-oauth-login'
 import type { SystemStatus } from '../types'
 
+function IconGoogle({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      fill='currentColor'
+      aria-hidden='true'
+      className={className}
+    >
+      <path d='M21.805 10.023H12.18v3.955h5.52c-.238 1.273-.957 2.352-2.041 3.076v2.556h3.302c1.932-1.778 3.044-4.398 3.044-7.508 0-.707-.064-1.39-.2-2.079Z' />
+      <path d='M12.18 22c2.755 0 5.066-.912 6.755-2.469l-3.302-2.556c-.914.614-2.084.978-3.453.978-2.654 0-4.904-1.792-5.708-4.2H3.063v2.634C4.742 19.721 8.191 22 12.18 22Z' />
+      <path d='M6.472 13.753a5.988 5.988 0 0 1 0-3.506V7.613H3.063a9.997 9.997 0 0 0 0 8.774l3.409-2.634Z' />
+      <path d='M12.18 6.047c1.498 0 2.842.515 3.9 1.525l2.927-2.927C17.241 3.001 14.93 2 12.18 2 8.191 2 4.742 4.279 3.063 7.613l3.409 2.634c.804-2.408 3.054-4.2 5.708-4.2Z' />
+    </svg>
+  )
+}
+
 type OAuthProvidersProps = {
   status: SystemStatus | null
   disabled?: boolean
@@ -103,12 +119,14 @@ export function OAuthProviders({
 
   if (status?.oidc_enabled) {
     const oidcDisplayName = status.oidc_display_name?.trim() || 'OIDC'
+    const isGoogle = oidcDisplayName.toLowerCase() === 'google'
     providerButtons.push({
       key: 'oidc',
       label: t('Continue with {{name}}', {
         name: oidcDisplayName,
       }),
       onClick: handleOIDCLogin,
+      icon: isGoogle ? <IconGoogle className='h-4 w-4' /> : undefined,
     })
   }
 
@@ -144,20 +162,28 @@ export function OAuthProviders({
 
   if (providerButtons.length === 0) return null
 
+  const useTwoColumnGrid = providerButtons.length === 2
+
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('space-y-4', className)}>
       <div className='relative'>
         <div className='absolute inset-0 flex items-center'>
-          <span className='w-full border-t' />
+          <span className='w-full border-t border-white/[0.08]' />
         </div>
-        <div className='relative flex justify-center text-xs uppercase'>
-          <span className='bg-background text-muted-foreground px-2'>
+        <div className='relative flex justify-center text-[11px] uppercase'>
+          <span className='bg-[#0a0a0c] px-3 font-medium tracking-wider text-zinc-500'>
             {t('Or continue with')}
           </span>
         </div>
       </div>
 
-      <div className='flex flex-col gap-2'>
+      <div
+        className={cn(
+          useTwoColumnGrid
+            ? 'grid grid-cols-1 gap-2.5 sm:grid-cols-2'
+            : 'flex flex-col gap-2.5'
+        )}
+      >
         {providerButtons.map(
           ({ key, label, onClick, icon, disabled: extraDisabled }) => (
             <Button
@@ -166,10 +192,10 @@ export function OAuthProviders({
               type='button'
               disabled={disabled || isLoading || extraDisabled}
               onClick={onClick}
-              className='h-11 w-full justify-center gap-2 rounded-lg'
+              className='h-10 w-full justify-center gap-2 rounded-xl border border-[#27272a] bg-[#141417] text-xs font-medium text-[#fafafa] shadow-none transition-all duration-200 hover:border-zinc-600 hover:bg-[#1c1c21] hover:text-white'
             >
               {icon}
-              {label}
+              <span className='truncate'>{label}</span>
             </Button>
           )
         )}

@@ -98,11 +98,11 @@ const DEFAULT_FLOW_SANKEY_LABELS: FlowSankeyLabels = {
   share: 'Share',
 }
 
-const DEFAULT_FLOW_CHART_COLOR = '#1664FF'
+const DEFAULT_FLOW_CHART_COLOR = '#fafafa'
 
 // Fallback when the caller does not pass the theme's text color.
-const DEFAULT_FLOW_LABEL_COLOR = '#475569'
-const DEFAULT_FLOW_ACTIVE_STROKE = 'rgba(15, 23, 42, 0.7)'
+const DEFAULT_FLOW_LABEL_COLOR = '#a1a1aa'
+const DEFAULT_FLOW_ACTIVE_STROKE = 'rgba(250, 250, 250, 0.7)'
 
 const FLOW_NODE_KINDS: readonly FlowNodeKind[] = [
   'user',

@@ -40,7 +40,7 @@ const DEFAULT_HEADER_NAV_MODULES: HeaderNavModules = {
   pricing: { enabled: true, requireAuth: false },
   rankings: { enabled: true, requireAuth: false },
   docs: true,
-  about: true,
+  about: false,
 }
 
 const DEFAULTS: Record<HeaderNavModule, ModuleAccess> = {
@@ -134,6 +134,9 @@ export function parseHeaderNavModules(raw: unknown): HeaderNavModules {
       )
     }
   })
+
+  // Keep About hidden from the navigation bar across all environments
+  result.about = false
 
   return result
 }

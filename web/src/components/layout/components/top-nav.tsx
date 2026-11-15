@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -40,16 +40,23 @@ type TopNavProps = React.HTMLAttributes<HTMLElement> & {
  * 在大屏幕显示水平导航，在小屏幕显示下拉菜单
  */
 export function TopNav({ className, links, ...props }: TopNavProps) {
-  // 规范化链接，确保所有可选属性都有默认值
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  // 规范化链接，确保所有可选属性都有默认值并实时计算激活状态
   const normalizedLinks = useMemo(
     () =>
-      links.map((link) => ({
-        isActive: false,
-        disabled: false,
-        external: false,
-        ...link,
-      })),
-    [links]
+      links.map((link) => {
+        const routeActive =
+          pathname === link.href ||
+          (link.href !== '/' && pathname.startsWith(`${link.href}/`))
+        return {
+          disabled: false,
+          external: false,
+          ...link,
+          isActive: link.isActive ?? routeActive,
+        }
+      }),
+    [links, pathname]
   )
 
   return (
@@ -97,7 +104,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
       {/* 桌面端水平导航 */}
       <nav
         className={cn(
-          'hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6',
+          'hidden items-center space-x-1 lg:flex xl:space-x-2',
           className
         )}
         {...props}
@@ -109,7 +116,12 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               href={href}
               target='_blank'
               rel='noopener noreferrer'
-              className={`hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`}
+              className={cn(
+                'rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                isActive
+                  ? 'bg-white/[0.09] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.12]'
+                  : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
+              )}
             >
               {title}
             </a>
@@ -118,7 +130,12 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               key={`${title}-${href}`}
               to={href}
               disabled={disabled}
-              className={`hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`}
+              className={cn(
+                'rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                isActive
+                  ? 'bg-white/[0.09] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.12]'
+                  : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
+              )}
             >
               {title}
             </Link>

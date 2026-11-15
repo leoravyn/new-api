@@ -64,8 +64,6 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   const isTokenBased = isTokenBasedModel(props.model)
   const tokenUnitLabel = tokenUnit === 'K' ? '1K' : '1M'
   const tags = parseTags(props.model.tags)
-  const groups = props.model.enable_groups || []
-  const endpoints = props.model.supported_endpoint_types || []
   const modelIconKey = props.model.icon || props.model.vendor_icon
   const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 28) : null
   const initial = props.model.model_name?.charAt(0).toUpperCase() || '?'
@@ -267,25 +265,29 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   }
 
   return (
-    <Card className='hover:ring-foreground/20 h-full min-w-0 gap-3 transition-colors'>
+    <Card className='group/card h-full min-w-0 gap-3.5 rounded-2xl border-white/[0.08] bg-[#0a0a0c] p-1 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-[#111114]'>
       <CardHeader className='flex flex-row items-start gap-3'>
         <div
           aria-hidden
-          className='bg-muted/50 flex size-10 shrink-0 items-center justify-center rounded-lg'
+          className='flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-[#141417] text-zinc-200'
         >
           {modelIcon || (
-            <span className='text-muted-foreground text-sm font-bold'>
-              {initial}
-            </span>
+            <span className='text-sm font-bold text-zinc-400'>{initial}</span>
           )}
         </div>
         <div className='min-w-0 flex-1'>
-          <h3
-            className='line-clamp-2 font-mono text-[15px] leading-snug font-semibold [overflow-wrap:anywhere]'
-            title={props.model.model_name}
-          >
-            {props.model.model_name}
-          </h3>
+          <div className='flex items-start justify-between gap-2'>
+            <h3
+              className='line-clamp-2 font-mono text-[15px] leading-snug font-semibold text-[#fafafa] [overflow-wrap:anywhere]'
+              title={props.model.model_name}
+            >
+              {props.model.model_name}
+            </h3>
+            <span className='mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] font-medium text-zinc-200'>
+              <span className='size-1.5 rounded-full bg-[#fafafa]' />
+              {t('Available')}
+            </span>
+          </div>
           {props.model.vendor_name && (
             <p
               className='text-muted-foreground mt-1 truncate text-xs'
@@ -298,12 +300,12 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
         <CopyButton
           value={props.model.model_name}
           tooltip={t('Copy model name')}
-          className='size-7'
+          className='size-7 shrink-0'
           iconClassName='size-3.5'
         />
       </CardHeader>
       <CardContent className='flex flex-1 flex-col gap-3'>
-        <div className='flex min-w-0 flex-col gap-1.5'>
+        <div className='flex min-w-0 flex-col gap-2'>
           <p className='text-muted-foreground line-clamp-2 text-[13px] leading-5 break-words'>
             {props.model.description || t('No description available.')}
           </p>
@@ -311,15 +313,22 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
             <div
               role='group'
               aria-label={t('Tags')}
-              className='text-muted-foreground flex min-w-0 items-baseline gap-1.5 text-xs'
+              className='flex flex-wrap items-center gap-1.5 text-xs'
             >
-              <span className='shrink-0'>{t('Tags')}</span>
-              <span className='truncate' title={tags.join(', ')}>
-                {tags.slice(0, 2).join(', ')}
-              </span>
-              {tags.length > 2 && (
-                <span className='shrink-0' title={tags.slice(2).join(', ')}>
-                  +{tags.length - 2}
+              {tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className='rounded-md border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] text-zinc-300'
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 3 && (
+                <span
+                  className='text-muted-foreground text-[11px]'
+                  title={tags.slice(3).join(', ')}
+                >
+                  +{tags.length - 3}
                 </span>
               )}
             </div>
@@ -328,71 +337,27 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
         <div
           role='group'
           aria-label={t('Pricing')}
-          className='mt-auto flex min-w-0 flex-col gap-1.5'
+          className='mt-auto flex min-w-0 flex-col gap-2 rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3'
         >
-          <ModelBillingModeBadge model={props.model} appearance='caption' />
+          <div className='flex flex-wrap items-center justify-between gap-2'>
+            <ModelBillingModeBadge model={props.model} appearance='caption' />
+            {isTokenBased && (
+              <span className='rounded-md border border-white/[0.08] bg-[#141417] px-1.5 py-0.5 font-mono text-[11px] text-zinc-300'>
+                {t('Multiplier')} {props.model.model_ratio ?? 1}x
+              </span>
+            )}
+          </div>
           {dynamicSummary?.providerCount && (
             <span className='text-muted-foreground text-xs break-words'>
               {t('{{count}} providers', {
                 count: dynamicSummary.providerCount,
               })}
-              {dynamicSummary.hasUnconfiguredProviders &&
-                ` · ${t('Not configured for some providers')}`}
             </span>
           )}
           <div className='grid grid-cols-[repeat(auto-fit,minmax(88px,1fr))] gap-x-3 gap-y-2'>
             {priceSummary}
           </div>
         </div>
-        {(groups.length > 0 || endpoints.length > 0) && (
-          <dl
-            className={cn(
-              'grid min-w-0 grid-cols-2 gap-3 text-xs',
-              (groups.length === 0 || endpoints.length === 0) && 'grid-cols-1'
-            )}
-          >
-            {groups.length > 0 && (
-              <div className='flex min-w-0 items-baseline gap-1.5'>
-                <dt className='text-muted-foreground shrink-0'>
-                  {t('Groups')}
-                </dt>
-                <dd className='flex min-w-0 items-baseline gap-1'>
-                  <span className='truncate' title={groups.join(', ')}>
-                    {groups[0]}
-                  </span>
-                  {groups.length > 1 && (
-                    <span
-                      className='text-muted-foreground shrink-0'
-                      title={groups.slice(1).join(', ')}
-                    >
-                      +{groups.length - 1}
-                    </span>
-                  )}
-                </dd>
-              </div>
-            )}
-            {endpoints.length > 0 && (
-              <div className='flex min-w-0 items-baseline gap-1.5'>
-                <dt className='text-muted-foreground shrink-0'>
-                  {t('Endpoints')}
-                </dt>
-                <dd className='flex min-w-0 items-baseline gap-1'>
-                  <span className='truncate' title={endpoints.join(', ')}>
-                    {endpoints.slice(0, 2).join(', ')}
-                  </span>
-                  {endpoints.length > 2 && (
-                    <span
-                      className='text-muted-foreground shrink-0'
-                      title={endpoints.slice(2).join(', ')}
-                    >
-                      +{endpoints.length - 2}
-                    </span>
-                  )}
-                </dd>
-              </div>
-            )}
-          </dl>
-        )}
       </CardContent>
       <CardFooter className='mt-auto border-0 bg-transparent pt-0'>
         <ModelPerfBadge

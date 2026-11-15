@@ -43,17 +43,18 @@ const COMPACT_NUMBER = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 })
 
+const RANK_BADGE_PALETTES: Record<number, string> = {
+  1: 'border border-white/25 bg-white/[0.12] text-white',
+  2: 'border border-white/[0.14] bg-white/[0.07] text-zinc-200',
+  3: 'border border-white/[0.08] bg-[#141417] text-zinc-300',
+}
+
 function RankBadge(props: { rank: number }) {
   const rank = props.rank
   const isPodium = rank <= 3
   const palette =
-    rank === 1
-      ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
-      : rank === 2
-        ? 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300'
-        : rank === 3
-          ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
-          : 'bg-muted text-muted-foreground'
+    RANK_BADGE_PALETTES[rank] ??
+    'border border-white/[0.06] bg-[#121215] text-zinc-400'
   return (
     <span
       className={cn(
@@ -70,12 +71,15 @@ function GrowthChip(props: { value: number }) {
   const value = props.value
   const isUp = value > 0
   const isDown = value < 0
-  const palette = isUp
-    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-    : isDown
-      ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
-      : 'bg-muted text-muted-foreground'
-  const Icon = isUp ? ArrowUpRight : isDown ? ArrowDownRight : null
+  let palette = 'border border-white/[0.08] bg-[#141417] text-zinc-400'
+  let Icon: typeof ArrowUpRight | null = null
+  if (isUp) {
+    palette = 'border border-white/20 bg-white/[0.08] text-zinc-100'
+    Icon = ArrowUpRight
+  } else if (isDown) {
+    palette = 'border border-white/[0.08] bg-[#141417] text-zinc-400'
+    Icon = ArrowDownRight
+  }
   const formatted = `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
   return (
     <span

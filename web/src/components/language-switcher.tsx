@@ -1,83 +1,54 @@
-/*
-Copyright (C) 2023-2026 QuantumNous
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-For commercial licensing, please contact support@quantumnous.com
-*/
-import { Languages, Check } from 'lucide-react'
-import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   INTERFACE_LANGUAGE_OPTIONS,
   normalizeInterfaceLanguage,
 } from '@/i18n/languages'
-import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { useAuthStore } from '@/stores/auth-store'
+
+const SHORT_LABELS: Record<string, string> = {
+  zhCN: '中文',
+  en: 'EN',
+}
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
-  const user = useAuthStore((s) => s.auth.user)
-  const currentLanguage = normalizeInterfaceLanguage(i18n.language)
-  const handleChangeLanguage = useCallback(
-    async (code: string) => {
-      await i18n.changeLanguage(code)
-      if (user) {
-        try {
-          await api.put('/api/user/self', { language: code })
-        } catch {
-          // Best-effort persistence; don't block the UI on failure
-        }
-      }
-    },
-    [i18n, user]
+  const currentLang = normalizeInterfaceLanguage(
+    i18n.resolvedLanguage || i18n.language
   )
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        render={<Button variant='ghost' size='icon' className='h-9 w-9' />}
-      >
-        <Languages className='size-[1.2rem]' />
-        <span className='sr-only'>{t('Change language')}</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align='end'>
-        {INTERFACE_LANGUAGE_OPTIONS.map((lang) => (
-          <DropdownMenuItem
+    <div
+      role='group'
+      aria-label={t('Switch language')}
+      className='inline-flex h-8 items-center rounded-full border border-white/[0.08] bg-white/[0.03] p-0.5 backdrop-blur-md'
+    >
+      {INTERFACE_LANGUAGE_OPTIONS.map((lang) => {
+        const isActive = currentLang === lang.code
+        const shortLabel = SHORT_LABELS[lang.code] ?? lang.label
+
+        return (
+          <button
             key={lang.code}
-            onClick={() => handleChangeLanguage(lang.code)}
+            type='button'
+            onClick={() => {
+              if (!isActive) {
+                void i18n.changeLanguage(lang.code)
+              }
+            }}
+            aria-label={lang.label}
+            aria-pressed={isActive}
+            className={cn(
+              'cursor-pointer rounded-full px-2.5 py-1 text-xs font-medium tracking-tight transition-all duration-200',
+              isActive
+                ? 'bg-white text-black shadow-xs'
+                : 'text-zinc-400 hover:text-white'
+            )}
           >
-            {lang.label}
-            <Check
-              size={14}
-              className={cn(
-                'ms-auto',
-                currentLanguage !== lang.code && 'hidden'
-              )}
-            />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            {shortLabel}
+          </button>
+        )
+      })}
+    </div>
   )
 }

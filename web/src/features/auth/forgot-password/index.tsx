@@ -26,25 +26,24 @@ export function ForgotPassword() {
   const { t } = useTranslation()
   return (
     <AuthLayout>
-      <div className='w-full space-y-8'>
-        <div className='space-y-3'>
-          <h2 className='text-center text-2xl font-semibold tracking-tight sm:text-left'>
+      <div className='w-full space-y-6'>
+        <div className='space-y-1.5'>
+          <h1 className='text-xl font-semibold tracking-tight text-[#fafafa] sm:text-2xl'>
             {t('Forgot password')}
-          </h2>
-          <p className='text-muted-foreground text-left text-sm sm:text-base'>
+          </h1>
+          <p className='text-sm text-zinc-400'>
             {t(
               'Enter your registered email and we will send you a link to reset your password.'
             )}
           </p>
-          <p className='text-muted-foreground text-left text-sm sm:text-base'>
+          <p className='text-sm text-zinc-400'>
             {t("Don't have an account?")}{' '}
             <Link
               to='/sign-up'
-              className='hover:text-primary font-medium underline underline-offset-4'
+              className='font-medium text-[#fafafa] underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-white'
             >
               {t('Sign up')}
             </Link>
-            .
           </p>
         </div>
 

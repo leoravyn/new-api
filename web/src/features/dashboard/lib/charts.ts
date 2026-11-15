@@ -16,8 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { dataScheme as vchartDefaultDataScheme } from '@visactor/vchart/esm/theme/color-scheme/builtin/default'
-
 import { MAX_CHART_TREND_POINTS } from '@/features/dashboard/constants'
 import type {
   QuotaDataItem,
@@ -39,14 +37,27 @@ type TooltipLineItem = {
   shapeSize?: number
 }
 
-export function getDashboardChartColors(domainLength: number): string[] {
-  const scheme =
-    vchartDefaultDataScheme.find(
-      (item) => !item.maxDomainLength || domainLength <= item.maxDomainLength
-    ) ?? vchartDefaultDataScheme.at(-1)
+const MONOCHROME_CHART_COLORS = [
+  '#fafafa',
+  '#d4d4d8',
+  '#a1a1aa',
+  '#71717a',
+  '#52525b',
+  '#3f3f46',
+  '#e4e4e7',
+  '#27272a',
+]
 
-  return (scheme?.scheme ?? []).filter(
-    (color): color is string => typeof color === 'string'
+export function getDashboardChartColors(domainLength: number): string[] {
+  if (domainLength <= MONOCHROME_CHART_COLORS.length) {
+    return MONOCHROME_CHART_COLORS.slice(
+      0,
+      Math.max(domainLength, MONOCHROME_CHART_COLORS.length)
+    )
+  }
+  return Array.from(
+    { length: domainLength },
+    (_, i) => MONOCHROME_CHART_COLORS[i % MONOCHROME_CHART_COLORS.length]
   )
 }
 
@@ -273,7 +284,7 @@ export function processChartData(
   const modelColorRange = getDashboardChartColors(modelColorDomain.length)
   const otherColor = modelColorRange[modelColorDomain.indexOf(otherLabel)]
   const otherTooltipColor =
-    typeof otherColor === 'string' ? otherColor : '#FF8A00'
+    typeof otherColor === 'string' ? otherColor : '#71717a'
   const modelColor = {
     type: 'ordinal',
     domain: modelColorDomain,
@@ -694,16 +705,14 @@ export function processChartData(
 }
 
 const USER_COLORS = [
-  '#5B8FF9',
-  '#5AD8A6',
-  '#F6BD16',
-  '#E8684A',
-  '#6DC8EC',
-  '#9270CA',
-  '#FF9D4D',
-  '#269A99',
-  '#FF99C3',
-  '#5D7092',
+  '#fafafa',
+  '#e4e4e7',
+  '#d4d4d8',
+  '#a1a1aa',
+  '#71717a',
+  '#52525b',
+  '#3f3f46',
+  '#27272a',
 ]
 
 export function processUserChartData(

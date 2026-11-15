@@ -55,11 +55,11 @@ function getChartThemeTokens(resolvedTheme: string) {
     textColor:
       resolvedTheme === 'dark'
         ? 'rgba(255, 255, 255, 0.68)'
-        : 'rgba(15, 23, 42, 0.58)',
+        : 'rgba(9, 9, 11, 0.58)',
     gridColor:
       resolvedTheme === 'dark'
         ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(15, 23, 42, 0.12)',
+        : 'rgba(9, 9, 11, 0.12)',
   }
 }
 
@@ -347,7 +347,7 @@ export function ThroughputBarChart(props: {
       yField: 'group',
       bar: {
         style: {
-          fill: '#6366f1',
+          fill: resolvedTheme === 'dark' ? '#fafafa' : '#18181b',
           ...(barRadius == null ? {} : { cornerRadius: barRadius }),
         },
       },

@@ -36,9 +36,7 @@ export function HowItWorks() {
     {
       num: '2',
       title: t('Connect'),
-      desc: t(
-        'Connect through OpenAI, Claude, Gemini, and other compatible API routes'
-      ),
+      desc: t('Connect through OpenAI and Claude compatible API routes'),
       icon: <Zap className='size-6' strokeWidth={1.5} />,
     },
     {

@@ -101,17 +101,25 @@ export function ForgotPasswordForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn('grid gap-2', className)}
+        className={cn('grid gap-4', className)}
         {...props}
       >
         <FormField
           control={form.control}
           name='email'
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
+            <FormItem className='space-y-2'>
+              <FormLabel className='text-xs font-medium text-zinc-300'>
+                {t('Email')}
+              </FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input
+                  placeholder='name@gmail.com'
+                  type='email'
+                  autoComplete='email'
+                  className='h-10 rounded-xl border-white/[0.08] bg-[#050506] text-sm text-[#fafafa] placeholder:text-zinc-500 focus-visible:border-white/30 focus-visible:ring-white/15'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,13 +128,17 @@ export function ForgotPasswordForm({
 
         <Button
           type='submit'
-          className='mt-2'
+          className='mt-1 h-10 w-full justify-center gap-2 rounded-xl bg-[#fafafa] text-sm font-medium text-[#09090b] shadow-none transition-all duration-200 hover:bg-zinc-200'
           disabled={isLoading || isActive || !turnstileReady}
         >
           {isActive
             ? t('Resend ({{seconds}}s)', { seconds: secondsLeft })
             : t('Send reset email')}
-          {isLoading ? <Loader2 className='animate-spin' /> : <ArrowRight />}
+          {isLoading ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <ArrowRight className='h-4 w-4' />
+          )}
         </Button>
 
         {isTurnstileEnabled && (

@@ -16,12 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ConfigDrawer } from '@/components/config-drawer'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
-import { SystemUpdateAction } from '@/features/system-update/system-update-action'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 
@@ -83,8 +81,7 @@ type AppHeaderProps = {
    */
   showNotifications?: boolean
   /**
-   * Whether to show config drawer
-   * @default true
+   * @deprecated Theme customization is locked to the unified system style.
    */
   showConfigDrawer?: boolean
   /**
@@ -101,7 +98,7 @@ export function AppHeader({
   showSearch = true,
   rightContent,
   showNotifications = true,
-  showConfigDrawer = true,
+  showConfigDrawer: _showConfigDrawer = false,
   showProfileDropdown = true,
 }: AppHeaderProps) {
   // Prioritize dynamically generated links from backend
@@ -115,7 +112,6 @@ export function AppHeader({
     <Header>
       <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-1'>
         <SystemBrand variant='inline' />
-        <SystemUpdateAction presentation='version' />
       </div>
 
       {leftContent ? (
@@ -123,11 +119,14 @@ export function AppHeader({
       ) : null}
 
       {rightContent ?? (
-        <div className='ms-auto flex shrink-0 items-center gap-1 sm:gap-2'>
+        <div className='ms-auto flex shrink-0 items-center gap-1 sm:gap-1.5'>
           {showTopNav && (
-            <div className='me-1 hidden lg:block'>
+            <div className='hidden lg:block'>
               <TopNav links={links} />
             </div>
+          )}
+          {showTopNav && (showSearch || showNotifications) && (
+            <div className='mx-1.5 hidden h-4 w-px bg-white/[0.1] lg:block' />
           )}
           {showSearch && (
             <Search className='w-8 flex-none [&>span]:hidden sm:[&>span]:inline' />
@@ -145,8 +144,12 @@ export function AppHeader({
             />
           )}
           <LanguageSwitcher />
-          {showConfigDrawer && <ConfigDrawer />}
-          {showProfileDropdown && <ProfileDropdown />}
+          {showProfileDropdown && (
+            <>
+              <div className='mx-1 hidden h-4 w-px bg-white/[0.1] sm:block' />
+              <ProfileDropdown />
+            </>
+          )}
         </div>
       )}
     </Header>

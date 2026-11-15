@@ -1,34 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
 
     <!-- Primary Meta Tags -->
-    <title>New API</title>
-    <meta name="title" content="New API" />
+    <title>TOKEX | Multi-Model Gateway</title>
+    <meta name="title" content="TOKEX | Multi-Model Gateway" />
     <meta
       name="description"
-      content="Unified AI API gateway and admin dashboard."
+      content="TOKEX enterprise multi-model AI gateway, unified routing, and API governance platform."
     />
 
-    <meta name="theme-color" content="#fff" />
+    <meta name="theme-color" content="#06080e" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <!-- Resolve the theme before first paint so the page never flashes light
          and one-shot detectors (e.g. Dark Reader) see the real theme.
          Keep in sync with ThemeProvider and THEME_STORAGE_KEYS.mode. -->
     <script>
       ;(function () {
-        var theme = 'system'
         try {
-          theme = localStorage.getItem('newapi:theme:v1:mode') || 'system'
+          localStorage.setItem('newapi:theme:v1:mode', 'dark')
         } catch (e) {}
-        if (theme !== 'dark' && theme !== 'light') {
-          theme = window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light'
-        }
-        document.documentElement.classList.add(theme)
+        document.documentElement.classList.remove('light', 'dark')
+        document.documentElement.classList.add('dark')
       })()
     </script>
     <!--umami-->

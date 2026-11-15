@@ -21,7 +21,8 @@ For commercial licensing, please contact support@quantumnous.com
  */
 
 // System Configuration Defaults
-export const DEFAULT_SYSTEM_NAME = 'New API'
+export const DEFAULT_SYSTEM_NAME = 'TOKEX'
+export const DEFAULT_DOCUMENT_TITLE = 'TOKEX | Multi-Model Gateway'
 export const DEFAULT_LOGO = '/logo.png'
 
 // LocalStorage Keys

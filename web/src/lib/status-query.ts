@@ -91,8 +91,16 @@ export function mapStatusDataToConfig(
     ),
   }
 
+  const rawName = (data.system_name as string | undefined)?.trim()
+  const systemName =
+    !rawName ||
+    rawName.toLowerCase() === 'new api' ||
+    rawName.toLowerCase() === 'tokex'
+      ? DEFAULT_SYSTEM_NAME
+      : rawName
+
   return {
-    systemName: (data.system_name as string | undefined) || DEFAULT_SYSTEM_NAME,
+    systemName,
     logo: (data.logo as string | undefined) || DEFAULT_LOGO,
     footerHtml: data.footer_html as string | undefined,
     demoSiteEnabled: data.demo_site_enabled as boolean | undefined,

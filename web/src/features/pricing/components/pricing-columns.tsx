@@ -19,24 +19,79 @@ For commercial licensing, please contact support@quantumnous.com
 import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 
-import {
-  BadgeCell,
-  BadgeListCell,
-  DataTableColumnHeader,
-} from '@/components/data-table'
-import { GroupBadge } from '@/components/group-badge'
-import { StatusBadge } from '@/components/status-badge'
+import { DataTableColumnHeader } from '@/components/data-table'
 import { getLobeIcon } from '@/lib/lobe-icon'
 
 import { parseTags } from '../lib/filters'
-import type { PricingModel } from '../types'
+import type { ModelCapability, PricingModel } from '../types'
 import { CachedPriceCell } from './cached-price-cell'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelPriceCell, type ModelPriceCellOptions } from './model-price-cell'
 
 // ----------------------------------------------------------------------------
-// Pricing Table Columns
+// Pricing Table Columns (OpenRouter Directory Style)
 // ----------------------------------------------------------------------------
+
+const CAPABILITY_LABEL_KEYS: Record<ModelCapability, string> = {
+  function_calling: 'Function calling',
+  streaming: 'Streaming',
+  vision: 'Vision',
+  json_mode: 'JSON mode',
+  structured_output: 'Structured output',
+  reasoning: 'Reasoning',
+  tools: 'Tools',
+  system_prompt: 'System prompt',
+  web_search: 'Web search',
+  code_interpreter: 'Code interpreter',
+  caching: 'Prompt caching',
+  embeddings: 'Embeddings',
+}
+
+const TOKEN_FORMAT = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 1,
+})
+
+function formatContextLength(tokens?: number): string {
+  if (tokens == null || !Number.isFinite(tokens) || tokens <= 0) {
+    return ''
+  }
+  if (tokens >= 1_000_000) {
+    return `${TOKEN_FORMAT.format(tokens / 1_000_000)}M`
+  }
+  if (tokens >= 1_000) {
+    return `${TOKEN_FORMAT.format(tokens / 1_000)}K`
+  }
+  return TOKEN_FORMAT.format(tokens)
+}
+
+function collectModelCapsules(
+  model: PricingModel,
+  t: (key: string) => string
+): string[] {
+  const seen = new Set<string>()
+  const items: string[] = []
+
+  for (const cap of model.capabilities ?? []) {
+    const labelKey = CAPABILITY_LABEL_KEYS[cap]
+    if (!labelKey) continue
+    const label = t(labelKey)
+    const normalized = label.toLowerCase()
+    if (!seen.has(normalized)) {
+      seen.add(normalized)
+      items.push(label)
+    }
+  }
+
+  for (const tag of parseTags(model.tags)) {
+    const normalized = tag.toLowerCase()
+    if (!seen.has(normalized)) {
+      seen.add(normalized)
+      items.push(tag)
+    }
+  }
+
+  return items
+}
 
 export type PricingColumnsOptions = ModelPriceCellOptions
 
@@ -46,7 +101,7 @@ export function usePricingColumns(
   const { t } = useTranslation()
 
   return [
-    // Model column
+    // Model name & slug column
     {
       accessorKey: 'model_name',
       meta: { label: t('Model') },
@@ -56,37 +111,145 @@ export function usePricingColumns(
       cell: ({ row }) => {
         const model = row.original
         const modelIconKey = model.icon || model.vendor_icon
-        const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 14) : null
+        const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 16) : null
+        const slashIndex = model.model_name.indexOf('/')
+        const displayTitle =
+          slashIndex > 0
+            ? model.model_name.slice(slashIndex + 1)
+            : model.model_name
+        const initial = (displayTitle[0] ?? 'M').toUpperCase()
+        const isTokenBased = model.quota_type === 0
 
         return (
-          <div className='flex max-w-full min-w-0 items-center gap-2'>
-            {modelIcon}
-            <span className='truncate font-mono text-sm font-medium'>
-              {model.model_name}
-            </span>
+          <div className='flex max-w-full min-w-0 items-center gap-3 py-0.5'>
+            <div
+              aria-hidden
+              className='flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-[#141417] text-zinc-200'
+            >
+              {modelIcon || (
+                <span className='font-mono text-xs font-semibold text-zinc-400'>
+                  {initial}
+                </span>
+              )}
+            </div>
+            <div className='min-w-0 flex-1'>
+              <div className='flex items-center gap-2'>
+                <span className='truncate text-sm font-semibold text-[#fafafa]'>
+                  {displayTitle}
+                </span>
+                {isTokenBased && model.model_ratio != null && (
+                  <span className='shrink-0 rounded border border-white/[0.08] bg-[#141417] px-1.5 py-px font-mono text-[10px] text-zinc-400'>
+                    {model.model_ratio}x
+                  </span>
+                )}
+              </div>
+              <div className='truncate font-mono text-[11px] text-zinc-400'>
+                {model.model_name}
+              </div>
+              {model.description && (
+                <div className='mt-0.5 truncate text-xs text-zinc-500'>
+                  {model.description}
+                </div>
+              )}
+            </div>
           </div>
         )
       },
-      minSize: 200,
+      minSize: 250,
     },
 
-    // Type column
+    // Clean monochrome vendor icon/badge column
     {
-      accessorKey: 'quota_type',
-      header: t('Type'),
-      cell: ({ row }) => (
-        <ModelBillingModeBadge model={row.original} className='-ml-1.5' />
-      ),
-      size: 110,
+      accessorKey: 'vendor_name',
+      header: t('Vendor'),
+      cell: ({ row }) => {
+        const model = row.original
+        if (!model.vendor_name) {
+          return <span className='text-xs text-zinc-600'>—</span>
+        }
+        const vendorIcon = model.vendor_icon
+          ? getLobeIcon(model.vendor_icon, 13)
+          : null
+        return (
+          <span className='inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/[0.08] bg-[#141417] px-2 py-1 text-xs font-medium text-zinc-200'>
+            {vendorIcon && (
+              <span className='shrink-0 text-zinc-300 opacity-90'>
+                {vendorIcon}
+              </span>
+            )}
+            <span className='truncate'>{model.vendor_name}</span>
+          </span>
+        )
+      },
+      size: 120,
       enableSorting: false,
     },
 
-    // Price column
+    // Compact capability capsules column
+    {
+      id: 'capabilities',
+      header: t('Capabilities'),
+      cell: ({ row }) => {
+        const model = row.original
+        const capsules = collectModelCapsules(model, t)
+        if (capsules.length === 0) {
+          return <ModelBillingModeBadge model={model} appearance='caption' />
+        }
+        const visible = capsules.slice(0, 3)
+        const overflow = capsules.length - visible.length
+        return (
+          <div className='flex flex-wrap items-center gap-1'>
+            {visible.map((item) => (
+              <span
+                key={item}
+                className='rounded-full border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] font-medium text-zinc-300'
+              >
+                {item}
+              </span>
+            ))}
+            {overflow > 0 && (
+              <span
+                className='rounded-full border border-white/[0.08] bg-[#141417] px-1.5 py-0.5 font-mono text-[10px] text-zinc-400'
+                title={capsules.slice(3).join(', ')}
+              >
+                +{overflow}
+              </span>
+            )}
+          </div>
+        )
+      },
+      size: 170,
+      enableSorting: false,
+    },
+
+    // Context length column
+    {
+      id: 'context_length',
+      header: t('Context'),
+      cell: ({ row }) => {
+        const formatted = formatContextLength(row.original.context_length)
+        if (!formatted) {
+          return <span className='font-mono text-xs text-zinc-600'>—</span>
+        }
+        return (
+          <span className='font-mono text-xs font-medium text-zinc-200 tabular-nums'>
+            {formatted}
+          </span>
+        )
+      },
+      size: 86,
+      enableSorting: false,
+    },
+
+    // Input / Output price column
     {
       accessorKey: 'price',
-      meta: { label: t('Price') },
+      meta: { label: `${t('Input')} / ${t('Output')}` },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('Price')} />
+        <DataTableColumnHeader
+          column={column}
+          title={`${t('Input')} / ${t('Output')}`}
+        />
       ),
       cell: ({ row }) => (
         <ModelPriceCell model={row.original} options={options} />
@@ -95,109 +258,28 @@ export function usePricingColumns(
       enableSorting: false,
     },
 
-    // Cached price column (Vercel AI Gateway style)
+    // Cached price column
     {
       id: 'cached_price',
       header: t('Cached'),
       cell: ({ row }) => (
         <CachedPriceCell model={row.original} options={options} />
       ),
-      size: 110,
+      size: 92,
       enableSorting: false,
     },
 
-    // Vendor column
+    // Status column
     {
-      accessorKey: 'vendor_name',
-      header: t('Vendor'),
-      cell: ({ row }) => {
-        const model = row.original
-        if (!model.vendor_name) {
-          return <span className='text-muted-foreground/50 text-xs'>—</span>
-        }
-        const vendorIcon = model.vendor_icon
-          ? getLobeIcon(model.vendor_icon, 12)
-          : null
-        return (
-          <BadgeCell className='gap-1.5'>
-            {vendorIcon}
-            <StatusBadge
-              label={model.vendor_name}
-              autoColor={model.vendor_name}
-              size='sm'
-              copyable={false}
-            />
-          </BadgeCell>
-        )
-      },
-      size: 130,
-      enableSorting: false,
-    },
-
-    // Tags column
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      cell: ({ row }) => {
-        const tags = parseTags(row.original.tags)
-        return (
-          <BadgeListCell
-            items={tags.map((tag) => (
-              <StatusBadge
-                key={tag}
-                label={tag}
-                autoColor={tag}
-                size='sm'
-                copyable={false}
-              />
-            ))}
-          />
-        )
-      },
-      size: 140,
-      enableSorting: false,
-    },
-
-    // Endpoints column
-    {
-      accessorKey: 'supported_endpoint_types',
-      header: t('Endpoints'),
-      cell: ({ row }) => {
-        const endpoints = row.original.supported_endpoint_types || []
-        return (
-          <BadgeListCell
-            items={endpoints.map((ep) => (
-              <StatusBadge
-                key={ep}
-                label={ep}
-                autoColor={ep}
-                size='sm'
-                copyable={false}
-              />
-            ))}
-          />
-        )
-      },
-      size: 130,
-      enableSorting: false,
-    },
-
-    // Enable Groups column
-    {
-      accessorKey: 'enable_groups',
-      header: t('Groups'),
-      cell: ({ row }) => {
-        const groups = row.original.enable_groups || []
-        return (
-          <BadgeListCell
-            items={groups.map((group) => (
-              <GroupBadge key={group} group={group} size='sm' />
-            ))}
-            tooltipClassName='max-w-[280px] p-2'
-          />
-        )
-      },
-      size: 130,
+      id: 'availability',
+      header: t('Status'),
+      cell: () => (
+        <span className='inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#141417] px-2.5 py-0.5 text-xs font-medium text-zinc-200'>
+          <span className='size-1.5 rounded-full bg-[#fafafa]' />
+          {t('Available')}
+        </span>
+      ),
+      size: 90,
       enableSorting: false,
     },
   ]

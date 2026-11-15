@@ -26,7 +26,6 @@ import {
 } from 'react'
 
 import {
-  readThemePreference,
   THEME_STORAGE_KEYS,
   writeThemePreference,
 } from '@/lib/theme-storage'
@@ -34,8 +33,7 @@ import {
 type Theme = 'dark' | 'light' | 'system'
 type ResolvedTheme = Exclude<Theme, 'system'>
 
-const DEFAULT_THEME = 'system'
-const THEMES = new Set<Theme>(['dark', 'light', 'system'])
+const DEFAULT_THEME = 'dark'
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -53,7 +51,7 @@ type ThemeProviderState = {
 
 const initialState: ThemeProviderState = {
   defaultTheme: DEFAULT_THEME,
-  resolvedTheme: 'light',
+  resolvedTheme: 'dark',
   theme: DEFAULT_THEME,
   setTheme: () => null,
   resetTheme: () => null,
@@ -61,59 +59,35 @@ const initialState: ThemeProviderState = {
 
 const ThemeContext = createContext<ThemeProviderState>(initialState)
 
-function getSystemTheme(): ResolvedTheme {
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
-}
-
-function resolveTheme(theme: Theme): ResolvedTheme {
-  return theme === 'system' ? getSystemTheme() : theme
-}
-
 export function ThemeProvider({
   children,
   defaultTheme = DEFAULT_THEME,
   storageKey = THEME_STORAGE_KEYS.mode,
   ...props
 }: ThemeProviderProps) {
-  const [theme, _setTheme] = useState<Theme>(() =>
-    readThemePreference(storageKey, THEMES, defaultTheme)
-  )
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-    resolveTheme(theme)
-  )
+  const [theme, _setTheme] = useState<Theme>('dark')
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('dark')
 
   useEffect(() => {
     const root = window.document.documentElement
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
-    const applyTheme = () => {
-      const nextResolvedTheme = theme === 'system' ? getSystemTheme() : theme
-      root.classList.remove('light', 'dark')
-      root.classList.add(nextResolvedTheme)
-      setResolvedTheme(nextResolvedTheme)
-    }
-
-    applyTheme()
-
-    mediaQuery.addEventListener('change', applyTheme)
-
-    return () => mediaQuery.removeEventListener('change', applyTheme)
-  }, [theme])
+    root.classList.remove('light', 'dark')
+    root.classList.add('dark')
+    writeThemePreference(storageKey, 'dark')
+    setResolvedTheme('dark')
+  }, [storageKey])
 
   const setTheme = useCallback(
-    (theme: Theme) => {
-      writeThemePreference(storageKey, theme)
-      _setTheme(theme)
+    (_theme: Theme) => {
+      writeThemePreference(storageKey, 'dark')
+      _setTheme('dark')
     },
     [storageKey]
   )
 
   const resetTheme = useCallback(() => {
-    writeThemePreference(storageKey, null)
-    _setTheme(defaultTheme)
+    void defaultTheme
+    writeThemePreference(storageKey, 'dark')
+    _setTheme('dark')
   }, [defaultTheme, storageKey])
 
   const contextValue = useMemo(

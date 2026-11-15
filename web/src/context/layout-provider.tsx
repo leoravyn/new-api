@@ -56,10 +56,8 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
     return (saved as Collapsible) || DEFAULT_COLLAPSIBLE
   })
 
-  const [variant, _setVariant] = useState<Variant>(() => {
-    const saved = getCookie(LAYOUT_VARIANT_COOKIE_NAME)
-    return (saved as Variant) || DEFAULT_VARIANT
-  })
+  // Lock layout variant to the rounded inset design across the whole console
+  const variant: Variant = DEFAULT_VARIANT
 
   const setCollapsible = (newCollapsible: Collapsible) => {
     _setCollapsible(newCollapsible)
@@ -70,9 +68,8 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
     )
   }
 
-  const setVariant = (newVariant: Variant) => {
-    _setVariant(newVariant)
-    setCookie(LAYOUT_VARIANT_COOKIE_NAME, newVariant, LAYOUT_COOKIE_MAX_AGE)
+  const setVariant = (_newVariant: Variant) => {
+    setCookie(LAYOUT_VARIANT_COOKIE_NAME, DEFAULT_VARIANT, LAYOUT_COOKIE_MAX_AGE)
   }
 
   const resetLayout = () => {

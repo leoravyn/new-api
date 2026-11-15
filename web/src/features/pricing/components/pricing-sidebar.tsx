@@ -31,10 +31,8 @@ import { getLobeIcon } from '@/lib/lobe-icon'
 import { cn } from '@/lib/utils'
 
 import {
-  ENDPOINT_TYPES,
   FILTER_ALL,
   QUOTA_TYPES,
-  getEndpointTypeLabels,
   getQuotaTypeLabels,
 } from '../constants'
 import { getModelQuotaType, parseTags } from '../lib/filters'
@@ -76,14 +74,6 @@ export interface PricingSidebarProps {
   className?: string
 }
 
-function formatGroupRatio(ratio: number | undefined): string | undefined {
-  if (ratio == null) return undefined
-  const formatted = Number.isInteger(ratio)
-    ? ratio.toString()
-    : ratio.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
-  return `x${formatted}`
-}
-
 function FilterChip(props: {
   option: FilterOption
   active: boolean
@@ -92,11 +82,16 @@ function FilterChip(props: {
   return (
     <Button
       type='button'
-      variant={props.active ? 'secondary' : 'outline'}
+      variant='outline'
       size='sm'
       onClick={props.onClick}
       aria-pressed={props.active}
-      className='h-auto max-w-full gap-1.5 px-2 py-1 text-xs'
+      className={cn(
+        'h-auto max-w-full gap-1.5 px-2 py-1 text-xs transition-colors',
+        props.active
+          ? 'border-white/25 bg-white/[0.1] text-[#fafafa] hover:bg-white/[0.14]'
+          : 'border-white/[0.08] bg-[#141417] text-zinc-400 hover:border-white/[0.16] hover:bg-[#1c1c20] hover:text-zinc-200'
+      )}
       title={props.option.label}
     >
       {props.option.icon && (
@@ -108,8 +103,8 @@ function FilterChip(props: {
           className={cn(
             'rounded-md px-1.5 py-0.5 text-[12px]',
             props.active
-              ? 'bg-background text-foreground'
-              : 'bg-muted text-muted-foreground'
+              ? 'bg-[#fafafa] text-[#09090b]'
+              : 'bg-white/[0.06] text-zinc-400'
           )}
         >
           {props.option.suffix ?? props.option.count}
@@ -154,7 +149,6 @@ export const PricingSidebar = memo(function PricingSidebar(
   const counts = useMemo(() => {
     const vendors = new Map<string, number>()
     const tags = new Map<string, number>()
-    const endpoints = new Map<string, number>()
     const quotas = { token: 0, request: 0, task: 0 }
     for (const model of props.models) {
       if (model.vendor_name) {
@@ -168,16 +162,12 @@ export const PricingSidebar = memo(function PricingSidebar(
       )) {
         tags.set(tag, (tags.get(tag) ?? 0) + 1)
       }
-      for (const endpoint of new Set(model.supported_endpoint_types ?? [])) {
-        endpoints.set(endpoint, (endpoints.get(endpoint) ?? 0) + 1)
-      }
       const quotaType = getModelQuotaType(model)
       if (quotaType) quotas[quotaType]++
     }
-    return { vendors, tags, endpoints, quotas }
+    return { vendors, tags, quotas }
   }, [props.models])
   const quotaTypeLabels = getQuotaTypeLabels(t)
-  const endpointTypeLabels = getEndpointTypeLabels(t)
 
   const vendorOptions: FilterOption[] = [
     {
@@ -193,18 +183,6 @@ export const PricingSidebar = memo(function PricingSidebar(
         icon: vendor.icon ? getLobeIcon(vendor.icon, 14) : undefined,
       }))
       .filter((vendor) => vendor.count > 0),
-  ]
-
-  const groupOptions: FilterOption[] = [
-    {
-      value: FILTER_ALL,
-      label: t('All Groups'),
-    },
-    ...props.groups.map((group) => ({
-      value: group,
-      label: group,
-      suffix: formatGroupRatio(props.groupRatios?.[group]),
-    })),
   ]
 
   const quotaOptions: FilterOption[] = [
@@ -243,28 +221,18 @@ export const PricingSidebar = memo(function PricingSidebar(
     })),
   ]
 
-  const endpointOptions: FilterOption[] = [
-    {
-      value: ENDPOINT_TYPES.ALL,
-      label: endpointTypeLabels[ENDPOINT_TYPES.ALL],
-      count: props.models.length,
-    },
-    ...Object.entries(endpointTypeLabels)
-      .filter(([value]) => value !== ENDPOINT_TYPES.ALL)
-      .map(([value, label]) => ({
-        value,
-        label,
-        count: counts.endpoints.get(value) ?? 0,
-      })),
-  ]
-
   return (
-    <aside className={cn('bg-card rounded-xl border p-3', props.className)}>
+    <aside
+      className={cn(
+        'rounded-2xl border border-white/[0.08] bg-[#0a0a0c] p-3.5',
+        props.className
+      )}
+    >
       <div className='mb-2.5 flex items-center justify-between gap-2'>
         <div>
           <h2 className='text-foreground text-sm font-bold'>{t('Filter')}</h2>
           <p className='text-muted-foreground mt-1 text-xs'>
-            {t('Refine models by provider, group, type, and tags.')}
+            {t('Refine models by provider, billing mode, and capability tags.')}
           </p>
         </div>
         <Button
@@ -288,12 +256,6 @@ export const PricingSidebar = memo(function PricingSidebar(
 
       <div className='space-y-1'>
         <FilterSection
-          title={t('Groups')}
-          value={props.groupFilter}
-          options={groupOptions}
-          onChange={props.onGroupChange}
-        />
-        <FilterSection
           title={t('All Vendors')}
           value={props.vendorFilter}
           options={vendorOptions}
@@ -310,12 +272,6 @@ export const PricingSidebar = memo(function PricingSidebar(
           value={props.quotaTypeFilter}
           options={quotaOptions}
           onChange={props.onQuotaTypeChange}
-        />
-        <FilterSection
-          title={t('Endpoint Type')}
-          value={props.endpointTypeFilter}
-          options={endpointOptions}
-          onChange={props.onEndpointTypeChange}
         />
       </div>
     </aside>

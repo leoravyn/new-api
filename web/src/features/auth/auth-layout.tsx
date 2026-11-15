@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { LanguageSwitcher } from '@/components/language-switcher'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemConfig } from '@/hooks/use-system-config'
 
@@ -29,32 +30,49 @@ type AuthLayoutProps = {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation()
   const { systemName, logo, loading } = useSystemConfig()
+  const rawName = systemName?.trim() || 'TOKEX'
+  const displayName =
+    rawName.toLowerCase() === 'new api' || rawName.toLowerCase() === 'tokex'
+      ? 'TOKEX'
+      : rawName
 
   return (
-    <div className='relative grid h-svh max-w-none'>
-      <Link
-        to='/'
-        className='absolute top-4 left-4 z-10 flex items-center gap-2 transition-opacity hover:opacity-80 sm:top-8 sm:left-8'
-      >
-        <div className='relative h-8 w-8'>
+    <div className='relative flex min-h-svh flex-col justify-center overflow-hidden bg-[#000000] px-4 py-20 text-[#fafafa]'>
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.045),transparent_65%)]'
+      />
+
+      <header className='absolute inset-x-0 top-0 z-20 mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8 sm:py-6'>
+        <Link
+          to='/'
+          className='flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#0a0a0c]/85 px-3 py-1.5 backdrop-blur-xl transition-all duration-200 hover:border-white/[0.16] hover:bg-[#141417]'
+        >
+          <div className='relative h-6 w-6'>
+            {loading ? (
+              <Skeleton className='absolute inset-0 rounded-md' />
+            ) : (
+              <img
+                src={logo || '/logo.png'}
+                alt={t('Logo')}
+                className='h-6 w-6 rounded-md object-contain'
+              />
+            )}
+          </div>
           {loading ? (
-            <Skeleton className='absolute inset-0 rounded-full' />
+            <Skeleton className='h-4 w-16' />
           ) : (
-            <img
-              src={logo}
-              alt={t('Logo')}
-              className='h-8 w-8 rounded-full object-cover'
-            />
+            <span className='text-sm font-semibold tracking-tight text-[#fafafa]'>
+              {displayName}
+            </span>
           )}
-        </div>
-        {loading ? (
-          <Skeleton className='h-6 w-24' />
-        ) : (
-          <h1 className='text-xl font-medium'>{systemName}</h1>
-        )}
-      </Link>
-      <div className='container flex items-center pt-16 sm:pt-0'>
-        <div className='mx-auto flex w-full flex-col justify-center space-y-2 px-4 py-8 sm:w-[480px] sm:p-8'>
+        </Link>
+
+        <LanguageSwitcher />
+      </header>
+
+      <div className='relative z-10 mx-auto w-full max-w-[440px]'>
+        <div className='flex w-full flex-col justify-center rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/90 p-6 shadow-[0_24px_64px_-20px_rgba(0,0,0,0.95)] backdrop-blur-2xl sm:p-8'>
           {children}
         </div>
       </div>

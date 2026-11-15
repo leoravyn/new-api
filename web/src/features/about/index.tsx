@@ -17,7 +17,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
-import { Construction } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
@@ -29,85 +28,51 @@ import { requireServerSuccess } from '@/lib/server-error-message'
 import { getAboutContent } from './api'
 
 function EmptyAboutState() {
-  const { t } = useTranslation()
   const currentYear = new Date().getFullYear()
 
   return (
-    <div className='flex min-h-[60vh] items-center justify-center p-8'>
-      <div className='max-w-2xl space-y-6 text-center'>
-        <div className='flex justify-center'>
-          <Construction className='text-muted-foreground h-24 w-24' />
+    <div className='flex min-h-[65vh] items-center justify-center p-6 sm:p-10'>
+      <div className='tokex-glass-elevated max-w-2xl space-y-6 rounded-2xl p-8 text-center sm:p-10'>
+        <div className='mx-auto flex size-14 items-center justify-center rounded-2xl border border-sky-400/25 bg-sky-500/10 text-xl font-bold tracking-tight text-sky-300'>
+          TX
         </div>
-        <div className='space-y-2'>
-          <h2 className='text-2xl font-bold'>{t('No About Content Set')}</h2>
-          <p className='text-muted-foreground'>
-            {t(
-              'The administrator has not configured any about content yet. You can set it in the settings page, supporting HTML or URL.'
-            )}
-          </p>
-        </div>
-        <div className='space-y-4 text-sm'>
-          <p>
-            {t('New API Project Repository:')}{' '}
-            <a
-              href='https://github.com/QuantumNous/new-api'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('https://github.com/QuantumNous/new-api')}
-            </a>
-          </p>
-          <p className='text-muted-foreground'>
-            <a
-              href='https://github.com/QuantumNous/new-api'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('NewAPI')}
-            </a>{' '}
-            © {currentYear}{' '}
-            <a
-              href='https://github.com/QuantumNous'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('QuantumNous')}
-            </a>{' '}
-            {t('| Based on')}{' '}
-            <a
-              href='https://github.com/songquanpeng/one-api'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('One API')}
-            </a>{' '}
-            © 2023{' '}
-            <a
-              href='https://github.com/songquanpeng'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('JustSong')}
-            </a>
-          </p>
-          <p className='text-muted-foreground'>
-            {t('This project must be used in compliance with the')}{' '}
-            <a
-              href='https://github.com/QuantumNous/new-api/blob/main/LICENSE'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('AGPL v3.0 License')}
-            </a>
-            .
+        <div className='space-y-3'>
+          <h1 className='text-2xl font-bold tracking-tight text-white sm:text-3xl'>
+            TOKEX · Enterprise Multi-Model AI Gateway
+          </h1>
+          <p className='text-sm leading-relaxed text-slate-300 sm:text-base'>
+            TOKEX 致力于为企业与开发者构建高可用、低时延、合规可控的多模型人工智能基础设施底座。通过单一标准协议连接全球前沿模型，全面赋能研发提效与商业智能化升级。
           </p>
         </div>
+        <div className='grid gap-3 pt-2 text-left sm:grid-cols-3'>
+          <div className='tokex-glass rounded-xl p-4'>
+            <div className='font-mono text-base font-semibold text-white'>
+              99.99% SLA
+            </div>
+            <div className='mt-1 text-xs text-slate-400'>
+              多线容灾高可用调度
+            </div>
+          </div>
+          <div className='tokex-glass rounded-xl p-4'>
+            <div className='font-mono text-base font-semibold text-white'>
+              Zero-Retention
+            </div>
+            <div className='mt-1 text-xs text-slate-400'>
+              数据隐私与安全审计
+            </div>
+          </div>
+          <div className='tokex-glass rounded-xl p-4'>
+            <div className='font-mono text-base font-semibold text-white'>
+              FinOps Ready
+            </div>
+            <div className='mt-1 text-xs text-slate-400'>
+              透明计量与分权配额
+            </div>
+          </div>
+        </div>
+        <p className='border-t border-white/[0.08] pt-4 text-xs text-slate-400'>
+          © {currentYear} TOKEX AI Infrastructure. All rights reserved.
+        </p>
       </div>
     </div>
   )

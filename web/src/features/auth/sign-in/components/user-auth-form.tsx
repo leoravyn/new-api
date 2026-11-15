@@ -299,16 +299,21 @@ export function UserAuthForm({
     }
   }
 
+  const inputClassName =
+    'h-10 rounded-xl border-white/[0.08] bg-[#050506] text-sm text-[#fafafa] placeholder:text-zinc-500 focus-visible:border-white/30 focus-visible:ring-white/15'
+  const passwordInputClassName =
+    '[&_input]:h-10 [&_input]:rounded-xl [&_input]:border-white/[0.08] [&_input]:bg-[#050506] [&_input]:pr-9 [&_input]:text-sm [&_input]:text-[#fafafa] [&_input]:placeholder:text-zinc-500 [&_input]:focus-visible:border-white/30 [&_input]:focus-visible:ring-white/15'
+
   const alternativeLoginMethods = (
-    <>
+    <div className='space-y-3 pt-1'>
       {passkeyLoginEnabled && (
-        <div className='mt-2 space-y-1'>
+        <div className='space-y-1.5'>
           <Button
             type='button'
             variant='outline'
             disabled={passkeyButtonDisabled}
             onClick={handlePasskeyLogin}
-            className='h-11 w-full justify-center gap-2 rounded-lg'
+            className='h-10 w-full justify-center gap-2 rounded-xl border border-[#27272a] bg-[#141417] text-xs font-medium text-[#fafafa] shadow-none transition-all duration-200 hover:border-zinc-600 hover:bg-[#1c1c21] hover:text-white'
           >
             {isPasskeyLoading ? (
               <Loader2 className='h-4 w-4 animate-spin' />
@@ -324,7 +329,7 @@ export function UserAuthForm({
             disabled={passkeyButtonDisabled}
           />
           {!passkeySupported && (
-            <p className='text-muted-foreground text-xs'>
+            <p className='text-xs text-zinc-500'>
               {t('Passkey is not supported on this device.')}
             </p>
           )}
@@ -339,7 +344,7 @@ export function UserAuthForm({
         onWeChatLogin={hasWeChatLogin ? handleOpenWeChatDialog : undefined}
         isWeChatLoading={isWeChatSubmitting}
       />
-    </>
+    </div>
   )
 
   return (
@@ -349,8 +354,6 @@ export function UserAuthForm({
         className={cn('grid gap-4', className)}
         {...props}
       >
-        {hasAlternativeLogin && alternativeLoginMethods}
-
         {passwordLoginEnabled && (
           <>
             {/* Username Field */}
@@ -358,11 +361,14 @@ export function UserAuthForm({
               control={form.control}
               name='username'
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('Username or Email')}</FormLabel>
+                <FormItem className='space-y-2'>
+                  <FormLabel className='text-xs font-medium text-zinc-300'>
+                    {t('Username or Email')}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('Enter your username or email')}
+                      className={inputClassName}
                       {...field}
                     />
                   </FormControl>
@@ -376,38 +382,33 @@ export function UserAuthForm({
               control={form.control}
               name='password'
               render={({ field }) => (
-                <FormItem className='relative'>
-                  <FormLabel>{t('Password')}</FormLabel>
+                <FormItem className='space-y-2'>
+                  <div className='flex items-center justify-between'>
+                    <FormLabel className='text-xs font-medium text-zinc-300'>
+                      {t('Password')}
+                    </FormLabel>
+                    <Link
+                      to='/forgot-password'
+                      className='text-xs font-medium text-zinc-400 transition-colors hover:text-[#fafafa]'
+                    >
+                      {t('Forgot password?')}
+                    </Link>
+                  </div>
                   <FormControl>
                     <PasswordInput
                       placeholder={t('Enter password')}
+                      className={passwordInputClassName}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
-                  <Link
-                    to='/forgot-password'
-                    className='text-muted-foreground absolute end-0 -top-0.5 z-10 text-sm font-medium hover:opacity-75'
-                  >
-                    {t('Forgot password?')}
-                  </Link>
                 </FormItem>
               )}
             />
 
-            {/* Submit Button */}
-            <Button
-              type='submit'
-              className='mt-2 w-full justify-center gap-2'
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
-              {t('Sign in')}
-            </Button>
-
             {/* Turnstile */}
             {isTurnstileEnabled && (
-              <div className='mt-2'>
+              <div className='pt-1'>
                 <Turnstile
                   key={turnstileWidgetKey}
                   siteKey={turnstileSiteKey}
@@ -416,17 +417,40 @@ export function UserAuthForm({
                 />
               </div>
             )}
+
+            <LegalConsent
+              status={status}
+              checked={agreedToLegal}
+              onCheckedChange={setAgreedToLegal}
+              className='mt-0.5'
+            />
+
+            {/* Submit Button */}
+            <Button
+              type='submit'
+              className='mt-1 h-10 w-full justify-center gap-2 rounded-xl bg-[#fafafa] text-sm font-medium text-[#09090b] shadow-none transition-all duration-200 hover:bg-zinc-200'
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <LogIn className='h-4 w-4' />
+              )}
+              {t('Sign in')}
+            </Button>
           </>
         )}
 
-        <LegalConsent
-          status={status}
-          checked={agreedToLegal}
-          onCheckedChange={setAgreedToLegal}
-          className='mt-1'
-        />
+        {!passwordLoginEnabled && (
+          <LegalConsent
+            status={status}
+            checked={agreedToLegal}
+            onCheckedChange={setAgreedToLegal}
+            className='mt-0.5'
+          />
+        )}
 
-        {!hasAlternativeLogin && alternativeLoginMethods}
+        {hasAlternativeLogin && alternativeLoginMethods}
       </form>
 
       {hasWeChatLogin && (

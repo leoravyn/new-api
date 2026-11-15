@@ -244,6 +244,11 @@ export function SignUpForm({
     verificationCodeAction = <Loader2 className='h-4 w-4 animate-spin' />
   }
 
+  const inputClassName =
+    'h-10 rounded-xl border-white/[0.08] bg-[#050506] text-sm text-[#fafafa] placeholder:text-zinc-500 focus-visible:border-white/30 focus-visible:ring-white/15'
+  const passwordInputClassName =
+    '[&_input]:h-10 [&_input]:rounded-xl [&_input]:border-white/[0.08] [&_input]:bg-[#050506] [&_input]:pr-9 [&_input]:text-sm [&_input]:text-[#fafafa] [&_input]:placeholder:text-zinc-500 [&_input]:focus-visible:border-white/30 [&_input]:focus-visible:ring-white/15'
+
   return (
     <Form {...form}>
       <form
@@ -256,26 +261,15 @@ export function SignUpForm({
           control={form.control}
           name='username'
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Username')}</FormLabel>
+            <FormItem className='space-y-2'>
+              <FormLabel className='text-xs font-medium text-zinc-300'>
+                {t('Username')}
+              </FormLabel>
               <FormControl>
-                <Input placeholder={t('Enter your username')} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Password Field */}
-        <FormField
-          control={form.control}
-          name='password'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Password')}</FormLabel>
-              <FormControl>
-                <PasswordInput
-                  placeholder={t('Enter password (8–128 characters)')}
+                <Input
+                  placeholder={t('Enter your username')}
+                  autoComplete='username'
+                  className={inputClassName}
                   {...field}
                 />
               </FormControl>
@@ -284,37 +278,23 @@ export function SignUpForm({
           )}
         />
 
-        {/* Confirm Password Field */}
-        <FormField
-          control={form.control}
-          name='confirmPassword'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('Confirm password')}</FormLabel>
-              <FormControl>
-                <PasswordInput placeholder={t('Confirm password')} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Email Verification Section */}
+        {/* Email & Verification Section */}
         {emailVerificationRequired && (
-          <>
-            {/* Email Field */}
+          <div className='grid gap-4'>
             <FormField
               control={form.control}
               name='email'
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('Email (required for verification)')}
+                <FormItem className='space-y-2'>
+                  <FormLabel className='text-xs font-medium text-zinc-300'>
+                    {t('Email')}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t('name@example.com')}
+                      placeholder='name@gmail.com'
                       type='email'
+                      autoComplete='email'
+                      className={inputClassName}
                       {...field}
                     />
                   </FormControl>
@@ -323,36 +303,91 @@ export function SignUpForm({
               )}
             />
 
-            {/* Verification Code Field */}
-            <div className='flex items-end gap-2'>
-              <div className='flex-1'>
+            <div className='space-y-2'>
+              <Label
+                htmlFor='signup-verification-code'
+                className='text-xs font-medium text-zinc-300'
+              >
+                {t('Verification code')}
+              </Label>
+              <div className='flex items-center gap-2.5'>
                 <Input
+                  id='signup-verification-code'
                   placeholder={t('Verification code')}
+                  inputMode='numeric'
+                  autoComplete='one-time-code'
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
+                  className='h-10 flex-1 rounded-xl border-white/[0.08] bg-[#050506] font-mono text-sm tracking-widest text-[#fafafa] placeholder:font-sans placeholder:tracking-normal placeholder:text-zinc-500 focus-visible:border-white/30 focus-visible:ring-white/15'
                 />
+                <Button
+                  variant='outline'
+                  type='button'
+                  disabled={
+                    isLoading ||
+                    isSendingCode ||
+                    isActive ||
+                    !emailValue ||
+                    !turnstileReady
+                  }
+                  onClick={handleSendVerificationCode}
+                  className='h-10 min-w-[116px] shrink-0 rounded-xl border border-[#27272a] bg-[#141417] px-3.5 text-xs font-medium text-[#fafafa] shadow-none transition-all duration-200 hover:border-zinc-600 hover:bg-[#1c1c21] hover:text-white disabled:opacity-45'
+                >
+                  {verificationCodeAction}
+                </Button>
               </div>
-              <Button
-                variant='outline'
-                type='button'
-                disabled={
-                  isLoading ||
-                  isSendingCode ||
-                  isActive ||
-                  !emailValue ||
-                  !turnstileReady
-                }
-                onClick={handleSendVerificationCode}
-              >
-                {verificationCodeAction}
-              </Button>
             </div>
-          </>
+          </div>
         )}
+
+        {/* Password & Confirm Password Grid */}
+        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3'>
+          <FormField
+            control={form.control}
+            name='password'
+            render={({ field }) => (
+              <FormItem className='space-y-2'>
+                <FormLabel className='text-xs font-medium text-zinc-300'>
+                  {t('Password')}
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder={t('Enter password (8–128 characters)')}
+                    autoComplete='new-password'
+                    className={passwordInputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='confirmPassword'
+            render={({ field }) => (
+              <FormItem className='space-y-2'>
+                <FormLabel className='text-xs font-medium text-zinc-300'>
+                  {t('Confirm password')}
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder={t('Confirm password')}
+                    autoComplete='new-password'
+                    className={passwordInputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Turnstile */}
         {isTurnstileEnabled && (
-          <div className='mt-2'>
+          <div className='pt-1'>
             <Turnstile
               key={turnstileWidgetKey}
               siteKey={turnstileSiteKey}
@@ -365,13 +400,13 @@ export function SignUpForm({
           status={status}
           checked={agreedToLegal}
           onCheckedChange={setAgreedToLegal}
-          className='mt-1'
+          className='mt-0.5'
         />
 
         {/* Submit Button */}
         <Button
           type='submit'
-          className='mt-2 w-full justify-center gap-2'
+          className='mt-1 h-10 w-full justify-center gap-2 rounded-xl bg-[#fafafa] text-sm font-medium text-[#09090b] shadow-none transition-all duration-200 hover:bg-zinc-200'
           disabled={
             isLoading ||
             (requiresLegalConsent && !agreedToLegal) ||
@@ -388,7 +423,7 @@ export function SignUpForm({
             disabled={isLoading || (requiresLegalConsent && !agreedToLegal)}
             onWeChatLogin={hasWeChatLogin ? handleOpenWeChatDialog : undefined}
             isWeChatLoading={isWeChatSubmitting}
-            className='pt-2'
+            className='pt-1'
           />
         )}
       </form>
