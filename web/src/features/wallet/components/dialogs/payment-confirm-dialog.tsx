@@ -113,17 +113,17 @@ export function PaymentConfirmDialog({
           </div>
 
           {hasDiscount && !calculating && (
-            <div className='bg-muted/50 rounded-lg p-3'>
+            <div className='rounded-xl border border-white/[0.07] bg-white/[0.025] p-3'>
               <div className='flex items-center justify-between text-sm'>
                 <span className='text-muted-foreground'>{t('You save')}</span>
-                <span className='font-semibold text-green-600'>
+                <span className='font-semibold text-emerald-400'>
                   {formatCurrency(discountAmount)}
                 </span>
               </div>
             </div>
           )}
 
-          <div className='border-t pt-4'>
+          <div className='border-t border-white/[0.08] pt-4'>
             <div className='flex items-center justify-between'>
               <span className='text-muted-foreground text-sm'>
                 {t('Payment Method')}

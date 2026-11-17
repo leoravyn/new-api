@@ -86,8 +86,8 @@ export function TwoFACard({ loading: pageLoading }: TwoFACardProps) {
   return (
     <>
       <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
-        <CardHeader className='p-3 sm:p-5'>
-          <CardTitle className='text-lg tracking-tight sm:text-xl'>
+        <CardHeader className='border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5'>
+          <CardTitle className='text-base font-semibold tracking-tight sm:text-lg'>
             {t('Two-Factor Authentication')}
           </CardTitle>
           <CardDescription className='text-xs sm:text-sm'>
@@ -153,7 +153,7 @@ export function TwoFACard({ loading: pageLoading }: TwoFACardProps) {
 
             {/* Actions Section - Only show when enabled */}
             {status.enabled && (
-              <div className='flex flex-col gap-3 border-t pt-6 sm:flex-row xl:flex-col 2xl:flex-row'>
+              <div className='flex flex-col gap-3 border-t border-white/[0.08] pt-5 sm:flex-row xl:flex-col 2xl:flex-row'>
                 <Button
                   variant='outline'
                   className='flex-1'

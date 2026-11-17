@@ -291,7 +291,7 @@ export function NotificationTab({
                   )}
                 </p>
               </div>
-              <div className='bg-muted/50 rounded-lg border p-3 sm:p-4'>
+              <div className='rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5 sm:p-4'>
                 <h5 className='mb-1.5 text-sm font-medium sm:mb-2'>
                   {t('Setup Instructions')}
                 </h5>
@@ -406,7 +406,7 @@ export function NotificationTab({
       )}
 
       {/* Divider */}
-      <div className='border-t' />
+      <div className='border-t border-white/[0.08]' />
 
       {/* Preferences Section */}
       <div className='space-y-3'>
@@ -418,7 +418,7 @@ export function NotificationTab({
         </div>
 
         {/* Accept Unset Model Price */}
-        <div className='flex items-start justify-between gap-3 rounded-lg border p-3 sm:items-center sm:p-4'>
+        <div className='flex items-start justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5 sm:items-center sm:p-4'>
           <div className='space-y-0.5'>
             <Label htmlFor='acceptUnsetPrice'>
               {t('Accept Unpriced Models')}

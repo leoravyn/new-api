@@ -62,8 +62,8 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
             </div>
           </div>
         </CardContent>
-        <div className='border-t'>
-          <div className='divide-border/60 grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0'>
+        <div className='border-t border-white/[0.08]'>
+          <div className='grid grid-cols-1 divide-y divide-white/[0.08] sm:grid-cols-3 sm:divide-x sm:divide-y-0'>
             {['balance', 'usage', 'requests'].map((key) => (
               <div key={key} className='px-4 py-3.5 sm:px-5 sm:py-4'>
                 <Skeleton className='h-3.5 w-20' />
@@ -116,11 +116,11 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
 
   return (
     <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
-      <CardContent className='p-3 sm:p-5'>
-        <div className='flex items-center gap-3 text-left sm:gap-4'>
-          <Avatar className='ring-background h-12 w-12 rounded-xl text-sm ring-2 sm:h-16 sm:w-16 sm:rounded-2xl sm:text-lg sm:ring-4'>
+      <CardContent className='bg-linear-to-b from-white/[0.03] to-transparent p-4 sm:p-6'>
+        <div className='flex items-center gap-3.5 text-left sm:gap-5'>
+          <Avatar className='h-12 w-12 rounded-2xl border border-white/[0.14] text-sm sm:h-16 sm:w-16 sm:text-lg'>
             <AvatarFallback
-              className='rounded-xl font-semibold text-white sm:rounded-2xl'
+              className='rounded-2xl font-semibold text-white'
               style={avatarFallbackStyle}
             >
               {avatarFallback}
@@ -162,8 +162,8 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
           </div>
         </div>
       </CardContent>
-      <div className='border-t'>
-        <div className='divide-border/60 grid grid-cols-3 divide-x'>
+      <div className='border-t border-white/[0.08] bg-white/[0.015]'>
+        <div className='grid grid-cols-3 divide-x divide-white/[0.08]'>
           {stats.map((item) => (
             <div key={item.label} className='min-w-0 px-3 py-3 sm:px-5 sm:py-4'>
               <div className='flex items-center gap-2'>

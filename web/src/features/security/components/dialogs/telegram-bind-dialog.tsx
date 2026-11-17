@@ -158,9 +158,9 @@ export function TelegramBindDialog({
           </AlertDescription>
         </Alert>
 
-        <div className='flex flex-col items-center justify-center gap-4 rounded-lg border p-6'>
-          <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900'>
-            <Send className='h-6 w-6 text-blue-600 dark:text-blue-400' />
+        <div className='flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6'>
+          <div className='flex h-12 w-12 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.05] text-white'>
+            <Send className='h-6 w-6' />
           </div>
 
           <div className='text-center'>

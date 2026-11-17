@@ -40,7 +40,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   getLoginSessions,
@@ -161,12 +160,13 @@ export function LoginSessionsCard() {
     )
   } else {
     sessionsContent = (
-      <div className='flex flex-col'>
-        {sessions.map((session, index) => (
-          <div key={session.sid}>
-            {index > 0 && <Separator />}
-            <LoginSessionItem session={session} onRevoke={setRevokeTarget} />
-          </div>
+      <div className='flex flex-col gap-2.5'>
+        {sessions.map((session) => (
+          <LoginSessionItem
+            key={session.sid}
+            session={session}
+            onRevoke={setRevokeTarget}
+          />
         ))}
       </div>
     )

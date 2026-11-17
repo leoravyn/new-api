@@ -131,10 +131,10 @@ export function TwoFASetupDialog(props: TwoFASetupDialogProps) {
                     'Scan this QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, etc.)'
                   )}
                 </p>
-                <div className='flex justify-center rounded-lg bg-white p-4'>
+                <div className='flex justify-center rounded-2xl border border-white/20 bg-white p-4'>
                   <QRCodeSVG value={props.setupData.qr_code_data} size={200} />
                 </div>
-                <div className='bg-muted rounded-lg p-3'>
+                <div className='rounded-xl border border-white/[0.08] bg-white/[0.03] p-3'>
                   <div className='flex items-center justify-between'>
                     <div>
                       <p className='text-muted-foreground text-xs'>
@@ -165,12 +165,12 @@ export function TwoFASetupDialog(props: TwoFASetupDialogProps) {
                     )}
                   </AlertDescription>
                 </Alert>
-                <div className='rounded-lg border p-4'>
+                <div className='rounded-xl border border-white/[0.08] bg-white/[0.02] p-4'>
                   <div className='grid grid-cols-2 gap-2'>
                     {props.setupData.backup_codes.map((code) => (
                       <div
                         key={code}
-                        className='bg-muted rounded-md p-2 text-center font-mono text-sm'
+                        className='rounded-lg border border-white/[0.06] bg-white/[0.04] p-2 text-center font-mono text-sm text-zinc-100'
                       >
                         {code}
                       </div>

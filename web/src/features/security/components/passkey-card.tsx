@@ -164,8 +164,8 @@ export function PasskeyCard({ loading: pageLoading }: PasskeyCardProps) {
   return (
     <>
       <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
-        <CardHeader className='p-3 sm:p-5'>
-          <CardTitle className='text-lg tracking-tight sm:text-xl'>
+        <CardHeader className='border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5'>
+          <CardTitle className='text-base font-semibold tracking-tight sm:text-lg'>
             {t('Passkey Login')}
           </CardTitle>
           <CardDescription className='text-xs sm:text-sm'>
@@ -219,7 +219,7 @@ export function PasskeyCard({ loading: pageLoading }: PasskeyCardProps) {
             </div>
 
             {enabled && (
-              <div className='flex flex-col gap-3 border-t pt-6 sm:flex-row xl:flex-col 2xl:flex-row'>
+              <div className='flex flex-col gap-3 border-t border-white/[0.08] pt-5 sm:flex-row xl:flex-col 2xl:flex-row'>
                 <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                   <AlertDialogTrigger
                     render={
@@ -269,7 +269,7 @@ export function PasskeyCard({ loading: pageLoading }: PasskeyCardProps) {
             )}
 
             {showUnsupportedNotice && (
-              <div className='bg-muted/60 text-muted-foreground flex items-start gap-3 rounded-md p-4 text-sm'>
+              <div className='text-muted-foreground flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5 text-sm'>
                 <ShieldAlert className='mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500' />
                 <div>
                   <p className='text-foreground font-medium'>

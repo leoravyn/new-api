@@ -60,9 +60,9 @@ export function AccountActionCard(props: AccountActionCardProps) {
     <>
       <Card
         data-card-hover='false'
-        className={`gap-0 py-0 ${props.action === 'delete' ? 'ring-destructive/30' : ''}`}
+        className={`gap-0 py-0 ${props.action === 'delete' ? 'border-destructive/30 hover:border-destructive/45' : ''}`}
       >
-        <div className='flex items-center gap-3 px-3 py-2.5 sm:px-4'>
+        <div className='flex items-center gap-3 px-4 py-3 sm:px-5'>
           <IconBadge tone='neutral' size='sm'>
             <action.icon />
           </IconBadge>
