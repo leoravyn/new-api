@@ -140,7 +140,7 @@
   - `id=2`: `Claude`（`status=1` 启用，`group=default`）
   - `id=3`: `CPA-Claude-Pool`（`status=1` 启用，`group=pool`，`base_url=http://tokex-cpa:8317`）
 - **关键 `options` 键名**（修改后需 `docker restart tokex-web` 使其全部重载，密钥/Token 值保存在库内）：
-  - 站点与注册：`SystemName`（`TOKEX`）、`Logo`（`/favicon.svg`）、`RegisterEnabled`、`PasswordRegisterEnabled`、`QuotaForNewUser`、`EmailDomainRestrictionEnabled`、`EmailDomainWhitelist`
+  - 站点与注册：`SystemName`（`TOKEX`）、`Logo`、`RegisterEnabled`、`PasswordRegisterEnabled`、`QuotaForNewUser`、`EmailDomainRestrictionEnabled`、`EmailDomainWhitelist`
   - 邮件（Resend）：`EmailProvider`（`resend`）、`EmailVerificationEnabled`、`ResendFrom`（`noreply@tokex.vip`）、`ResendApiKey`
   - OAuth：`GitHubOAuthEnabled`、`GitHubClientId`、`GitHubClientSecret`（回调 `https://tokex.vip/oauth/github`）；`oidc.enabled`、`oidc.display_name`、`oidc.client_id`、`oidc.client_secret`、`oidc.well_known`、`oidc.authorization_endpoint`、`oidc.token_endpoint`、`oidc.user_info_endpoint`（Google 回调 `https://tokex.vip/oauth/oidc`）
   - 人机验证（Turnstile）：`TurnstileCheckEnabled`、`TurnstileSiteKey`、`TurnstileSecretKey`
