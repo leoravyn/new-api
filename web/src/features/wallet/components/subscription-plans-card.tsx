@@ -553,7 +553,10 @@ export function SubscriptionPlansCard({
                 <Card
                   key={plan.id}
                   data-card-hover='false'
-                  className={cn(isPopular && 'border-primary/70 shadow-sm')}
+                  className={cn(
+                    isPopular &&
+                      'border-white/25 bg-white/[0.03] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]'
+                  )}
                 >
                   <CardContent className='flex h-full flex-col p-3.5 sm:p-4'>
                     <div className='mb-2 flex items-start justify-between gap-3'>

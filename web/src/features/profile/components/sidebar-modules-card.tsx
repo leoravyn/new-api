@@ -229,13 +229,13 @@ export function SidebarModulesCard() {
 
   return (
     <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
-      <CardHeader className='border-b p-3 !pb-3 sm:p-5 sm:!pb-5'>
+      <CardHeader className='border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5'>
         <div className='flex items-center gap-3'>
           <IconBadge tone='info' size='title'>
             <LayoutDashboard />
           </IconBadge>
           <div className='min-w-0'>
-            <CardTitle className='text-lg tracking-tight sm:text-xl'>
+            <CardTitle className='text-base font-semibold tracking-tight sm:text-lg'>
               {t('Sidebar Personal Settings')}
             </CardTitle>
             <CardDescription className='text-xs sm:text-sm'>
@@ -244,13 +244,13 @@ export function SidebarModulesCard() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className='space-y-4 p-3 sm:space-y-5 sm:p-5'>
+      <CardContent className='space-y-4 p-3.5 sm:space-y-5 sm:p-5'>
         {visibleSectionDefs.map((section) => {
           const sectionEnabled = config[section.key]?.enabled !== false
           return (
             <div
               key={section.key}
-              className='bg-background/60 rounded-xl border p-3'
+              className='rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5'
             >
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0'>
@@ -268,7 +268,7 @@ export function SidebarModulesCard() {
                 {section.modules.map((mod) => (
                   <div
                     key={mod.key}
-                    className={`flex min-h-16 items-center justify-between rounded-lg border p-3 ${
+                    className={`flex min-h-16 items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-white/[0.12] ${
                       sectionEnabled ? '' : 'opacity-50'
                     }`}
                   >
@@ -294,7 +294,7 @@ export function SidebarModulesCard() {
           )
         })}
 
-        <div className='flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end'>
+        <div className='flex flex-col-reverse gap-2 border-t border-white/[0.08] pt-4 sm:flex-row sm:justify-end'>
           <Button variant='outline' onClick={handleReset}>
             {t('Reset to Default')}
           </Button>

@@ -153,7 +153,7 @@ export function BillingHistoryDialog({
                   (placeholder) => (
                     <div
                       key={placeholder}
-                      className='rounded-lg border p-3 sm:p-4'
+                      className='rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 sm:p-4'
                     >
                       <div className='flex items-start justify-between'>
                         <div className='flex-1 space-y-2'>
@@ -191,7 +191,7 @@ export function BillingHistoryDialog({
                   return (
                     <div
                       key={record.id}
-                      className='rounded-lg border p-3 sm:p-4'
+                      className='rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 transition-colors hover:border-white/[0.13] sm:p-4'
                     >
                       {/* Header Row */}
                       <div className='flex items-start justify-between gap-2'>

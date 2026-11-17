@@ -34,7 +34,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
   SheetClose,
@@ -178,24 +177,22 @@ export function AccessTokensCard() {
             title={t('No access tokens')}
           />
         ) : (
-          <div className='flex flex-col'>
-            {list.items.map((token, index) => (
-              <div key={token.id}>
-                {index > 0 && <Separator />}
-                <AccessTokenItem
-                  token={token}
-                  resourceLabels={resourceLabels}
-                  formatTime={formatTime}
-                  now={now}
-                  disabled={access.pending}
-                  canEdit={!!catalog}
-                  onEdit={setEditTarget}
-                  onShowRecords={(target) =>
-                    setRecords({ tokenRef: target.token_ref })
-                  }
-                  onRevoke={setRevokeTarget}
-                />
-              </div>
+          <div className='flex flex-col gap-2.5'>
+            {list.items.map((token) => (
+              <AccessTokenItem
+                key={token.id}
+                token={token}
+                resourceLabels={resourceLabels}
+                formatTime={formatTime}
+                now={now}
+                disabled={access.pending}
+                canEdit={!!catalog}
+                onEdit={setEditTarget}
+                onShowRecords={(target) =>
+                  setRecords({ tokenRef: target.token_ref })
+                }
+                onRevoke={setRevokeTarget}
+              />
             ))}
           </div>
         )}

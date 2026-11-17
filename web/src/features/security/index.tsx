@@ -79,7 +79,10 @@ export function Security() {
             aria-labelledby='security-authentication'
             className='space-y-3'
           >
-            <h3 id='security-authentication' className='text-sm font-semibold'>
+            <h3
+              id='security-authentication'
+              className='text-xs font-medium tracking-wider text-zinc-400 uppercase'
+            >
               {t('Login & Authentication')}
             </h3>
             <AccountActionCard
@@ -91,9 +94,9 @@ export function Security() {
             <TitledCard
               title={t('Account Bindings')}
               icon={<Link2 className='size-4' />}
-              headerClassName='px-3 py-2.5 !pb-2.5 sm:px-4 sm:py-2.5 sm:!pb-2.5'
-              contentClassName='p-3 sm:p-3'
-              titleClassName='text-sm sm:text-sm'
+              headerClassName='px-3.5 py-3 !pb-3 sm:px-5 sm:py-3.5 sm:!pb-3.5'
+              contentClassName='p-3.5 sm:p-4'
+              titleClassName='text-sm sm:text-base'
               iconClassName='size-7 sm:size-7'
               disableHoverEffect
             >
@@ -101,14 +104,20 @@ export function Security() {
             </TitledCard>
           </section>
           <section aria-labelledby='security-access' className='space-y-4'>
-            <h3 id='security-access' className='text-sm font-semibold'>
+            <h3
+              id='security-access'
+              className='text-xs font-medium tracking-wider text-zinc-400 uppercase'
+            >
               {t('Sessions & Access')}
             </h3>
             <LoginSessionsCard />
             <AccessTokensCard />
           </section>
           <section aria-labelledby='security-account' className='space-y-4'>
-            <h3 id='security-account' className='text-sm font-semibold'>
+            <h3
+              id='security-account'
+              className='text-xs font-medium tracking-wider text-zinc-400 uppercase'
+            >
               {t('Account Actions')}
             </h3>
             <AccountActionCard action='delete' username={profile.username} />
@@ -119,14 +128,20 @@ export function Security() {
           className='min-w-0 space-y-4 sm:space-y-6 xl:sticky xl:top-0'
         >
           <div className='space-y-3'>
-            <h3 id='security-verification' className='text-sm font-semibold'>
+            <h3
+              id='security-verification'
+              className='text-xs font-medium tracking-wider text-zinc-400 uppercase'
+            >
               {t('Security verification')}
             </h3>
             <PasskeyCard loading={loading} />
             <TwoFACard loading={loading} />
           </div>
           <section aria-labelledby='security-privacy' className='space-y-4'>
-            <h3 id='security-privacy' className='text-sm font-semibold'>
+            <h3
+              id='security-privacy'
+              className='text-xs font-medium tracking-wider text-zinc-400 uppercase'
+            >
               {t('Privacy')}
             </h3>
             <PrivacyCard profile={profile} onUpdate={refreshProfile} />

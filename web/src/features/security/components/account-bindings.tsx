@@ -332,10 +332,10 @@ export function AccountBindings({ profile, onUpdate }: AccountBindingsProps) {
           return (
             <li
               key={binding.id}
-              className='flex min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-2'
+              className='flex min-w-0 items-center justify-between gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 transition-colors hover:border-white/[0.14]'
             >
-              <div className='flex min-w-0 items-center gap-2'>
-                <div className='bg-muted shrink-0 rounded-md p-1.5'>
+              <div className='flex min-w-0 items-center gap-2.5'>
+                <div className='shrink-0 rounded-lg border border-white/[0.06] bg-white/[0.04] p-2 text-zinc-200'>
                   <binding.icon className='h-4 w-4' />
                 </div>
                 <div className='min-w-0'>
@@ -379,10 +379,10 @@ export function AccountBindings({ profile, onUpdate }: AccountBindingsProps) {
           return (
             <li
               key={provider.id}
-              className='flex min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-2'
+              className='flex min-w-0 items-center justify-between gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 transition-colors hover:border-white/[0.14]'
             >
-              <div className='flex min-w-0 items-center gap-2'>
-                <div className='bg-muted shrink-0 rounded-md p-1.5'>
+              <div className='flex min-w-0 items-center gap-2.5'>
+                <div className='shrink-0 rounded-lg border border-white/[0.06] bg-white/[0.04] p-2 text-zinc-200'>
                   <Link2 className='h-4 w-4' />
                 </div>
                 <div className='min-w-0'>

@@ -77,11 +77,11 @@ export function AccessTokenItem(props: AccessTokenItemProps) {
   }
 
   return (
-    <div className='flex items-start gap-3 py-3'>
+    <div className='flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3 transition-colors hover:border-white/[0.13]'>
       <div className='min-w-0 flex-1 space-y-1.5'>
         <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
-          <p className='font-medium break-all'>{token.name}</p>
-          <code className='text-muted-foreground text-xs'>
+          <p className='font-medium break-all text-white'>{token.name}</p>
+          <code className='rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px] text-zinc-300'>
             nap_…{token.token_hint}
           </code>
         </div>

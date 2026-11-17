@@ -103,11 +103,11 @@ export function TwoFABackupDialog(props: TwoFABackupDialogProps) {
             )}
           </AlertDescription>
         </Alert>
-        <div className='grid grid-cols-2 gap-2 rounded-lg border p-4'>
+        <div className='grid grid-cols-2 gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4'>
           {backupCodes.map((code) => (
             <div
               key={code}
-              className='bg-muted rounded-md p-2 text-center font-mono text-sm'
+              className='rounded-lg border border-white/[0.06] bg-white/[0.04] p-2 text-center font-mono text-sm text-zinc-100'
             >
               {code}
             </div>

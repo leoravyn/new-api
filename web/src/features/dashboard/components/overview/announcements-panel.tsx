@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Megaphone } from 'lucide-react'
+import { ChevronRight, Megaphone } from 'lucide-react'
 import { memo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -61,7 +61,7 @@ export function AnnouncementsPanel() {
     <PanelWrapper
       title={
         <span className='flex items-center gap-2'>
-          <IconBadge tone='warning' size='sm'>
+          <IconBadge tone='neutral' size='sm'>
             <Megaphone />
           </IconBadge>
           {t('Announcements')}
@@ -75,7 +75,7 @@ export function AnnouncementsPanel() {
       contentClassName='p-0'
     >
       <ScrollArea className='h-72'>
-        <div>
+        <div className='space-y-2 p-3 sm:p-4'>
           {list.map((item: AnnouncementItem, idx: number) => {
             const key = item.id ?? `announcement-${idx}`
             return (
@@ -84,24 +84,26 @@ export function AnnouncementsPanel() {
                 type='button'
                 onClick={() => handleAnnouncementClick(item)}
                 className={cn(
-                  'group hover:bg-muted/40 w-full px-3 py-3 text-left transition-colors sm:px-5 sm:py-3.5',
-                  idx < list.length - 1 && 'border-border/60 border-b'
+                  'group w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2.5 text-left transition-all duration-200 hover:border-white/[0.15] hover:bg-white/[0.05]'
                 )}
               >
                 <div className='flex items-start gap-2.5'>
                   <AnnouncementStatusDot type={item.type} />
-                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                    <p className='line-clamp-1 text-sm font-medium'>
+                  <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+                    <p className='line-clamp-1 text-sm font-medium text-zinc-100 transition-colors group-hover:text-white'>
                       {getPreviewText(item.content)}
                     </p>
-                    <div className='flex items-center justify-between'>
-                      {item.publishDate && (
-                        <time className='text-muted-foreground/60 text-xs'>
+                    <div className='flex items-center justify-between gap-2'>
+                      {item.publishDate ? (
+                        <time className='font-mono text-[11px] text-zinc-400'>
                           {formatDateTimeObject(new Date(item.publishDate))}
                         </time>
+                      ) : (
+                        <span />
                       )}
-                      <span className='text-muted-foreground/40 text-xs opacity-0 transition-opacity group-hover:opacity-100'>
+                      <span className='inline-flex items-center gap-1 text-[11px] text-zinc-400 opacity-0 transition-all group-hover:opacity-100'>
                         {t('Click for details')}
+                        <ChevronRight className='size-3 transition-transform group-hover:translate-x-0.5' />
                       </span>
                     </div>
                   </div>

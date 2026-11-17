@@ -17,7 +17,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useNavigate } from '@tanstack/react-router'
-import { User, Wallet, LogOut, Settings, ShieldCheck } from 'lucide-react'
+import {
+  ChevronRight,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  User,
+  Wallet,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -56,13 +63,25 @@ export function ProfileDropdown() {
     [avatarName]
   )
 
+  const navItemClass =
+    'group/nav-item flex items-center gap-2.5 rounded-xl px-2 py-2 text-zinc-200 transition-all hover:bg-white/[0.06] hover:text-white focus:bg-white/[0.06] focus:text-white'
+  const navIconBoxClass =
+    'flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-300 transition-colors group-hover/nav-item:border-white/[0.16] group-hover/nav-item:bg-white/[0.08] group-hover/nav-item:text-white'
+  const navChevronClass =
+    'ml-auto size-3.5 text-zinc-600 transition-all group-hover/nav-item:translate-x-0.5 group-hover/nav-item:text-zinc-300'
+
   return (
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger
-          render={<Button variant='ghost' className='relative size-6 p-0' />}
+          render={
+            <Button
+              variant='ghost'
+              className='relative size-8 rounded-full border border-white/[0.12] bg-white/[0.04] p-0 transition-all hover:border-white/25 hover:bg-white/[0.08]'
+            />
+          }
         >
-          <Avatar className='size-6'>
+          <Avatar className='size-7'>
             <AvatarFallback
               className={`${avatarFallbackClassName} text-[11px]`}
               style={avatarFallbackStyle}
@@ -71,59 +90,87 @@ export function ProfileDropdown() {
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' sideOffset={8} className='w-56'>
-          <div className='flex items-center gap-2 px-1.5 py-1.5'>
-            <Avatar className='size-8'>
-              <AvatarFallback
-                className={`${avatarFallbackClassName} text-xs`}
-                style={avatarFallbackStyle}
-              >
-                {avatarFallback}
-              </AvatarFallback>
-            </Avatar>
-            <div className='flex flex-1 flex-col gap-0.5 overflow-hidden'>
-              <p className='text-foreground truncate text-sm font-medium'>
-                {displayName}
-              </p>
-              <div className='flex items-center gap-1.5'>
-                <span className='text-muted-foreground text-xs'>
-                  {roleLabel}
-                </span>
-                {user?.group && (
-                  <>
-                    <span className='text-muted-foreground text-xs'>·</span>
-                    <span className='text-muted-foreground truncate text-xs'>
-                      {String(user.group)}
+        <DropdownMenuContent align='end' sideOffset={10} className='w-72 p-1.5'>
+          <div className='mb-1 rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5'>
+            <div className='flex items-center gap-2.5'>
+              <Avatar className='size-9 border border-white/[0.14]'>
+                <AvatarFallback
+                  className={`${avatarFallbackClassName} text-xs`}
+                  style={avatarFallbackStyle}
+                >
+                  {avatarFallback}
+                </AvatarFallback>
+              </Avatar>
+              <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                <div className='flex items-center gap-1.5'>
+                  <p className='truncate text-sm font-semibold text-white'>
+                    {displayName}
+                  </p>
+                  <span className='shrink-0 rounded-md border border-white/[0.1] bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-zinc-300'>
+                    {roleLabel}
+                  </span>
+                </div>
+                <div className='flex items-center gap-1.5 text-xs text-zinc-400'>
+                  {user?.username && (
+                    <span className='truncate font-mono text-[11px]'>
+                      @{user.username}
                     </span>
-                  </>
-                )}
+                  )}
+                  {user?.group && (
+                    <>
+                      <span className='text-zinc-600'>·</span>
+                      <span className='truncate text-[11px] text-zinc-400'>
+                        {String(user.group)}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
-            <User className='size-4' />
-            {t('Profile')}
+          <DropdownMenuItem
+            className={navItemClass}
+            onClick={() => navigate({ to: '/profile' })}
+          >
+            <span className={navIconBoxClass}>
+              <User className='size-3.5' />
+            </span>
+            <span className='font-medium'>{t('Profile')}</span>
+            <ChevronRight className={navChevronClass} />
           </DropdownMenuItem>
 
           {isSecurityVisible && (
-            <DropdownMenuItem onClick={() => navigate({ to: '/security' })}>
-              <ShieldCheck className='size-4' />
-              {t('Security & Access')}
+            <DropdownMenuItem
+              className={navItemClass}
+              onClick={() => navigate({ to: '/security' })}
+            >
+              <span className={navIconBoxClass}>
+                <ShieldCheck className='size-3.5' />
+              </span>
+              <span className='font-medium'>{t('Security & Access')}</span>
+              <ChevronRight className={navChevronClass} />
             </DropdownMenuItem>
           )}
 
           {isWalletVisible && (
-            <DropdownMenuItem onClick={() => navigate({ to: '/wallet' })}>
-              <Wallet className='size-4' />
-              {t('Wallet')}
+            <DropdownMenuItem
+              className={navItemClass}
+              onClick={() => navigate({ to: '/wallet' })}
+            >
+              <span className={navIconBoxClass}>
+                <Wallet className='size-3.5' />
+              </span>
+              <span className='font-medium'>{t('Wallet')}</span>
+              <ChevronRight className={navChevronClass} />
             </DropdownMenuItem>
           )}
 
           {isSuperAdmin && (
             <DropdownMenuItem
+              className={navItemClass}
               onClick={() =>
                 navigate({
                   to: '/system-settings/site/$section',
@@ -131,16 +178,25 @@ export function ProfileDropdown() {
                 })
               }
             >
-              <Settings className='size-4' />
-              {t('System Settings')}
+              <span className={navIconBoxClass}>
+                <Settings className='size-3.5' />
+              </span>
+              <span className='font-medium'>{t('System Settings')}</span>
+              <ChevronRight className={navChevronClass} />
             </DropdownMenuItem>
           )}
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>
-            <LogOut className='size-4' />
-            {t('Sign out')}
+          <DropdownMenuItem
+            variant='destructive'
+            className='group/signout flex items-center gap-2.5 rounded-xl px-2 py-2'
+            onClick={() => setOpen(true)}
+          >
+            <span className='border-destructive/25 bg-destructive/10 text-destructive flex size-7 shrink-0 items-center justify-center rounded-lg border'>
+              <LogOut className='size-3.5' />
+            </span>
+            <span className='font-medium'>{t('Sign out')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

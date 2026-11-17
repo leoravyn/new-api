@@ -1,6 +1,6 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-15  
+> **最后更新**：2026-11-17  
 > **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握全局结构、分支规范、接口边界与构建部署流程，无需全仓盲搜）。
 
 ---
@@ -10,24 +10,26 @@
 - **主站与 API 网关**：`https://tokex.vip`
 - **上游账号池管理端（CPA WebUI）**：`https://sub.tokex.vip`
 - **架构模式**：**前后端分离静态托管 + Docker 原生后端**
-  - **后端核心**：直接运行上游官方容器 `calciumion/new-api:latest`（容器名 `tokex-web`，监听 `127.0.0.1:3000`），配合 `tokex-db`（MariaDB 10.11）与 `tokex-cpa`（CLIProxyAPI，`127.0.0.1:8317`）。
+  - **后端核心**：直接运行上游官方容器 `calciumion/new-api:latest`（当前 **`v1.0.0-rc.51`**，容器名 `tokex-web`，监听 `127.0.0.1:3000`），配合 `tokex-db`（MariaDB 10.11）与 `tokex-cpa`（CLIProxyAPI 当前 **`v8.0.76`**，`127.0.0.1:8317`）。
   - **前端工程**：基于原 New API 的 React 19 单页应用（`/home/ubuntu/tokex/web`）进行深度商业化与设计重构，通过 Rsbuild 编译生成纯静态产物并部署至 `/var/www/tokex/dist`，由主机 Nginx 直接托管并反向代理 `/api`、`/v1` 等后端接口到 `127.0.0.1:3000`（已彻底摒弃早期外部 `sub_filter` 注入模式）。
 
 ### 已完成里程碑清单
 - [x] **全局极黑极简设计重构（OpenRouter 质感）**：纯黑单色体系（`#000000` / `#050506` / `#0a0a0c` / 1px 微光边框），永久锁定暗黑模式（Dark Mode Only）与中/英双语（`zhCN` / `en`）。
+- [x] **品牌视觉终稿定稿上线**：替换全站矢量资产（`favicon.svg`、`logo-tokex.svg`、`banner-tokex.svg`）、OpenGraph/Twitter 预览图与首页横幅主视觉，统一站内外名称为 `TOKEX`（`Logo: /favicon.svg`）。
 - [x] **首页与模型广场重塑**：首页 Hero 展示最新旗舰模型路由与 SDK 示例；`/pricing` 与 `/rankings` 净化管理员内部字段（渠道/Endpoint 等）。
 - [x] **认证与风控链路上线**：
   - 开放用户注册，新用户初始额度 `0`，开启邮箱域名白名单限制。
   - 配置 **Resend API** 发信（`noreply@tokex.vip`）与强制注册邮箱验证码。
-  - 配置 **GitHub OAuth** 与 **Google OAuth (OIDC)** 第三方登录。
+  - 配置 **GitHub OAuth**（回调：`https://tokex.vip/oauth/github`）与 **Google OAuth (OIDC)**（回调：`https://tokex.vip/oauth/oidc`）第三方登录。
   - 配置 **Cloudflare Turnstile** 人机验证（`TurnstileSiteKey: 0x4AAAAAAGBJP7HOD4ZkNFVM`）。
-- [x] **导航栏与控制台最终打磨**：
+- [x] **导航栏、弹窗体系与个人功能页全面优化**：
   - 移除「关于」入口及控制台右上角「自定义风格」抽屉，锁定全站单一默认外观。
   - 统一前台与控制台顶部导航栏（`sticky top-0`、`h-14` / `3.5rem`、毛玻璃质感一致）。
   - 修复控制台「概览」标题吸顶问题（标题随页面正常滚动）；左侧边栏与主内容区统一 `rounded-2xl` 圆角玻璃容器。
-- [x] **工程清理与生产上线**：
-  - 将源码目录由 `/home/ubuntu/new-api` 规范更名为 `/home/ubuntu/tokex`。
-  - 建立清晰的 Git 分支体系（`upstream-base` / `main` / `dev`），关闭临时 `5173` 开发预览，完成全量生产构建并部署至 `https://tokex.vip`。
+  - 完成全站弹窗基元（`DropdownMenu`/`Popover`/`Dialog`/`AlertDialog`/`Alert`/`TitledCard`/`IconBadge`）、头像单色体系、顶部与概览公告栏、点击头像弹出的用户菜单以及 **个人资料（`/profile`）**、**安全访问（`/security`）**、**钱包（`/wallet`）** 全页面的极黑玻璃风格统一重构。
+- [x] **工程清理与镜像升级上线**：
+  - 将源码目录由 `/home/ubuntu/new-api` 规范更名为 `/home/ubuntu/tokex`，清理废弃测试目录，建立清晰 Git 分支（`upstream-base` / `main` / `dev`）。
+  - 已将后端 `tokex-web` 升级至 **`New API v1.0.0-rc.51`**（`c9c6da2`），`tokex-cpa` 升级至 **`CLIProxyAPI v8.0.76`**（`7df5607`）。
 
 ### 后续规划建议
 - [ ] 配置更多正式生产上游渠道与充值/订阅支付回调。
@@ -47,9 +49,9 @@
 | `/etc/nginx/sites-available/tokex.conf` | Nginx 主站点与 SSL 配置 | 软链至 `/etc/nginx/sites-enabled/tokex.conf`，包含 `tokex.vip` 与 `sub.tokex.vip` |
 
 ### 运行中 Docker 容器
-- `tokex-web`（`calciumion/new-api:latest`）-> `127.0.0.1:3000`
+- `tokex-web`（`calciumion/new-api:latest` -> 当前 `v1.0.0-rc.51`）-> `127.0.0.1:3000`
 - `tokex-db`（`mariadb:10.11`）-> Docker 内网 `tokex-net:3306`（数据库名 `newapi`）
-- `tokex-cpa`（`eceasy/cli-proxy-api:latest`）-> `127.0.0.1:8317`（同时通过 `tokex-net` 供 `tokex-web` 访问 `http://tokex-cpa:8317`）
+- `tokex-cpa`（`eceasy/cli-proxy-api:latest` -> 当前 `v8.0.76`）-> `127.0.0.1:8317`（同时通过 `tokex-net` 供 `tokex-web` 访问 `http://tokex-cpa:8317`）
 
 > 查看/管理容器统一在 `/opt/tokex` 或 `/opt/tokex/cpa` 下使用 `docker compose` 或 `docker ps`。数据库连接凭据见 `/opt/tokex/docker-compose.yml`。
 
@@ -61,8 +63,8 @@
 
 | 分支 / 引用 | 定位 | 说明 |
 |---|---|---|
-| `upstream-base` | 上游只读基线 | 指向 `Calcium-Ion/new-api` `v1.0.0-rc.49`（`48a6c87`），用于对比所有 TOKEX 改动（`git diff upstream-base..main`） |
-| **`main`** | **生产分支** | 与当前线上 `/var/www/tokex/dist/` 运行版本严格对应（带发布标签 `tokex-web-v1.0.0`） |
+| `upstream-base` | 上游只读基线 | 指向 `Calcium-Ion/new-api` `v1.0.0-rc.49`（`48a6c87`），用于对比所有 TOKEX 前端改动（`git diff upstream-base..main`） |
+| **`main`** | **生产分支** | 与当前线上 `/var/www/tokex/dist/` 运行版本严格对应（当前发布标签 `tokex-web-v1.2.0`） |
 | **`dev`** | **日常开发分支（默认当前分支）** | 所有新页面、样式、功能改造均在 `dev` 进行并预览验收；确认无误后合并到 `main` 并发布上线 |
 
 - 远程仓库：`upstream` 指向 `https://github.com/Calcium-Ion/new-api.git`（已重命名原 `origin`，避免误推送到上游公共仓库）。
@@ -73,30 +75,33 @@
 
 后续 Agent 如需修改前端特定功能，可直接定位以下模块，无需全仓扫描：
 
-### 全局主题、样式与语言锁定
-- `web/index.html` & `web/rsbuild.config.ts`：页面标题（`TOKEX | Multi-Model Gateway`）、PWA/构建配置
+### 全局品牌、主题、样式与语言锁定
+- `web/public/favicon.svg`, `logo-tokex.svg`, `banner-tokex.svg`：全站定稿品牌矢量资产（64x64 图标、226x64 横版徽标、1200x400 主视觉与 OG 图）
+- `web/index.html` & `web/rsbuild.config.ts`：页面标题（`TOKEX | Multi-Model Gateway`）、SVG Favicon、OpenGraph / Twitter 社交卡片预览、PWA/构建配置
 - `web/src/styles/theme.css` & `web/src/styles/index.css`：纯黑单色变量体系、`--app-header-height: 3.5rem`、玻璃表面样式
+- `web/src/lib/constants.ts` & `web/src/lib/avatar.ts`：`DEFAULT_LOGO`（`/favicon.svg`）、`DEFAULT_BANNER` 与单色用户头像风格
 - `web/src/context/theme-provider.tsx`：永久锁定 `dark` 模式
 - `web/src/context/theme-customization-provider.tsx`：锁定默认预设与圆角，禁止自定义主题切换
 - `web/src/context/layout-provider.tsx`：锁定控制台为 `inset` 布局模式
 - `web/src/i18n/languages.ts` & `web/src/i18n/config.ts`：仅保留 `zhCN` 与 `en` 双语
 
-### 导航、侧边栏与通用页面骨架
+### 导航、侧边栏与弹窗/通用页面骨架
 - `web/src/hooks/use-top-nav-links.ts` & `web/src/lib/nav-modules.ts`：顶部导航链接控制（已强制关闭 `about`）
-- `web/src/components/layout/components/public-header.tsx` & `public-layout.tsx`：前台顶部导航栏（`sticky top-0 h-14`）
+- `web/src/components/layout/components/public-header.tsx` & `public-layout.tsx`：前台顶部导航栏（`sticky top-0 h-14`，使用 `/logo-tokex.svg`）
 - `web/src/components/layout/components/header.tsx` & `app-header.tsx`：控制台顶部导航栏（与前台保持统一高度与定位，已移除 `ConfigDrawer`）
-- `web/src/components/layout/components/system-brand.tsx`：站点 Logo 与 `TOKEX` 品牌名归一化
-- `web/src/components/layout/components/footer.tsx`：页脚（已移除关于链接）
+- `web/src/components/layout/components/system-brand.tsx` & `footer.tsx`：全站横版徽标 `/logo-tokex.svg` 与 `TOKEX` 名称归一化（页脚已移除关于链接）
+- `web/src/components/profile-dropdown.tsx` & `web/src/components/notification-popover.tsx`：点击头像弹出菜单（含个人资料、安全访问、钱包、系统设置）与顶部通知/公告铃铛弹出面板
 - `web/src/components/layout/components/section-page-layout.tsx`：控制台页面标题与滚动容器（非 `fixedContent` 页面标题随内容自然滚动）
 - `web/src/components/layout/components/authenticated-layout.tsx` & `web/src/components/ui/sidebar.tsx`：圆角左侧边栏、圆角 `SidebarInset` 主视图容器及菜单胶囊样式
-- `web/src/components/ui/card.tsx`, `tabs.tsx`, `table.tsx`, `web/src/components/data-table/core/data-table-view.tsx`：统一暗黑玻璃边框与表格质感
+- `web/src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty}.tsx`, `web/src/components/data-table/core/data-table-view.tsx`：统一暗黑玻璃边框、弹窗与表格质感
 
 ### 业务功能页
-- **首页（`/`)**：`web/src/features/home/index.tsx`、`constants.ts`、`components/hero-terminal-demo.tsx`、`components/tokex/hero-section.tsx`、`components/sections/*`
-- **认证页（`/sign-in`, `/sign-up`, `/forgot-password`, `/oauth/*`)**：`web/src/features/auth/`（含邮箱验证码、GitHub/Google OAuth、`turnstile.tsx`）
+- **首页（`/`)**：`web/src/features/home/index.tsx`、`constants.ts`、`components/hero-terminal-demo.tsx`、`components/tokex/hero-section.tsx`（含 `/banner-tokex.svg` 主视觉）、`components/sections/*`
+- **认证页（`/sign-in`, `/sign-up`, `/forgot-password`, `/oauth/*`)**：`web/src/features/auth/`（含邮箱验证码、GitHub/Google OAuth、`turnstile.tsx`、`auth-layout.tsx`）
 - **模型广场与排行榜（`/pricing`, `/rankings`)**：`web/src/features/pricing/`、`web/src/features/rankings/`
-- **控制台概览与看板（`/dashboard/*`)**：`web/src/features/dashboard/`（`index.tsx`、`components/overview/*`、`components/ui/panel-wrapper.tsx`）
-- **其他控制台管理路由**（位于 `web/src/routes/_authenticated/`）：`/keys`、`/usage-logs`、`/channels`、`/wallet`、`/redemption-codes`、`/subscriptions`、`/models`、`/playground`、`/profile`、`/security`、`/users`、`/system-settings`
+- **控制台概览与看板（`/dashboard/*`)**：`web/src/features/dashboard/`（`index.tsx`、`components/overview/{overview-dashboard,announcements-panel,announcement-detail-dialog,performance-health-panel,summary-cards}.tsx`、`components/ui/panel-wrapper.tsx`）
+- **个人资料、安全访问、钱包**：`web/src/features/profile/`、`web/src/features/security/`、`web/src/features/wallet/`（均已统一单色液态玻璃卡片与列表项样式）
+- **其他控制台管理路由**（位于 `web/src/routes/_authenticated/`）：`/keys`、`/usage-logs`、`/channels`、`/redemption-codes`、`/subscriptions`、`/models`、`/playground`、`/users`、`/system-settings`
 
 ---
 
@@ -135,9 +140,9 @@
   - `id=2`: `Claude`（`status=1` 启用，`group=default`）
   - `id=3`: `CPA-Claude-Pool`（`status=1` 启用，`group=pool`，`base_url=http://tokex-cpa:8317`）
 - **关键 `options` 键名**（修改后需 `docker restart tokex-web` 使其全部重载，密钥/Token 值保存在库内）：
-  - 站点与注册：`SystemName`、`RegisterEnabled`、`PasswordRegisterEnabled`、`QuotaForNewUser`、`EmailDomainRestrictionEnabled`、`EmailDomainWhitelist`
+  - 站点与注册：`SystemName`（`TOKEX`）、`Logo`（`/favicon.svg`）、`RegisterEnabled`、`PasswordRegisterEnabled`、`QuotaForNewUser`、`EmailDomainRestrictionEnabled`、`EmailDomainWhitelist`
   - 邮件（Resend）：`EmailProvider`（`resend`）、`EmailVerificationEnabled`、`ResendFrom`（`noreply@tokex.vip`）、`ResendApiKey`
-  - OAuth：`GitHubOAuthEnabled`、`GitHubClientId`、`GitHubClientSecret`、`oidc.enabled`、`oidc.display_name`、`oidc.client_id`、`oidc.client_secret`、`oidc.well_known`、`oidc.authorization_endpoint`、`oidc.token_endpoint`、`oidc.user_info_endpoint`
+  - OAuth：`GitHubOAuthEnabled`、`GitHubClientId`、`GitHubClientSecret`（回调 `https://tokex.vip/oauth/github`）；`oidc.enabled`、`oidc.display_name`、`oidc.client_id`、`oidc.client_secret`、`oidc.well_known`、`oidc.authorization_endpoint`、`oidc.token_endpoint`、`oidc.user_info_endpoint`（Google 回调 `https://tokex.vip/oauth/oidc`）
   - 人机验证（Turnstile）：`TurnstileCheckEnabled`、`TurnstileSiteKey`、`TurnstileSecretKey`
 
 ---

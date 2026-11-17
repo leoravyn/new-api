@@ -38,7 +38,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getAnnouncementColorClass } from '@/lib/colors'
 import { formatDateTimeObject } from '@/lib/time'
@@ -204,8 +203,10 @@ function NoticeContent({
   }
 
   return (
-    <ScrollArea className='h-[min(52vh,28rem)] pr-3'>
-      <RichContent breaks content={notice} />
+    <ScrollArea className='h-[min(52vh,28rem)] pr-2'>
+      <div className='rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-sm leading-relaxed'>
+        <RichContent breaks content={notice} />
+      </div>
     </ScrollArea>
   )
 }
@@ -239,9 +240,9 @@ function AnnouncementsContent({
   }
 
   return (
-    <ScrollArea className='h-[min(52vh,28rem)] pr-3'>
-      <div className='flex flex-col'>
-        {announcements.map((item, idx) => {
+    <ScrollArea className='h-[min(52vh,28rem)] pr-2'>
+      <div className='flex flex-col gap-2'>
+        {announcements.map((item) => {
           const announcementKey = getAnnouncementRenderKey(item)
           const publishDate = item.publishDate
             ? new Date(item.publishDate)
@@ -254,31 +255,35 @@ function AnnouncementsContent({
             : ''
 
           return (
-            <div key={announcementKey}>
-              <div className='py-3'>
-                <div className='flex items-start gap-3'>
-                  <AnnouncementDot type={item.type} />
-                  <div className='flex min-w-0 flex-1 flex-col gap-2'>
-                    <div className='text-sm'>
-                      <RichContent breaks content={item.content || ''} />
+            <div
+              key={announcementKey}
+              className='rounded-xl border border-white/[0.07] bg-white/[0.025] p-3 transition-colors hover:border-white/[0.14] hover:bg-white/[0.04]'
+            >
+              <div className='flex items-start gap-2.5'>
+                <AnnouncementDot type={item.type} />
+                <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+                  {absoluteTime ? (
+                    <div className='flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-zinc-400'>
+                      {relativeTime ? (
+                        <span className='rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-200'>
+                          {relativeTime}
+                        </span>
+                      ) : null}
+                      <span>{absoluteTime}</span>
                     </div>
+                  ) : null}
 
-                    {item.extra ? (
-                      <div className='text-muted-foreground text-xs'>
-                        <RichContent breaks content={item.extra} />
-                      </div>
-                    ) : null}
-
-                    {absoluteTime ? (
-                      <div className='text-muted-foreground text-xs'>
-                        {relativeTime ? `${relativeTime} • ` : null}
-                        {absoluteTime}
-                      </div>
-                    ) : null}
+                  <div className='text-sm text-zinc-100'>
+                    <RichContent breaks content={item.content || ''} />
                   </div>
+
+                  {item.extra ? (
+                    <div className='rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-1.5 text-xs text-zinc-400'>
+                      <RichContent breaks content={item.extra} />
+                    </div>
+                  ) : null}
                 </div>
               </div>
-              {idx < announcements.length - 1 ? <Separator /> : null}
             </div>
           )
         })}
@@ -309,17 +314,17 @@ export function NotificationPopover({
           <Button
             variant='ghost'
             size='icon'
-            className={cn('relative size-9', className)}
+            className={cn(
+              'relative size-9 rounded-xl text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white',
+              className
+            )}
             aria-label={t('Notifications')}
           />
         }
       >
-        <Bell className='size-[1.2rem]' />
+        <Bell className='size-[1.15rem]' />
         {unreadCount > 0 ? (
-          <Badge
-            variant='destructive'
-            className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center px-1 text-[10px] font-semibold tabular-nums'
-          >
+          <Badge className='absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-0 bg-[#fafafa] px-1 text-[10px] font-semibold text-[#09090b] tabular-nums shadow-sm'>
             {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>
         ) : null}
@@ -327,14 +332,28 @@ export function NotificationPopover({
 
       <PopoverContent
         align='end'
-        sideOffset={8}
-        className='w-[min(26rem,calc(100vw-1rem))] gap-3 p-3'
+        sideOffset={10}
+        className='w-[min(28rem,calc(100vw-1rem))] gap-3 p-3.5'
       >
-        <PopoverHeader className='gap-1 px-1'>
-          <PopoverTitle>{t('System Announcements')}</PopoverTitle>
-          <p className='text-muted-foreground text-xs'>
-            {t('Latest platform updates and notices')}
-          </p>
+        <PopoverHeader className='flex-row items-center gap-2.5 border-b border-white/[0.08] pb-3'>
+          <span className='flex size-8 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200'>
+            <Megaphone className='size-4' />
+          </span>
+          <div className='min-w-0 flex-1'>
+            <div className='flex items-center gap-2'>
+              <PopoverTitle className='text-sm font-semibold text-white'>
+                {t('System Announcements')}
+              </PopoverTitle>
+              {unreadCount > 0 ? (
+                <span className='rounded-md border border-white/[0.1] bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-medium text-zinc-200 tabular-nums'>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : null}
+            </div>
+            <p className='truncate text-xs text-zinc-400'>
+              {t('Latest platform updates and notices')}
+            </p>
+          </div>
         </PopoverHeader>
 
         <Tabs
@@ -352,11 +371,11 @@ export function NotificationPopover({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value='notice' className='mt-2'>
+          <TabsContent value='notice' className='mt-2.5'>
             <NoticeContent notice={notice} loading={loading} t={t} />
           </TabsContent>
 
-          <TabsContent value='announcements' className='mt-2'>
+          <TabsContent value='announcements' className='mt-2.5'>
             <AnnouncementsContent
               announcements={announcements}
               loading={loading}
@@ -365,8 +384,13 @@ export function NotificationPopover({
           </TabsContent>
         </Tabs>
 
-        <div className='flex justify-end'>
-          <Button size='sm' onClick={() => onOpenChange(false)}>
+        <div className='flex justify-end border-t border-white/[0.08] pt-2.5'>
+          <Button
+            size='sm'
+            variant='outline'
+            className='rounded-xl border-white/[0.1] bg-white/[0.03] px-3.5 hover:bg-white/[0.08]'
+            onClick={() => onOpenChange(false)}
+          >
             {t('Close')}
           </Button>
         </div>
