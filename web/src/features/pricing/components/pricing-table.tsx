@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import type { Row, PaginationState } from '@tanstack/react-table'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -60,12 +60,26 @@ export function PricingTable(props: PricingTableProps) {
     pageSize: DEFAULT_PRICING_PAGE_SIZE,
   })
 
+  const showCapabilities = useMemo(
+    () =>
+      models.some(
+        (m) => (m.capabilities?.length ?? 0) > 0 || Boolean(m.tags?.trim())
+      ),
+    [models]
+  )
+  const showContext = useMemo(
+    () => models.some((m) => (m.context_length ?? 0) > 0),
+    [models]
+  )
+
   const columns = usePricingColumns({
     tokenUnit,
     priceRate,
     usdExchangeRate,
     showRechargePrice,
     selectedGroup,
+    showCapabilities,
+    showContext,
   })
 
   const { table } = useDataTable({

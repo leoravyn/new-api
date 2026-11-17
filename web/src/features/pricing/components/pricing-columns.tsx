@@ -19,13 +19,13 @@ For commercial licensing, please contact support@quantumnous.com
 import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 
+import { CopyButton } from '@/components/copy-button'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { getLobeIcon } from '@/lib/lobe-icon'
 
 import { parseTags } from '../lib/filters'
 import type { ModelCapability, PricingModel } from '../types'
 import { CachedPriceCell } from './cached-price-cell'
-import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelGroupRatioBadges } from './model-group-ratio-badges'
 import { ModelPriceCell, type ModelPriceCellOptions } from './model-price-cell'
 
@@ -94,12 +94,17 @@ function collectModelCapsules(
   return items
 }
 
-export type PricingColumnsOptions = ModelPriceCellOptions
+export type PricingColumnsOptions = ModelPriceCellOptions & {
+  showCapabilities?: boolean
+  showContext?: boolean
+}
 
 export function usePricingColumns(
   options: PricingColumnsOptions = {}
 ): ColumnDef<PricingModel>[] {
   const { t } = useTranslation()
+  const showCapabilities = options.showCapabilities ?? true
+  const showContext = options.showContext ?? true
 
   return [
     // Model name & slug column
@@ -119,6 +124,7 @@ export function usePricingColumns(
             ? model.model_name.slice(slashIndex + 1)
             : model.model_name
         const initial = (displayTitle[0] ?? 'M').toUpperCase()
+        const showFullSlug = displayTitle !== model.model_name
 
         return (
           <div className='flex max-w-full min-w-0 items-center gap-3 py-0.5'>
@@ -133,19 +139,27 @@ export function usePricingColumns(
               )}
             </div>
             <div className='min-w-0 flex-1'>
-              <div className='flex flex-wrap items-center gap-2'>
-                <span className='truncate text-sm font-semibold text-[#fafafa]'>
+              <div className='flex items-center gap-1.5'>
+                <span className='truncate font-mono text-sm font-semibold text-[#fafafa]'>
                   {displayTitle}
                 </span>
-                <ModelGroupRatioBadges
-                  model={model}
-                  selectedGroup={options.selectedGroup}
-                  size='xs'
-                />
+                <span
+                  className='shrink-0'
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <CopyButton
+                    value={model.model_name}
+                    tooltip={t('Copy model name')}
+                    className='size-6'
+                    iconClassName='size-3'
+                  />
+                </span>
               </div>
-              <div className='truncate font-mono text-[11px] text-zinc-400'>
-                {model.model_name}
-              </div>
+              {showFullSlug && (
+                <div className='truncate font-mono text-[11px] text-zinc-400'>
+                  {model.model_name}
+                </div>
+              )}
               {model.description && (
                 <div className='mt-0.5 truncate text-xs text-zinc-500'>
                   {model.description}
@@ -155,7 +169,7 @@ export function usePricingColumns(
           </div>
         )
       },
-      minSize: 250,
+      minSize: 230,
     },
 
     // Clean monochrome vendor icon/badge column
@@ -185,61 +199,83 @@ export function usePricingColumns(
       enableSorting: false,
     },
 
-    // Compact capability capsules column
+    // Group ratio column
     {
-      id: 'capabilities',
-      header: t('Capabilities'),
-      cell: ({ row }) => {
-        const model = row.original
-        const capsules = collectModelCapsules(model, t)
-        if (capsules.length === 0) {
-          return <ModelBillingModeBadge model={model} appearance='caption' />
-        }
-        const visible = capsules.slice(0, 3)
-        const overflow = capsules.length - visible.length
-        return (
-          <div className='flex flex-wrap items-center gap-1'>
-            {visible.map((item) => (
-              <span
-                key={item}
-                className='rounded-full border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] font-medium text-zinc-300'
-              >
-                {item}
-              </span>
-            ))}
-            {overflow > 0 && (
-              <span
-                className='rounded-full border border-white/[0.08] bg-[#141417] px-1.5 py-0.5 font-mono text-[10px] text-zinc-400'
-                title={capsules.slice(3).join(', ')}
-              >
-                +{overflow}
-              </span>
-            )}
-          </div>
-        )
-      },
-      size: 170,
+      id: 'group_ratio',
+      header: t('Group Ratio'),
+      cell: ({ row }) => (
+        <ModelGroupRatioBadges
+          model={row.original}
+          selectedGroup={options.selectedGroup}
+          size='xs'
+        />
+      ),
+      size: 140,
       enableSorting: false,
     },
 
-    // Context length column
-    {
-      id: 'context_length',
-      header: t('Context'),
-      cell: ({ row }) => {
-        const formatted = formatContextLength(row.original.context_length)
-        if (!formatted) {
-          return <span className='font-mono text-xs text-zinc-600'>—</span>
-        }
-        return (
-          <span className='font-mono text-xs font-medium text-zinc-200 tabular-nums'>
-            {formatted}
-          </span>
-        )
-      },
-      size: 86,
-      enableSorting: false,
-    },
+    // Compact capability capsules column (shown only when catalog has data)
+    ...(showCapabilities
+      ? [
+          {
+            id: 'capabilities',
+            header: t('Capabilities'),
+            cell: ({ row }) => {
+              const capsules = collectModelCapsules(row.original, t)
+              if (capsules.length === 0) {
+                return <span className='text-xs text-zinc-600'>—</span>
+              }
+              const visible = capsules.slice(0, 3)
+              const overflow = capsules.length - visible.length
+              return (
+                <div className='flex flex-wrap items-center gap-1'>
+                  {visible.map((item) => (
+                    <span
+                      key={item}
+                      className='rounded-full border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] font-medium text-zinc-300'
+                    >
+                      {item}
+                    </span>
+                  ))}
+                  {overflow > 0 && (
+                    <span
+                      className='rounded-full border border-white/[0.08] bg-[#141417] px-1.5 py-0.5 font-mono text-[10px] text-zinc-400'
+                      title={capsules.slice(3).join(', ')}
+                    >
+                      +{overflow}
+                    </span>
+                  )}
+                </div>
+              )
+            },
+            size: 170,
+            enableSorting: false,
+          } satisfies ColumnDef<PricingModel>,
+        ]
+      : []),
+
+    // Context length column (shown only when catalog has data)
+    ...(showContext
+      ? [
+          {
+            id: 'context_length',
+            header: t('Context'),
+            cell: ({ row }) => {
+              const formatted = formatContextLength(row.original.context_length)
+              if (!formatted) {
+                return <span className='font-mono text-xs text-zinc-600'>—</span>
+              }
+              return (
+                <span className='font-mono text-xs font-medium text-zinc-200 tabular-nums'>
+                  {formatted}
+                </span>
+              )
+            },
+            size: 86,
+            enableSorting: false,
+          } satisfies ColumnDef<PricingModel>,
+        ]
+      : []),
 
     // Input / Output price column
     {

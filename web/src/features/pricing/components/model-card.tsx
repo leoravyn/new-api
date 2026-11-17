@@ -34,10 +34,14 @@ import {
   getDynamicDisplayGroupRatio,
   getDynamicPriceUnitLabelKey,
   getDynamicPricingSummary,
+  isDynamicPricingModel,
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { parseTags } from '../lib/filters'
-import { isTokenBasedModel } from '../lib/model-helpers'
+import {
+  getModelGroupMultipliers,
+  isTokenBasedModel,
+} from '../lib/model-helpers'
 import { formatPrice, formatRequestPrice } from '../lib/price'
 import { taskPriceLabel, taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, PriceType, TokenUnit } from '../types'
@@ -65,6 +69,10 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   const isTokenBased = isTokenBasedModel(props.model)
   const tokenUnitLabel = tokenUnit === 'K' ? '1K' : '1M'
   const tags = parseTags(props.model.tags)
+  const groupMultipliers = getModelGroupMultipliers(
+    props.model,
+    props.selectedGroup
+  )
   const modelIconKey = props.model.icon || props.model.vendor_icon
   const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 28) : null
   const initial = props.model.model_name?.charAt(0).toUpperCase() || '?'
@@ -277,26 +285,26 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
           )}
         </div>
         <div className='min-w-0 flex-1'>
-          <div className='flex items-start justify-between gap-2'>
-            <h3
-              className='line-clamp-2 font-mono text-[15px] leading-snug font-semibold text-[#fafafa] [overflow-wrap:anywhere]'
-              title={props.model.model_name}
-            >
-              {props.model.model_name}
-            </h3>
-            <span className='mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] font-medium text-zinc-200'>
+          <h3
+            className='truncate font-mono text-[15px] leading-snug font-semibold text-[#fafafa]'
+            title={props.model.model_name}
+          >
+            {props.model.model_name}
+          </h3>
+          <div className='text-muted-foreground mt-1 flex items-center gap-1.5 text-xs'>
+            {props.model.vendor_name && (
+              <>
+                <span className='truncate' title={props.model.vendor_name}>
+                  {props.model.vendor_name}
+                </span>
+                <span className='text-white/20'>·</span>
+              </>
+            )}
+            <span className='inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-zinc-300'>
               <span className='size-1.5 rounded-full bg-[#fafafa]' />
               {t('Available')}
             </span>
           </div>
-          {props.model.vendor_name && (
-            <p
-              className='text-muted-foreground mt-1 truncate text-xs'
-              title={props.model.vendor_name}
-            >
-              {props.model.vendor_name}
-            </p>
-          )}
         </div>
         <CopyButton
           value={props.model.model_name}
@@ -306,42 +314,53 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
         />
       </CardHeader>
       <CardContent className='flex flex-1 flex-col gap-3'>
-        <div className='flex min-w-0 flex-col gap-2'>
-          <p className='text-muted-foreground line-clamp-2 text-[13px] leading-5 break-words'>
-            {props.model.description || t('No description available.')}
-          </p>
-          {tags.length > 0 && (
-            <div
-              role='group'
-              aria-label={t('Tags')}
-              className='flex flex-wrap items-center gap-1.5 text-xs'
-            >
-              {tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className='rounded-md border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] text-zinc-300'
-                >
-                  {tag}
-                </span>
-              ))}
-              {tags.length > 3 && (
-                <span
-                  className='text-muted-foreground text-[11px]'
-                  title={tags.slice(3).join(', ')}
-                >
-                  +{tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        {(props.model.description || tags.length > 0) && (
+          <div className='flex min-w-0 flex-col gap-2'>
+            {props.model.description && (
+              <p className='text-muted-foreground line-clamp-2 text-[13px] leading-5 break-words'>
+                {props.model.description}
+              </p>
+            )}
+            {tags.length > 0 && (
+              <div
+                role='group'
+                aria-label={t('Tags')}
+                className='flex flex-wrap items-center gap-1.5 text-xs'
+              >
+                {tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className='rounded-md border border-white/[0.08] bg-[#141417] px-2 py-0.5 text-[11px] text-zinc-300'
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {tags.length > 3 && (
+                  <span
+                    className='text-muted-foreground text-[11px]'
+                    title={tags.slice(3).join(', ')}
+                  >
+                    +{tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <div
           role='group'
           aria-label={t('Pricing')}
           className='mt-auto flex min-w-0 flex-col gap-2 rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3'
         >
           <div className='flex flex-wrap items-center justify-between gap-2'>
-            <ModelBillingModeBadge model={props.model} appearance='caption' />
+            {groupMultipliers.length > 0 &&
+            isDynamicPricingModel(props.model) ? (
+              <span className='text-[11px] font-medium text-zinc-400'>
+                {t('Group Ratio')}
+              </span>
+            ) : (
+              <ModelBillingModeBadge model={props.model} appearance='caption' />
+            )}
             <ModelGroupRatioBadges
               model={props.model}
               selectedGroup={props.selectedGroup}

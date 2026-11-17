@@ -97,13 +97,16 @@ export function Pricing() {
     [models, selectedModelName]
   )
 
-  const availableGroups = useMemo(
-    () =>
-      Object.keys(usableGroup || {}).filter(
-        (g) => !EXCLUDED_GROUPS.includes(g)
-      ),
-    [usableGroup]
-  )
+  const availableGroups = useMemo(() => {
+    const activeModelGroups = new Set(
+      (models || []).flatMap((model) => model.enable_groups ?? [])
+    )
+    return Object.keys(usableGroup || {}).filter(
+      (g) =>
+        !EXCLUDED_GROUPS.includes(g) &&
+        (g !== 'default' || activeModelGroups.has('default'))
+    )
+  }, [usableGroup, models])
 
   const handleClearAll = useCallback(() => {
     clearFilters()
@@ -174,20 +177,28 @@ export function Pricing() {
           }}
         />
         <PageTransition className='relative mx-auto w-full max-w-[1800px] px-3 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10 xl:px-8'>
-          <header className='mx-auto mb-5 max-w-3xl pt-5 text-center sm:mb-10 sm:pt-10'>
-            <h1 className='text-[clamp(2rem,5.5vw,3.5rem)] leading-[1.15] font-bold tracking-tight'>
+          <header className='mx-auto mb-5 max-w-3xl pt-3 text-center sm:mb-7 sm:pt-6'>
+            <h1 className='text-[clamp(1.85rem,4.5vw,3rem)] leading-[1.15] font-bold tracking-tight'>
               {t('Model Square')}
             </h1>
-            <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('This site currently has {{count}} models enabled', {
-                count: models?.length || 0,
-              })}
-            </p>
-            <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
+            <p className='text-muted-foreground/75 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
               {t(
                 'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
               )}
             </p>
+            <div className='mt-3 flex flex-wrap items-center justify-center gap-2 text-xs'>
+              <span className='inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#0a0a0c] px-3 py-1 text-zinc-300 tabular-nums'>
+                <span className='size-1.5 rounded-full bg-[#fafafa]' />
+                {t('This site currently has {{count}} models enabled', {
+                  count: models?.length || 0,
+                })}
+              </span>
+              {availableGroups.length > 0 && (
+                <span className='inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#0a0a0c] px-3 py-1 text-zinc-400 tabular-nums'>
+                  {t('Groups')}: {availableGroups.join(' / ')}
+                </span>
+              )}
+            </div>
             <SearchBar
               value={searchInput}
               onChange={setSearchInput}
@@ -195,7 +206,7 @@ export function Pricing() {
               placeholder={t(
                 'Search model name, provider, or capability tag...'
               )}
-              className='mx-auto mt-4 max-w-2xl sm:mt-6'
+              className='mx-auto mt-4 max-w-2xl sm:mt-5'
             />
           </header>
 

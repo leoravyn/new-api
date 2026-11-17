@@ -24,6 +24,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ModelCard } from '../components/model-card'
 import { ModelDetailsContent } from '../components/model-details'
 import { ModelGroupRatioBadges } from '../components/model-group-ratio-badges'
+import { PricingTable } from '../components/pricing-table'
 import {
   formatRatioMultiplier,
   getModelGroupMultipliers,
@@ -140,5 +141,32 @@ describe('group ratio display', () => {
     expect(officialButton).toHaveAttribute('aria-pressed', 'true')
     expect(proxyButton).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getAllByText('$2.0000').length).toBeGreaterThan(0)
+  })
+
+  it('avoids duplicate model identifiers and omits empty capabilities/context columns in PricingTable', () => {
+    const models = [
+      createDynamicModel({ model_name: 'gpt-6-astra' }),
+      createDynamicModel({
+        id: 2,
+        model_name: 'anthropic/claude-fable-5.2',
+        enable_groups: ['Official'],
+      }),
+    ]
+
+    render(<PricingTable models={models} />)
+
+    // Model without slash appears once in the cell (no duplicate slug subtitle)
+    expect(screen.getAllByText('gpt-6-astra')).toHaveLength(1)
+    // Model with slash shows short title + full slug
+    expect(screen.getByText('claude-fable-5.2')).toBeVisible()
+    expect(screen.getByText('anthropic/claude-fable-5.2')).toBeVisible()
+
+    // Dedicated group ratio column without "Capabilities: Dynamic Pricing" noise
+    expect(screen.getByText('Group Ratio')).toBeVisible()
+    expect(screen.getByText('Proxy · 0.3x')).toBeVisible()
+    expect(screen.getByText('Official · 1x')).toBeVisible()
+    expect(screen.queryByText('Capabilities')).toBeNull()
+    expect(screen.queryByText('Context')).toBeNull()
+    expect(screen.queryByText('Dynamic Pricing')).toBeNull()
   })
 })
