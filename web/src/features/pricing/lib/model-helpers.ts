@@ -102,6 +102,65 @@ export function replaceModelInPath(path: string, modelName: string): string {
 }
 
 /**
+ * Format a numeric multiplier ratio concisely (e.g. 1 -> "1x", 0.3 -> "0.3x")
+ */
+export function formatRatioMultiplier(
+  ratio: number | undefined
+): string | undefined {
+  if (ratio == null || !Number.isFinite(ratio)) return undefined
+  const formatted = Number.isInteger(ratio)
+    ? ratio.toString()
+    : ratio.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
+  return `${formatted}x`
+}
+
+export interface ModelGroupMultiplier {
+  group: string
+  ratio: number
+  label: string
+}
+
+/**
+ * Resolve displayable enabled groups and their group multipliers for a model
+ */
+export function getModelGroupMultipliers(
+  model: PricingModel,
+  selectedGroup?: string
+): ModelGroupMultiplier[] {
+  const rawGroups = Array.isArray(model.enable_groups)
+    ? model.enable_groups
+    : []
+  const uniqueGroups: string[] = []
+  const seen = new Set<string>()
+  for (const group of rawGroups) {
+    if (!group || group === 'auto' || seen.has(group)) continue
+    seen.add(group)
+    uniqueGroups.push(group)
+  }
+
+  const groupRatio = model.group_ratio || {}
+  const toEntry = (group: string): ModelGroupMultiplier => {
+    const ratio = getConfiguredGroupRatio(groupRatio, group)
+    const formatted = formatRatioMultiplier(ratio) ?? `${ratio}x`
+    return {
+      group,
+      ratio,
+      label: `${group} · ${formatted}`,
+    }
+  }
+
+  if (
+    selectedGroup &&
+    selectedGroup !== FILTER_ALL &&
+    uniqueGroups.includes(selectedGroup)
+  ) {
+    return [toEntry(selectedGroup)]
+  }
+
+  return uniqueGroups.map(toEntry)
+}
+
+/**
  * Check if model is token-based pricing
  */
 export function isTokenBasedModel(model: PricingModel): boolean {

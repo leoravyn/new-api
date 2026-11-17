@@ -36,6 +36,7 @@ import {
   getQuotaTypeLabels,
 } from '../constants'
 import { getModelQuotaType, parseTags } from '../lib/filters'
+import { formatRatioMultiplier } from '../lib/model-helpers'
 import type { PricingModel, PricingVendor } from '../types'
 
 type FilterOption = {
@@ -185,6 +186,18 @@ export const PricingSidebar = memo(function PricingSidebar(
       .filter((vendor) => vendor.count > 0),
   ]
 
+  const groupOptions: FilterOption[] = [
+    {
+      value: FILTER_ALL,
+      label: t('All Groups'),
+    },
+    ...props.groups.map((group) => ({
+      value: group,
+      label: group,
+      suffix: formatRatioMultiplier(props.groupRatios?.[group]),
+    })),
+  ]
+
   const quotaOptions: FilterOption[] = [
     {
       value: QUOTA_TYPES.ALL,
@@ -232,7 +245,7 @@ export const PricingSidebar = memo(function PricingSidebar(
         <div>
           <h2 className='text-foreground text-sm font-bold'>{t('Filter')}</h2>
           <p className='text-muted-foreground mt-1 text-xs'>
-            {t('Refine models by provider, billing mode, and capability tags.')}
+            {t('Refine models by provider, group, type, and tags.')}
           </p>
         </div>
         <Button
@@ -255,6 +268,14 @@ export const PricingSidebar = memo(function PricingSidebar(
       )}
 
       <div className='space-y-1'>
+        {props.groups.length > 0 && (
+          <FilterSection
+            title={t('Groups')}
+            value={props.groupFilter}
+            options={groupOptions}
+            onChange={props.onGroupChange}
+          />
+        )}
         <FilterSection
           title={t('All Vendors')}
           value={props.vendorFilter}

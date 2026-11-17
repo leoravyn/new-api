@@ -42,6 +42,7 @@ import { formatPrice, formatRequestPrice } from '../lib/price'
 import { taskPriceLabel, taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, PriceType, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
+import { ModelGroupRatioBadges } from './model-group-ratio-badges'
 import { ModelPerfBadge, type ModelPerfBadgeData } from './model-perf-badge'
 
 export interface ModelCardProps {
@@ -341,11 +342,11 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
         >
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <ModelBillingModeBadge model={props.model} appearance='caption' />
-            {isTokenBased && (
-              <span className='rounded-md border border-white/[0.08] bg-[#141417] px-1.5 py-0.5 font-mono text-[11px] text-zinc-300'>
-                {t('Multiplier')} {props.model.model_ratio ?? 1}x
-              </span>
-            )}
+            <ModelGroupRatioBadges
+              model={props.model}
+              selectedGroup={props.selectedGroup}
+              size='sm'
+            />
           </div>
           {dynamicSummary?.providerCount && (
             <span className='text-muted-foreground text-xs break-words'>

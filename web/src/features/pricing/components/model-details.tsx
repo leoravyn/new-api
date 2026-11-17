@@ -29,7 +29,7 @@ import {
   Sparkles,
   Timer,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
@@ -68,7 +68,11 @@ import {
   type DynamicPriceEntry,
 } from '../lib/dynamic-price'
 import { parseTags } from '../lib/filters'
-import { isTokenBasedModel } from '../lib/model-helpers'
+import {
+  getDisplayGroupRatio,
+  getModelGroupMultipliers,
+  isTokenBasedModel,
+} from '../lib/model-helpers'
 import { formatFixedPrice, formatGroupPrice } from '../lib/price'
 import { getTaskEnumFields, getTaskNumberFields } from '../lib/task-expr'
 import { getTaskPricingDisplayTiers } from '../lib/task-matrix-display'
@@ -608,12 +612,15 @@ function PriceSection(props: {
   usdExchangeRate: number
   tokenUnit: TokenUnit
   showRechargePrice: boolean
+  groupKey?: string
+  groupRatioMultiplier?: number
 }) {
   const { t, i18n } = useTranslation()
   const isTokenBased = isTokenBasedModel(props.model)
   const tokenUnitLabel = props.tokenUnit === 'K' ? '1K' : '1M'
-  const baseGroupKey = '_base'
-  const baseGroupRatioMap = { [baseGroupKey]: 1 }
+  const groupRatioMultiplier = props.groupRatioMultiplier ?? 1
+  const baseGroupKey = props.groupKey || '_base'
+  const baseGroupRatioMap = { [baseGroupKey]: groupRatioMultiplier }
   const currency = useSystemConfigStore((state) => state.config.currency)
   const billingTime = useBillingTime(props.model.billing_expr)
   const dynamicSummary = useMemo(
@@ -624,7 +631,7 @@ function PriceSection(props: {
         showRechargePrice: props.showRechargePrice,
         priceRate: props.priceRate,
         usdExchangeRate: props.usdExchangeRate,
-        groupRatioMultiplier: 1,
+        groupRatioMultiplier,
       }),
     // Currency is read indirectly by the price formatter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -634,6 +641,7 @@ function PriceSection(props: {
       props.showRechargePrice,
       props.priceRate,
       props.usdExchangeRate,
+      groupRatioMultiplier,
       billingTime,
       currency,
     ]
@@ -895,6 +903,7 @@ const TAB_META: Record<
 
 export interface ModelDetailsContentProps {
   model: PricingModel
+  selectedGroup?: string
   groupRatio: Record<string, number>
   usableGroup: Record<string, { desc: string; ratio: number }>
   endpointMap: Record<string, { path?: string; method?: string }>
@@ -908,6 +917,47 @@ export interface ModelDetailsContentProps {
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
   const { t } = useTranslation()
   const showRechargePrice = props.showRechargePrice ?? false
+
+  const modelWithGroupRatio = useMemo(
+    () =>
+      props.model.group_ratio
+        ? props.model
+        : { ...props.model, group_ratio: props.groupRatio },
+    [props.model, props.groupRatio]
+  )
+  const groupMultipliers = useMemo(
+    () => getModelGroupMultipliers(modelWithGroupRatio),
+    [modelWithGroupRatio]
+  )
+  const defaultGroup = useMemo(() => {
+    if (
+      props.selectedGroup &&
+      groupMultipliers.some((item) => item.group === props.selectedGroup)
+    ) {
+      return props.selectedGroup
+    }
+    let best = groupMultipliers[0]
+    for (const item of groupMultipliers) {
+      if (best && item.ratio < best.ratio) {
+        best = item
+      }
+    }
+    return best?.group
+  }, [groupMultipliers, props.selectedGroup])
+  const [selectedDetailGroup, setSelectedDetailGroup] = useState<
+    string | undefined
+  >(defaultGroup)
+
+  useEffect(() => {
+    setSelectedDetailGroup(defaultGroup)
+  }, [props.model.model_name, defaultGroup])
+
+  const activeGroupEntry =
+    groupMultipliers.find((item) => item.group === selectedDetailGroup) ??
+    groupMultipliers[0]
+  const activeGroupRatio =
+    activeGroupEntry?.ratio ??
+    getDisplayGroupRatio(modelWithGroupRatio, props.selectedGroup)
 
   const isDynamic =
     props.model.billing_mode === 'tiered_expr' &&
@@ -948,7 +998,41 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
           <OverviewSummaryGrid model={props.model} />
 
           <section className='bg-card/60 space-y-5 rounded-xl border p-4 shadow-sm'>
-            <SectionTitle>{t('Pricing')}</SectionTitle>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <SectionTitle>{t('Pricing')}</SectionTitle>
+              {groupMultipliers.length === 1 && (
+                <span className='mb-3 inline-flex items-center rounded-md border border-white/[0.12] bg-[#141417] px-2 py-0.5 font-mono text-xs text-zinc-200'>
+                  {groupMultipliers[0].label}
+                </span>
+              )}
+              {groupMultipliers.length > 1 && (
+                <div
+                  role='group'
+                  aria-label={t('Group Ratio')}
+                  className='mb-3 flex flex-wrap items-center gap-1.5'
+                >
+                  {groupMultipliers.map((item) => {
+                    const active = item.group === activeGroupEntry?.group
+                    return (
+                      <button
+                        key={item.group}
+                        type='button'
+                        aria-pressed={active}
+                        onClick={() => setSelectedDetailGroup(item.group)}
+                        className={cn(
+                          'rounded-md border px-2 py-0.5 font-mono text-xs transition-colors',
+                          active
+                            ? 'border-white/25 bg-white/[0.12] text-[#fafafa]'
+                            : 'border-white/[0.08] bg-[#141417] text-zinc-400 hover:border-white/[0.16] hover:text-zinc-200'
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
             {showBasePrices && (
               <PriceSection
                 model={props.model}
@@ -956,6 +1040,8 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                 usdExchangeRate={props.usdExchangeRate}
                 tokenUnit={props.tokenUnit}
                 showRechargePrice={showRechargePrice}
+                groupKey={activeGroupEntry?.group}
+                groupRatioMultiplier={activeGroupRatio}
               />
             )}
             {isDynamic && !simpleTaskPricing && (
@@ -966,6 +1052,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                   showRechargePrice,
                   priceRate: props.priceRate,
                   usdExchangeRate: props.usdExchangeRate,
+                  groupRatioMultiplier: activeGroupRatio,
                 }}
               />
             )}
