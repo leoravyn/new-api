@@ -22,9 +22,10 @@ import { createInstance } from 'i18next'
 import { I18nextProvider } from 'react-i18next'
 import { expect, test, vi } from 'vitest'
 
+import { api } from '@/lib/api'
 import zh from '@/i18n/locales/zh.json'
 
-import type { TaskPluginOption } from '../../api'
+import { getTaskPluginOptions, type TaskPluginOption } from '../../api'
 import { ChannelProviderPicker } from '../drawers/channel-provider-picker'
 
 const plugins = [
@@ -864,4 +865,67 @@ test('an empty plugin filter reports that no plugins can be bound', async () => 
   await user.click(screen.getByRole('tab', { name: 'Plugins' }))
   expect(screen.getByText('No plugins available for binding')).toBeVisible()
   expect(screen.queryByRole('option')).not.toBeInTheDocument()
+})
+
+test('getTaskPluginOptions excludes transform-only plugins and tolerates null models', async () => {
+  vi.spyOn(api, 'get').mockResolvedValue({
+    data: {
+      success: true,
+      data: [
+        {
+          key: 'auto-reasoning',
+          name: 'Auto Reasoning',
+          models: null,
+          task: false,
+          provider: false,
+          transform: true,
+        },
+        {
+          key: 'provider-null-models',
+          name: 'Null Models Provider',
+          models: null,
+          task: false,
+          provider: true,
+        },
+        {
+          key: 'kling',
+          name: 'Kling',
+          models: ['kling-v1'],
+          task: true,
+          provider: false,
+        },
+      ],
+    },
+  })
+
+  const options = await getTaskPluginOptions()
+  expect(options.map((item) => item.key)).toEqual([
+    'provider-null-models',
+    'kling',
+  ])
+  expect(options[0]?.models).toEqual([])
+
+  render(
+    <ChannelProviderPicker
+      plugins={[
+        {
+          key: 'provider-null-models',
+          name: 'Null Models Provider',
+          models: null as unknown as string[],
+        },
+      ]}
+      canBindPlugin
+      loading={false}
+      failed={false}
+      disabled={false}
+      onRetry={vi.fn()}
+      onSelect={vi.fn()}
+    />
+  )
+  expect(
+    screen.getByRole('option', {
+      name: 'Null Models Provider Plugin provider-null-models',
+    })
+  ).toBeVisible()
+  expect(screen.getByText('0 models')).toBeVisible()
 })

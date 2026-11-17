@@ -388,7 +388,7 @@ export function ChannelProviderPicker(props: ChannelProviderPickerProps) {
                     {option.plugin && (
                       <span className='text-muted-foreground ml-auto shrink-0 text-[11px]'>
                         {t('{{count}} models', {
-                          count: option.plugin.models.length,
+                          count: option.plugin.models?.length ?? 0,
                         })}
                       </span>
                     )}
