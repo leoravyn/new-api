@@ -26,6 +26,7 @@ import { parseTags } from '../lib/filters'
 import type { ModelCapability, PricingModel } from '../types'
 import { CachedPriceCell } from './cached-price-cell'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
+import { ModelGroupRatioBadges } from './model-group-ratio-badges'
 import { ModelPriceCell, type ModelPriceCellOptions } from './model-price-cell'
 
 // ----------------------------------------------------------------------------
@@ -118,7 +119,6 @@ export function usePricingColumns(
             ? model.model_name.slice(slashIndex + 1)
             : model.model_name
         const initial = (displayTitle[0] ?? 'M').toUpperCase()
-        const isTokenBased = model.quota_type === 0
 
         return (
           <div className='flex max-w-full min-w-0 items-center gap-3 py-0.5'>
@@ -133,15 +133,15 @@ export function usePricingColumns(
               )}
             </div>
             <div className='min-w-0 flex-1'>
-              <div className='flex items-center gap-2'>
+              <div className='flex flex-wrap items-center gap-2'>
                 <span className='truncate text-sm font-semibold text-[#fafafa]'>
                   {displayTitle}
                 </span>
-                {isTokenBased && model.model_ratio != null && (
-                  <span className='shrink-0 rounded border border-white/[0.08] bg-[#141417] px-1.5 py-px font-mono text-[10px] text-zinc-400'>
-                    {model.model_ratio}x
-                  </span>
-                )}
+                <ModelGroupRatioBadges
+                  model={model}
+                  selectedGroup={options.selectedGroup}
+                  size='xs'
+                />
               </div>
               <div className='truncate font-mono text-[11px] text-zinc-400'>
                 {model.model_name}
