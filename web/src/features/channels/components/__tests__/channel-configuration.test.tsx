@@ -2366,6 +2366,60 @@ test('closing an edited channel retains its left exit direction after the parent
   }
 })
 
+test('saving an edited channel with transform-only plugin options in the registry closes cleanly', async () => {
+  pluginOptions = [
+    ...plugins,
+    {
+      key: 'auto-reasoning',
+      name: 'Auto Reasoning',
+      models: null as unknown as string[],
+      task: false,
+      provider: false,
+      transform: true,
+    },
+  ]
+  const animation = deferredResponse<void>()
+  const originalGetAnimations = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'getAnimations'
+  )
+  Object.defineProperty(HTMLElement.prototype, 'getAnimations', {
+    configurable: true,
+    value(this: HTMLElement) {
+      return this.hasAttribute('data-ending-style')
+        ? [{ finished: animation.promise }]
+        : []
+    },
+  })
+  const put = vi
+    .spyOn(api, 'put')
+    .mockResolvedValue({ data: { success: true, message: '', data: editingChannel } })
+  try {
+    const user = userEvent.setup()
+    render(<ConfigurationHarness currentRow={editingChannel} clearRowOnClose />)
+    await screen.findByDisplayValue('Existing channel')
+    await user.click(screen.getByRole('button', { name: 'Update Channel' }))
+    await waitFor(() => expect(put).toHaveBeenCalledTimes(1))
+    const drawer = screen.getByRole('dialog')
+    await waitFor(() => expect(drawer).toHaveAttribute('data-ending-style'))
+    await act(async () => {
+      animation.resolve()
+    })
+    await waitFor(() => expect(drawer).not.toBeInTheDocument())
+  } finally {
+    animation.resolve()
+    if (originalGetAnimations) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        'getAnimations',
+        originalGetAnimations
+      )
+    } else {
+      Reflect.deleteProperty(HTMLElement.prototype, 'getAnimations')
+    }
+  }
+})
+
 test('the model list summarizes redirects, counts them on the routing tab, and jumps to the mapping editor', async () => {
   editingChannel = {
     ...editingChannel,

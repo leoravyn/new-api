@@ -824,7 +824,7 @@ export function ChannelMutateDrawer({
         if (!isEditing && !providerTarget && !form.getValues('name').trim()) {
           form.setValue('name', plugin.name)
         }
-        if (plugin.models.length) {
+        if (plugin.models?.length) {
           form.setValue('models', formatModelsArray(plugin.models), {
             shouldDirty: true,
           })
@@ -982,7 +982,7 @@ export function ChannelMutateDrawer({
     const allModels = new Set([
       ...allModelsList,
       ...currentModelsArray,
-      ...pluginExtensions.flatMap((plugin) => plugin.models),
+      ...pluginExtensions.flatMap((plugin) => plugin.models ?? []),
     ])
     return [...allModels].map((model) => {
       const target = targetBySource.get(model)
