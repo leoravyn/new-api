@@ -314,7 +314,10 @@ export function SignUpForm({
                 <Input
                   id='signup-verification-code'
                   placeholder={t('Verification code')}
-                  inputMode='numeric'
+                  inputMode='text'
+                  autoCapitalize='none'
+                  autoCorrect='off'
+                  spellCheck={false}
                   autoComplete='one-time-code'
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}

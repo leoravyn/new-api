@@ -272,7 +272,10 @@ export function EmailBindDialog(props: EmailBindDialogProps) {
                       <FormControl>
                         <Input
                           {...field}
-                          inputMode='numeric'
+                          inputMode='text'
+                          autoCapitalize='none'
+                          autoCorrect='off'
+                          spellCheck={false}
                           autoComplete='one-time-code'
                           maxLength={6}
                           disabled={security.pending || expired}
@@ -297,7 +300,10 @@ export function EmailBindDialog(props: EmailBindDialogProps) {
                         <FormControl>
                           <Input
                             {...field}
-                            inputMode='numeric'
+                            inputMode='text'
+                            autoCapitalize='none'
+                            autoCorrect='off'
+                            spellCheck={false}
                             autoComplete='one-time-code'
                             maxLength={6}
                             disabled={security.pending || expired}
