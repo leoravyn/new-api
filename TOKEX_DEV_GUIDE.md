@@ -1,197 +1,120 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-17  
-> **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握全局结构、分支规范、接口边界与构建部署流程，无需全仓盲搜）。
+> **最后更新**：2026-11-18  
+> **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握全局结构、分支规范、2GB 内存运维边界与部署流程，无需全仓盲搜）。
 
 ---
 
-## 1. 项目概览与当前进度
+## 1. 线上全景与当前版本
 
 - **主站与 API 网关**：`https://tokex.vip`
-- **上游账号池管理端（CPA WebUI）**：`https://sub.tokex.vip`
-- **架构模式**：**前后端分离静态托管 + Docker 原生后端**
-  - **后端核心**：直接运行上游官方容器 `calciumion/new-api:latest`（当前 **`v1.0.0-rc.51`**，容器名 `tokex-web`，监听 `127.0.0.1:3000`），配合 `tokex-db`（MariaDB 10.11）与 `tokex-cpa`（CLIProxyAPI 当前 **`v8.0.76`**，`127.0.0.1:8317`）。
-  - **前端工程**：基于原 New API 的 React 19 单页应用（`/home/ubuntu/tokex/web`）进行深度商业化与设计重构，通过 Rsbuild 编译生成纯静态产物并部署至 `/var/www/tokex/dist`，由主机 Nginx 直接托管并反向代理 `/api`、`/v1` 等后端接口到 `127.0.0.1:3000`（已彻底摒弃早期外部 `sub_filter` 注入模式）。
+- **CPA 上游管理端**：`https://sub.tokex.vip`
+- **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 原生后端**
+  - **前端产物**：基于原 New API 前端（`/home/ubuntu/tokex/web`）重构，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管静态资源。
+  - **后端网关**：`tokex-web`（官方 `calciumion/new-api:latest`，当前 `v1.0.0-rc.51`，`127.0.0.1:3000`），Root Go 源码仅作路由/后端逻辑对照参考，**未自定义编译后端镜像**。
+  - **数据库**：`tokex-db`（`mariadb:10.11`，库名 `newapi`，Docker 内网 `tokex-net:3306`）。
+  - **上游代理**：`tokex-cpa`（官方 `eceasy/cli-proxy-api:latest`，当前 `v8.0.76`，`127.0.0.1:8317` / 内网 `http://tokex-cpa:8317`）。
 
-### 已完成里程碑清单
-- [x] **全局极黑极简设计重构（OpenRouter 质感）**：纯黑单色体系（`#000000` / `#050506` / `#0a0a0c` / 1px 微光边框），永久锁定暗黑模式（Dark Mode Only）与中/英双语（`zhCN` / `en`）。
-- [x] **品牌视觉终稿定稿上线**：替换全站矢量资产（`favicon.svg`、`logo-tokex.svg`、`banner-tokex.svg`）、OpenGraph/Twitter 预览图与首页横幅主视觉，统一站内外名称为 `TOKEX`（`Logo: /favicon.svg`）。
-- [x] **首页与模型广场重塑**：首页 Hero 展示最新旗舰模型路由与 SDK 示例；`/pricing` 与 `/rankings` 净化管理员内部字段（渠道/Endpoint 等）。
-- [x] **认证与风控链路上线**：
-  - 开放用户注册，新用户初始额度 `0`，开启邮箱域名白名单限制。
-  - 配置 **Resend API** 发信（`noreply@tokex.vip`）与强制注册邮箱验证码。
-  - 配置 **GitHub OAuth**（回调：`https://tokex.vip/oauth/github`）与 **Google OAuth (OIDC)**（回调：`https://tokex.vip/oauth/oidc`）第三方登录。
-  - 配置 **Cloudflare Turnstile** 人机验证（`TurnstileSiteKey: 0x4AAAAAAGBJP7HOD4ZkNFVM`）。
-- [x] **导航栏、弹窗体系与个人功能页全面优化**：
-  - 移除「关于」入口及控制台右上角「自定义风格」抽屉，锁定全站单一默认外观。
-  - 统一前台与控制台顶部导航栏（`sticky top-0`、`h-14` / `3.5rem`、毛玻璃质感一致）。
-  - 修复控制台「概览」标题吸顶问题（标题随页面正常滚动）；左侧边栏与主内容区统一 `rounded-2xl` 圆角玻璃容器。
-  - 完成全站弹窗基元（`DropdownMenu`/`Popover`/`Dialog`/`AlertDialog`/`Alert`/`TitledCard`/`IconBadge`）、头像单色体系、顶部与概览公告栏、点击头像弹出的用户菜单以及 **个人资料（`/profile`）**、**安全访问（`/security`）**、**钱包（`/wallet`）** 全页面的极黑玻璃风格统一重构。
-- [x] **工程清理与镜像升级上线**：
-  - 将源码目录由 `/home/ubuntu/new-api` 规范更名为 `/home/ubuntu/tokex`，清理废弃测试目录，建立清晰 Git 分支（`upstream-base` / `main` / `dev`）。
-  - 已将后端 `tokex-web` 升级至 **`New API v1.0.0-rc.51`**（`c9c6da2`），`tokex-cpa` 升级至 **`CLIProxyAPI v8.0.76`**（`7df5607`）。
-
-### 后续规划建议
-- [ ] 配置更多正式生产上游渠道与充值/订阅支付回调。
-- [ ] 按需为 `/home/ubuntu/tokex` 添加自有私有 Git 远程仓库（`git remote add origin <你的私有仓地址>`）做代码云端备份。
+### 已完成关键改造摘要
+- **品牌与设计定稿（`v1.0.0` ~ `v1.2.0`）**：极黑单色体系（`#000000`/`#050506`/`#0a0a0c` + 1px 微光边框），永久锁定暗黑模式与 `zhCN`/`en` 双语；替换 `favicon.svg` / `logo-tokex.svg` / `banner-tokex.svg`；重构首页、顶部导航、公告栏、头像菜单、个人资料/安全/钱包与通用弹窗基元；移除「关于」与风格抽屉。
+- **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile（`0x4AAAAAAGBJP7HOD4ZkNFVM`）、GitHub OAuth（`/oauth/github`）、Google OIDC（`/oauth/oidc`）；`v1.2.4` 修复注册与换绑邮箱验证码输入框在手机端强制数字键盘的问题（改为 `inputMode='text'`）。
+- **渠道与模型广场（`v1.2.1` ~ `v1.2.3`）**：修复通道编辑页 `filterTransformPlugins` 空 `models` 崩溃；模型广场隐藏无意义 `37.5x` 与「能力：动态计费」回退，改为分组倍率胶囊（`Official · 1.35x` / `Proxy · 0.4x`）、恢复侧边栏分组筛选、支持详情页多分组倍率切换、清理表头重复 ID 与未使用的 `default` 分组。
+- **2GB 内存与 Base64 多模态链路调优（2026-11-18）**：Nginx、New API、CLIProxyAPI 全链路请求体上限对齐为 **40 MiB**，启用 DiskCache 落盘缓冲与容器内存/GC 硬限制（详见第 3 节）。
 
 ---
 
-## 2. 服务器目录与服务全景
+## 2. 目录与 Git 分支工作流
 
-| 路径 / 容器 | 用途说明 | 备注 |
+| 路径 | 用途 | 备注 |
 |---|---|---|
-| `/home/ubuntu/tokex/` | **TOKEX 开发源码仓库**（原 `/home/ubuntu/new-api/`） | 实际只二次开发构建 `web/`；根目录 Go 代码仅作上游后端与路由对照参考 |
-| `/home/ubuntu/tokex/web/` | **React 前端工程源码目录** | Bun + Rsbuild v2 + React 19 + TanStack |
-| `/var/www/tokex/dist/` | **生产环境前端静态资源目录** | `tokex.vip` Nginx 直接托管此目录（不含旧 `tokex-brand.js` / `tokex-theme.css`） |
-| `/opt/tokex/` | **生产环境容器编排与持久化目录** | 含 `docker-compose.yml`、`mariadb/`、`cpa/`、`data/`、`logs/` |
-| `/opt/tokex/cpa/` | CLIProxyAPI 部署与认证目录 | `docker-compose.yml`、`config/config.yaml`、`auths/` |
-| `/etc/nginx/sites-available/tokex.conf` | Nginx 主站点与 SSL 配置 | 软链至 `/etc/nginx/sites-enabled/tokex.conf`，包含 `tokex.vip` 与 `sub.tokex.vip` |
+| `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 日常二次开发仅修改 `web/` 及本手册；Go 文件作上游参考 |
+| `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 Bun 运行类型检查、测试与构建 |
+| `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | `main` 合并构建后同步至此目录 |
+| `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`mariadb/`、`data/`、`logs/`、`backups/` |
+| `/opt/tokex/cpa/` | **CLIProxyAPI 部署目录** | `docker-compose.yml`、`config/config.yaml`、`auths/` |
+| `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf` |
 
-### 运行中 Docker 容器
-- `tokex-web`（`calciumion/new-api:latest` -> 当前 `v1.0.0-rc.51`）-> `127.0.0.1:3000`
-- `tokex-db`（`mariadb:10.11`）-> Docker 内网 `tokex-net:3306`（数据库名 `newapi`）
-- `tokex-cpa`（`eceasy/cli-proxy-api:latest` -> 当前 `v8.0.76`）-> `127.0.0.1:8317`（同时通过 `tokex-net` 供 `tokex-web` 访问 `http://tokex-cpa:8317`）
-
-> 查看/管理容器统一在 `/opt/tokex` 或 `/opt/tokex/cpa` 下使用 `docker compose` 或 `docker ps`。数据库连接凭据见 `/opt/tokex/docker-compose.yml`。
-
----
-
-## 3. Git 分支结构与版本工作流
-
-当前仓库位于 `/home/ubuntu/tokex/`，已完成规范化分支划分：
-
-| 分支 / 引用 | 定位 | 说明 |
-|---|---|---|
-| `upstream-base` | 上游只读基线 | 指向 `Calcium-Ion/new-api` `v1.0.0-rc.49`（`48a6c87`），用于对比所有 TOKEX 前端改动（`git diff upstream-base..main`） |
-| **`main`** | **生产分支** | 与当前线上 `/var/www/tokex/dist/` 运行版本严格对应（当前发布标签 `tokex-web-v1.2.0`） |
-| **`dev`** | **日常开发分支（默认当前分支）** | 所有新页面、样式、功能改造均在 `dev` 进行并预览验收；确认无误后合并到 `main` 并发布上线 |
-
-- 远程仓库：`upstream` 指向 `https://github.com/Calcium-Ion/new-api.git`（已重命名原 `origin`，避免误推送到上游公共仓库）。
+- **Git 分支**（位于 `/home/ubuntu/tokex/`）：
+  - `upstream-base`：`Calcium-Ion/new-api` 只读对照基线（`48a6c87`）。
+  - **`main`**：**生产分支**（当前发布标签 `tokex-web-v1.2.4`，commit `fb6aefa`）。
+  - **`dev`**：**默认开发分支**，日常改动在此提交验收后再 `--no-ff` 合并到 `main`。
+  - 远程名已将原 `origin` 重命名为 `upstream`（指向官方 GitHub），**勿误推**。
 
 ---
 
-## 4. 前端源码核心改写索引（`/home/ubuntu/tokex/web/`）
+## 3. 2GB 内存主机运维边界与多模态调优参数
 
-后续 Agent 如需修改前端特定功能，可直接定位以下模块，无需全仓扫描：
+主机物理内存 **1.8Gi（2GB 规格）** + **`/swapfile`（2.0Gi，`vm.swappiness=20`）**，全链路以 **40 MiB**（可容纳单张 20MB 原图 Base64 后 ~27MB + 上下文）对齐防外放内截与 OOM：
 
-### 全局品牌、主题、样式与语言锁定
-- `web/public/favicon.svg`, `logo-tokex.svg`, `banner-tokex.svg`：全站定稿品牌矢量资产（64x64 图标、226x64 横版徽标、1200x400 主视觉与 OG 图）
-- `web/index.html` & `web/rsbuild.config.ts`：页面标题（`TOKEX | Multi-Model Gateway`）、SVG Favicon、OpenGraph / Twitter 社交卡片预览、PWA/构建配置
-- `web/src/styles/theme.css` & `web/src/styles/index.css`：纯黑单色变量体系、`--app-header-height: 3.5rem`、玻璃表面样式
-- `web/src/lib/constants.ts` & `web/src/lib/avatar.ts`：`DEFAULT_LOGO`（`/favicon.svg`）、`DEFAULT_BANNER` 与单色用户头像风格
-- `web/src/context/theme-provider.tsx`：永久锁定 `dark` 模式
-- `web/src/context/theme-customization-provider.tsx`：锁定默认预设与圆角，禁止自定义主题切换
-- `web/src/context/layout-provider.tsx`：锁定控制台为 `inset` 布局模式
-- `web/src/i18n/languages.ts` & `web/src/i18n/config.ts`：仅保留 `zhCN` 与 `en` 双语
+| 组件 | 配置文件 | 关键生效参数 | 说明 |
+|---|---|---|---|
+| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 600s;` | 吸收手机端慢速大请求到 `/var/lib/nginx/body`，保持 SSE 零缓冲 |
+| **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m` / `GOMEMLIMIT=700MiB` / `GOGC=75` / `MAX_REQUEST_BODY_MB=40` / `MAX_FILE_DOWNLOAD_MB=32` / `STREAM_SCANNER_MAX_BUFFER_MB=32` / `DEBUG=false` | 日志截断保留 `LocalLogContentLimit=2048`；`json-file` 限 `20m x 3` |
+| **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true` / `threshold_mb=4` / `max_size_mb=256` | `>=4MB` 请求体自动暂存临时文件并在请求结束后清理 |
+| **tokex-cpa** | `/opt/tokex/cpa/docker-compose.yml` & `config/config.yaml` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `max-request-body-bytes: 41943040` / `shutdown-timeout: 15` / `request-log: false` / `logging-to-file: false` | 解除原 `120m` 过低导致的 20MB+ 大图 OOM；关闭全量请求体落盘 |
+| **tokex-db** | `/opt/tokex/docker-compose.yml` & `mariadb/my.cnf` | `mem_limit: 512m` / `innodb_buffer_pool_size=256M` / `max_connections=60` | Docker 日志轮转 `10m x 3` |
 
-### 导航、侧边栏与弹窗/通用页面骨架
-- `web/src/hooks/use-top-nav-links.ts` & `web/src/lib/nav-modules.ts`：顶部导航链接控制（已强制关闭 `about`）
-- `web/src/components/layout/components/public-header.tsx` & `public-layout.tsx`：前台顶部导航栏（`sticky top-0 h-14`，使用 `/logo-tokex.svg`）
-- `web/src/components/layout/components/header.tsx` & `app-header.tsx`：控制台顶部导航栏（与前台保持统一高度与定位，已移除 `ConfigDrawer`）
-- `web/src/components/layout/components/system-brand.tsx` & `footer.tsx`：全站横版徽标 `/logo-tokex.svg` 与 `TOKEX` 名称归一化（页脚已移除关于链接）
-- `web/src/components/profile-dropdown.tsx` & `web/src/components/notification-popover.tsx`：点击头像弹出菜单（含个人资料、安全访问、钱包、系统设置）与顶部通知/公告铃铛弹出面板
-- `web/src/components/layout/components/section-page-layout.tsx`：控制台页面标题与滚动容器（非 `fixedContent` 页面标题随内容自然滚动）
-- `web/src/components/layout/components/authenticated-layout.tsx` & `web/src/components/ui/sidebar.tsx`：圆角左侧边栏、圆角 `SidebarInset` 主视图容器及菜单胶囊样式
-- `web/src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty}.tsx`, `web/src/components/data-table/core/data-table-view.tsx`：统一暗黑玻璃边框、弹窗与表格质感
-
-### 业务功能页
-- **首页（`/`)**：`web/src/features/home/index.tsx`、`constants.ts`、`components/hero-terminal-demo.tsx`、`components/tokex/hero-section.tsx`（含 `/banner-tokex.svg` 主视觉）、`components/sections/*`
-- **认证页（`/sign-in`, `/sign-up`, `/forgot-password`, `/oauth/*`)**：`web/src/features/auth/`（含邮箱验证码、GitHub/Google OAuth、`turnstile.tsx`、`auth-layout.tsx`）
-- **模型广场与排行榜（`/pricing`, `/rankings`)**：`web/src/features/pricing/`、`web/src/features/rankings/`
-- **控制台概览与看板（`/dashboard/*`)**：`web/src/features/dashboard/`（`index.tsx`、`components/overview/{overview-dashboard,announcements-panel,announcement-detail-dialog,performance-health-panel,summary-cards}.tsx`、`components/ui/panel-wrapper.tsx`）
-- **个人资料、安全访问、钱包**：`web/src/features/profile/`、`web/src/features/security/`、`web/src/features/wallet/`（均已统一单色液态玻璃卡片与列表项样式）
-- **其他控制台管理路由**（位于 `web/src/routes/_authenticated/`）：`/keys`、`/usage-logs`、`/channels`、`/redemption-codes`、`/subscriptions`、`/models`、`/playground`、`/users`、`/system-settings`
+> 上述配置文件的修改前原始备份保存在 `/opt/tokex/backups/2026-11-18/`。
 
 ---
 
-## 5. 路由分流、后端接口与数据库速查
+## 4. 前端源码核心定位（`/home/ubuntu/tokex/web/`）
 
-### Nginx 动静分流边界（`/etc/nginx/sites-available/tokex.conf`）
-- **静态资源与 SPA 路由**（由 `/var/www/tokex/dist` 提供）：
-  - `/static/*`（强缓存 30d `immutable`）
-  - `/index.html`（禁止缓存 `no-cache, no-store, must-revalidate`）
-  - `/`、`/pricing`、`/rankings`、`/sign-in`、`/sign-up`、`/oauth/:provider`、`/dashboard`、`/keys`、`/usage-logs`、`/channels`、`/system-settings` 等前端路由均走 `try_files $uri $uri/ /index.html;`
-- **后端反代路由**（`location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`，已开启 SSE 零缓冲与 WebSocket）：
-  - 注意：`dashboard/billing/` 走后端计费旧接口，`/dashboard` 与 `/dashboard/overview` 留给 React SPA，切勿将 `/dashboard` 整体代理给后端。
-
-### 高频核心后端 API 路径（前缀 `/api` 或中继前缀）
-- **系统与公开接口**：
-  - `GET /api/status`（返回系统名称、注册/邮箱验证/OAuth/Turnstile 开关及 `turnstile_site_key`）
-  - `GET /api/pricing`、`GET /api/rankings`、`GET /api/notice`、`GET /api/models`
-- **用户认证与 OAuth**：
-  - `POST /api/user/login`、`POST /api/user/register`、`GET /api/verification`（受 Turnstile 与频控保护）
-  - `GET /api/oauth/:provider`、`POST /api/oauth/state`、`POST /api/user/auth/refresh`、`POST /api/user/auth/logout`
-- **业务与管理组**（均挂载于 `/api/*`，源码见 `/home/ubuntu/tokex/router/`）：
-  - `/api/user/*`、`/api/token/*`、`/api/channel/*`、`/api/log/*`、`/api/usage/*`、`/api/data/*`
-  - `/api/option/*`、`/api/redemption/*`、`/api/subscription/*`、`/api/models/*`、`/api/group/*`、`/api/vendors/*`
-- **AI 模型网关中继接口**：
-  - `/v1/chat/completions`、`/v1/responses`、`/v1/messages`、`/v1/models`、`/v1/images/*`、`/v1/videos/*`、`/v1/tasks/*`
-  - `/v1beta/models/*`（Gemini）、`/pg/*`（Playground）、`/mj/*` 与 `/:mode/mj/*`（Midjourney）
-
-### 数据库关键信息（容器 `tokex-db`，库名 `newapi`）
-- **已有管理员与测试账号**（`users` 表）：
-  - `id=1`: `admin`（`role=100` 超级管理员）
-  - `id=2`: `test`（`role=1` 普通用户）
-  - `id=3`: `tokex_preview`（`role=100` 预览验收管理员）
-  - `id=4`: `leoravyn`（`role=1` 普通用户）
-- **已配置渠道**（`channels` 表）：
-  - `id=1`: `AWS-Bedrock-Tokyo`（`status=2` 禁用）
-  - `id=2`: `Claude`（`status=1` 启用，`group=default`）
-  - `id=3`: `CPA-Claude-Pool`（`status=1` 启用，`group=pool`，`base_url=http://tokex-cpa:8317`）
-- **关键 `options` 键名**（修改后需 `docker restart tokex-web` 使其全部重载，密钥/Token 值保存在库内）：
-  - 站点与注册：`SystemName`（`TOKEX`）、`Logo`、`RegisterEnabled`、`PasswordRegisterEnabled`、`QuotaForNewUser`、`EmailDomainRestrictionEnabled`、`EmailDomainWhitelist`
-  - 邮件（Resend）：`EmailProvider`（`resend`）、`EmailVerificationEnabled`、`ResendFrom`（`noreply@tokex.vip`）、`ResendApiKey`
-  - OAuth：`GitHubOAuthEnabled`、`GitHubClientId`、`GitHubClientSecret`（回调 `https://tokex.vip/oauth/github`）；`oidc.enabled`、`oidc.display_name`、`oidc.client_id`、`oidc.client_secret`、`oidc.well_known`、`oidc.authorization_endpoint`、`oidc.token_endpoint`、`oidc.user_info_endpoint`（Google 回调 `https://tokex.vip/oauth/oidc`）
-  - 人机验证（Turnstile）：`TurnstileCheckEnabled`、`TurnstileSiteKey`、`TurnstileSecretKey`
+- **品牌、样式与锁定约束**：
+  - 资产与入口：`public/{favicon,logo-tokex,banner-tokex}.svg`、`index.html`、`rsbuild.config.ts`
+  - 主题与双语：`src/styles/{theme,index}.css`、`src/lib/{constants,avatar,nav-modules}.ts`、`src/context/{theme,theme-customization,layout}-provider.tsx`（锁定 `dark` + 默认样式）、`src/i18n/{languages,config}.ts`
+- **导航与通用 UI**：
+  - 顶栏与菜单：`src/components/layout/components/{public-header,public-layout,header,app-header,system-brand,footer,section-page-layout,authenticated-layout}.tsx`、`src/components/{profile-dropdown,notification-popover}.tsx`
+  - 统一深色玻璃基元：`src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty,sidebar}.tsx`
+- **核心业务页面**：
+  - 首页：`src/features/home/`（`constants.ts`、`components/tokex/hero-section.tsx`、`components/hero-terminal-demo.tsx`）
+  - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`hooks/`）
+  - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/model-helpers.ts`、`components/{model-card,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`
+  - 渠道管理：`src/features/channels/`（注意 `task-plugins` 目录下的插件模型转换过滤逻辑）
+  - 控制台与账户：`src/features/dashboard/`、`src/features/profile/`、`src/features/security/`、`src/features/wallet/`；全部控制台路由见 `src/routes/_authenticated/`
 
 ---
 
-## 6. 开发、构建与上线标准流程（必读约束）
+## 5. 路由边界、接口与数据库现状
 
-> **主机环境约束（2GB 内存 ARM64）**：
-> 1. **`oxlint` 在 ARM64 存在原生 panic，请始终跳过 `oxlint`**，仅使用 `bun check -b` 做全量 TypeScript 检查。
-> 2. 内存紧张，**执行全量构建前务必关闭临时 `rsbuild dev` 预览进程**，并限制 Node/Bun 堆内存（`NODE_OPTIONS="--max-old-space-size=1536"`）。
+### Nginx 动静分流
+- **静态 SPA**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）、以及所有前端路由（`/`, `/pricing`, `/rankings`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
+- **后端反代**：`location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
-### 日常开发预览（在 `dev` 分支）
+### 线上分组、渠道与关键配置（`newapi` 库）
+- **现行分组**（已清理 `default` 分组）：`Official`（`1.35x`）、`Proxy`（`0.4x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
+- **启用渠道**（`channels` 表）：
+  - `id=2`：`OpenRouter`（`status=1`, `group=Official`, `claude-fable-5.2`）
+  - `id=3`：`Codex-Pool`（`status=1`, `group=Proxy`, `http://tokex-cpa:8317`, `gpt-6-astra` / `gpt-6.1-sol` / `gpt-6.2-sol` / `gpt-6.2-astra`）
+- **重要提示**：直接改库内 `options` 后需 `docker restart tokex-web` 立即重载；连接凭据见 `/opt/tokex/docker-compose.yml`。
+
+---
+
+## 6. 开发、验证与发布标准流程
+
+> **2GB ARM64 构建约束**：
+> 1. **`oxlint` 在 ARM64 存在原生 panic，禁止运行 `oxlint`**，统一使用 `bun check -b` 做类型校验。
+> 2. 内存紧张，**全量构建前先停止临时 `rsbuild dev` 进程**，并限制 `NODE_OPTIONS="--max-old-space-size=1536"`。
+
 ```bash
-export PATH="$HOME/.bun/bin:$PATH"
-cd /home/ubuntu/tokex/web
-NODE_OPTIONS="--max-old-space-size=1536" bun --bun x rsbuild dev --host 0.0.0.0 --port 5173
-# 预览结束后记得停止 dev 进程释放内存
-```
-
-### 类型校验与生产构建
-```bash
+# 1. 类型校验、单元测试与生产构建（在 dev 分支）
 export PATH="$HOME/.bun/bin:$PATH"
 cd /home/ubuntu/tokex/web
 bun check -b
+bun --bun x vitest run src/features/pricing/__tests__/group-ratio-display.test.tsx
 NODE_OPTIONS="--max-old-space-size=1536" bun --bun x rsbuild build
-```
 
-### 合并至生产分支并发布到 `https://tokex.vip`
-```bash
-# 1. 在 /home/ubuntu/tokex 确认 dev 已提交并合入 main
+# 2. 合并至 main 并发布上线
 cd /home/ubuntu/tokex
 git checkout main && git merge dev --no-ff
-
-# 2. 同步最新构建产物到生产 Nginx 根目录
-sudo rm -rf /var/www/tokex/dist
-sudo mkdir -p /var/www/tokex/dist
+sudo rm -rf /var/www/tokex/dist && sudo mkdir -p /var/www/tokex/dist
 sudo cp -r /home/ubuntu/tokex/web/dist/* /var/www/tokex/dist/
 sudo chmod -R a+rX /var/www/tokex/dist
-
-# 3. 校验并重载 Nginx
 sudo nginx -t && sudo systemctl reload nginx
-
-# 4. 切回 dev 继续日常开发
 git checkout dev
-```
 
-### 上线必测检查命令
-```bash
-curl -sS https://tokex.vip/api/status
-curl -I https://tokex.vip/
-curl -I https://tokex.vip/sign-in
-curl -I https://tokex.vip/dashboard
+# 3. 线上基础冒烟
+curl -sS -o /dev/null -w "root:%{http_code}\n" https://tokex.vip/
+curl -sS -o /dev/null -w "api_status:%{http_code}\n" https://tokex.vip/api/status
+curl -sS -o /dev/null -w "pricing:%{http_code}\n" https://tokex.vip/pricing
 ```
