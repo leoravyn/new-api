@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { SectionPageLayout } from '@/components/layout'
 import { useStatus } from '@/hooks/use-status'
@@ -31,7 +32,7 @@ import { TransferDialog } from './components/dialogs/transfer-dialog'
 import { RechargeFormCard } from './components/recharge-form-card'
 import { SubscriptionPlansCard } from './components/subscription-plans-card'
 import { WalletStatsCard } from './components/wallet-stats-card'
-import { DEFAULT_DISCOUNT_RATE, PAYMENT_TYPES } from './constants'
+import { PAYMENT_TYPES } from './constants'
 import {
   useTopupInfo,
   usePayment,
@@ -42,7 +43,9 @@ import {
   useWaffoPancakePayment,
 } from './hooks'
 import {
+  formatUsdAmount,
   getDefaultPaymentType,
+  getMatchedAmountDiscount,
   getMinTopupAmount,
   dispatchSelectedPayment,
   isStripePayment,
@@ -187,20 +190,24 @@ export function Wallet(props: WalletProps) {
 
   // Handle payment method selection
   const handlePaymentMethodSelect = async (method: PaymentMethod) => {
+    const minTopup = Math.max(
+      method.min_topup || 0,
+      getMinTopupAmount(topupInfo)
+    )
+    if (topupAmount < minTopup) {
+      toast.error(
+        t('Minimum topup amount: {{amount}}', {
+          amount: formatUsdAmount(minTopup, { trimWholeCents: true }),
+        })
+      )
+      return
+    }
+
     setSelectedPaymentMethod(method)
     setSelectedWaffoMethodIndex(null)
     setPaymentLoading(method.type)
 
     try {
-      // Validate minimum topup
-      const minTopup = Math.max(
-        method.min_topup || 0,
-        getMinTopupAmount(topupInfo)
-      )
-      if (topupAmount < minTopup) {
-        return
-      }
-
       // Calculate payment amount and show confirmation dialog
       await calculatePaymentAmount(topupAmount, method.type)
       setConfirmDialogOpen(true)
@@ -272,6 +279,19 @@ export function Wallet(props: WalletProps) {
     method: WaffoPayMethod,
     index: number
   ) => {
+    const minTopup = Math.max(
+      topupInfo?.waffo_min_topup || 0,
+      getMinTopupAmount(topupInfo)
+    )
+    if (topupAmount < minTopup) {
+      toast.error(
+        t('Minimum topup amount: {{amount}}', {
+          amount: formatUsdAmount(minTopup, { trimWholeCents: true }),
+        })
+      )
+      return
+    }
+
     const loadingKey = `waffo-${index}`
     setSelectedPaymentMethod({
       name: method.name,
@@ -282,10 +302,6 @@ export function Wallet(props: WalletProps) {
     setPaymentLoading(loadingKey)
 
     try {
-      const waffoMin = topupInfo?.waffo_min_topup || 0
-      if (topupAmount < waffoMin) {
-        return
-      }
       await calculatePaymentAmount(topupAmount, PAYMENT_TYPES.WAFFO)
       setConfirmDialogOpen(true)
     } finally {
@@ -295,8 +311,8 @@ export function Wallet(props: WalletProps) {
 
   // Get discount rate for current topup amount
   const getDiscountRate = useCallback(() => {
-    return topupInfo?.discount?.[topupAmount] || DEFAULT_DISCOUNT_RATE
-  }, [topupInfo, topupAmount])
+    return getMatchedAmountDiscount(topupAmount, topupInfo?.discount)
+  }, [topupInfo?.discount, topupAmount])
 
   const handleSubscriptionAvailabilityChange = useCallback(
     (available: boolean) => {

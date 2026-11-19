@@ -112,6 +112,42 @@ export function formatUsdAmount(
 }
 
 /**
+ * Match the highest discount tier whose threshold is <= amount.
+ */
+export function getMatchedAmountDiscount(
+  amount: number,
+  discounts?: Record<number, number> | null
+): number {
+  if (!Number.isFinite(amount) || amount <= 0 || !discounts) {
+    return DEFAULT_DISCOUNT_RATE
+  }
+
+  let bestThreshold = 0
+  let bestRate = DEFAULT_DISCOUNT_RATE
+
+  for (const [rawThreshold, rawRate] of Object.entries(discounts)) {
+    const threshold = Number(rawThreshold)
+    const rate = Number(rawRate)
+    if (
+      !Number.isFinite(threshold) ||
+      threshold <= 0 ||
+      threshold > amount ||
+      !Number.isFinite(rate) ||
+      rate <= 0
+    ) {
+      continue
+    }
+
+    if (threshold > bestThreshold) {
+      bestThreshold = threshold
+      bestRate = rate
+    }
+  }
+
+  return bestRate
+}
+
+/**
  * Get discount label for display (e.g., "20% OFF")
  */
 export function getDiscountLabel(discount: number, t: TFunction): string {

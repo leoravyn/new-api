@@ -169,3 +169,98 @@ it('translates unified USD recharge presets, Waffo note, minimum amount, and che
     screen.getByRole('link', { name: 'Acceptable Use Policy' })
   ).toHaveAttribute('href', '/aup')
 })
+
+it('translates custom amount tier discount savings and inline minimum topup warning', async () => {
+  const { rerender } = render(
+    <I18nextProvider i18n={i18n}>
+      <RechargeFormCard
+        topupInfo={{
+          enable_online_topup: false,
+          enable_stripe_topup: false,
+          enable_waffo_pancake_topup: true,
+          pay_methods: [
+            { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 1 },
+          ],
+          min_topup: 10,
+          stripe_min_topup: 1,
+          waffo_pancake_min_topup: 1,
+          amount_options: [10, 100],
+          discount: { 100: 0.95, 200: 0.9 },
+        }}
+        presetAmounts={[
+          { value: 10, discount: 1 },
+          { value: 100, discount: 0.95 },
+        ]}
+        selectedPreset={null}
+        topupAmount={105}
+        paymentAmount={99.75}
+        priceRatio={6}
+        usdExchangeRate={7}
+        calculating={false}
+        paymentLoading={null}
+        redemptionCode=''
+        redeeming={false}
+        enableWaffoPancakeTopup
+        onSelectPreset={vi.fn()}
+        onTopupAmountChange={vi.fn()}
+        onPaymentMethodSelect={vi.fn()}
+        onRedemptionCodeChange={vi.fn()}
+        onRedeem={vi.fn()}
+      />
+    </I18nextProvider>
+  )
+
+  const customDiscount = screen.getByTestId('custom-amount-discount')
+  expect(customDiscount).toHaveTextContent('优惠 5%')
+  expect(customDiscount).toHaveTextContent('节省 $5.25')
+
+  await act(() => i18n.changeLanguage('en'))
+  expect(customDiscount).toHaveTextContent('5% OFF')
+  expect(customDiscount).toHaveTextContent('Save $5.25')
+
+  rerender(
+    <I18nextProvider i18n={i18n}>
+      <RechargeFormCard
+        topupInfo={{
+          enable_online_topup: false,
+          enable_stripe_topup: false,
+          enable_waffo_pancake_topup: true,
+          pay_methods: [
+            { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 1 },
+          ],
+          min_topup: 10,
+          stripe_min_topup: 1,
+          waffo_pancake_min_topup: 1,
+          amount_options: [10, 100],
+          discount: { 100: 0.95, 200: 0.9 },
+        }}
+        presetAmounts={[
+          { value: 10, discount: 1 },
+          { value: 100, discount: 0.95 },
+        ]}
+        selectedPreset={null}
+        topupAmount={5}
+        paymentAmount={0}
+        priceRatio={6}
+        usdExchangeRate={7}
+        calculating={false}
+        paymentLoading={null}
+        redemptionCode=''
+        redeeming={false}
+        enableWaffoPancakeTopup
+        onSelectPreset={vi.fn()}
+        onTopupAmountChange={vi.fn()}
+        onPaymentMethodSelect={vi.fn()}
+        onRedemptionCodeChange={vi.fn()}
+        onRedeem={vi.fn()}
+      />
+    </I18nextProvider>
+  )
+
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'Minimum topup amount: $10'
+  )
+
+  await act(() => i18n.changeLanguage('zh'))
+  expect(screen.getByRole('alert')).toHaveTextContent('最低充值金额：$10')
+})

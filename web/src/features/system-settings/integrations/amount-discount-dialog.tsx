@@ -118,7 +118,7 @@ export function AmountDiscountDialog({
       onOpenChange={onOpenChange}
       title={isEditMode ? t('Edit discount tier') : t('Add discount tier')}
       description={t(
-        'Set a discount rate for a specific recharge amount threshold.'
+        'Set a discount rate applied when top-up amount reaches or exceeds the threshold.'
       )}
       contentClassName='sm:max-w-[500px]'
       contentHeight='auto'
@@ -149,7 +149,7 @@ export function AmountDiscountDialog({
             name='amount'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('Recharge Amount (USD)')}</FormLabel>
+                <FormLabel>{t('Recharge Amount Threshold (≥ USD)')}</FormLabel>
                 <FormControl>
                   <Input
                     type='number'
@@ -165,9 +165,11 @@ export function AmountDiscountDialog({
                 </FormControl>
                 <FormDescription>
                   {isEditMode
-                    ? t('Amount cannot be changed when editing.')
+                    ? t(
+                        'Threshold cannot be changed when editing. Applies when top-up amount ≥ this threshold (highest matching tier applies).'
+                      )
                     : t(
-                        'Minimum recharge amount to qualify for this discount.'
+                        'Applies when top-up amount reaches or exceeds this threshold (≥ amount); the highest matching tier applies.'
                       )}
                 </FormDescription>
                 <FormMessage />

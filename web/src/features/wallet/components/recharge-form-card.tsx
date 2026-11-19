@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils'
 import {
   formatUsdAmount,
   getDiscountLabel,
+  getMatchedAmountDiscount,
   getPaymentIcon,
   getMinTopupAmount,
   calculatePresetPricing,
@@ -167,6 +168,17 @@ export function RechargeFormCard({
   const hasWaffoPaymentMethods =
     Array.isArray(waffoPayMethods) && waffoPayMethods.length > 0
   const minTopup = getMinTopupAmount(topupInfo)
+  const isBelowMinTopup = topupAmount < minTopup
+  const customDiscount = getMatchedAmountDiscount(
+    topupAmount,
+    topupInfo?.discount
+  )
+  const customDiscountPricing = calculatePresetPricing(
+    topupAmount,
+    effectivePriceRatio,
+    customDiscount,
+    effectiveUsdExchangeRate
+  )
   const redemptionEnabled = topupInfo?.enable_redemption !== false
 
   if (loading) {
@@ -256,10 +268,16 @@ export function RechargeFormCard({
                   </Label>
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4'>
                     {presetAmounts.map((preset) => {
+                      const matchedDiscount = getMatchedAmountDiscount(
+                        preset.value,
+                        topupInfo?.discount
+                      )
                       const discount =
-                        preset.discount ||
-                        topupInfo?.discount?.[preset.value] ||
-                        1.0
+                        preset.discount &&
+                        preset.discount > 0 &&
+                        preset.discount < 1
+                          ? preset.discount
+                          : matchedDiscount
                       const {
                         displayValue,
                         actualPrice,
@@ -346,12 +364,17 @@ export function RechargeFormCard({
                       onChange={(e) => handleAmountChange(e.target.value)}
                       min={minTopup}
                       step={1}
+                      aria-invalid={isBelowMinTopup}
                       placeholder={t('Minimum {{amount}}', {
                         amount: formatUsdAmount(minTopup, {
                           trimWholeCents: true,
                         }),
                       })}
-                      className='h-9 pr-12 pl-7 font-mono text-base tabular-nums sm:h-10 sm:text-lg'
+                      className={cn(
+                        'h-9 pr-12 pl-7 font-mono text-base tabular-nums sm:h-10 sm:text-lg',
+                        isBelowMinTopup &&
+                          'border-destructive focus-visible:ring-destructive/40'
+                      )}
                     />
                     <span className='text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 font-mono text-xs'>
                       USD
@@ -370,6 +393,38 @@ export function RechargeFormCard({
                     )}
                   </div>
                 </div>
+                {isBelowMinTopup && (
+                  <p
+                    role='alert'
+                    className='text-destructive text-xs font-medium'
+                  >
+                    {t('Minimum topup amount: {{amount}}', {
+                      amount: formatUsdAmount(minTopup, {
+                        trimWholeCents: true,
+                      }),
+                    })}
+                  </p>
+                )}
+                {topupAmount > 0 && customDiscountPricing.hasDiscount && (
+                  <div
+                    data-testid='custom-amount-discount'
+                    className='flex flex-wrap items-center gap-2 text-xs'
+                  >
+                    <span className='rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
+                      {getDiscountLabel(customDiscount, t)}
+                    </span>
+                    <span className='font-medium text-emerald-400 tabular-nums'>
+                      {t('Save {{saved}}', {
+                        saved: formatUsdAmount(
+                          customDiscountPricing.savedAmount
+                        ),
+                        defaultValue: isZh
+                          ? '节省 {{saved}}'
+                          : 'Save {{saved}}',
+                      })}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className='space-y-2.5 sm:space-y-3'>
@@ -401,14 +456,19 @@ export function RechargeFormCard({
                           key={method.type}
                           variant='outline'
                           onClick={() => onPaymentMethodSelect(method)}
-                          disabled={disabled || !!paymentLoading}
+                          disabled={!!paymentLoading}
+                          aria-disabled={disabled}
                           title={disabledReason}
                           aria-label={
                             disabledReason
                               ? `${method.name}. ${disabledReason}`
                               : method.name
                           }
-                          className='min-h-14 min-w-0 justify-start gap-2.5 rounded-xl border-white/[0.08] bg-white/[0.025] px-3.5 py-2.5 text-left transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]'
+                          className={cn(
+                            'min-h-14 min-w-0 justify-start gap-2.5 rounded-xl border-white/[0.08] bg-white/[0.025] px-3.5 py-2.5 text-left transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]',
+                            disabled &&
+                              'cursor-not-allowed opacity-50 hover:border-white/[0.08] hover:bg-white/[0.025]'
+                          )}
                         >
                           {paymentLoading === method.type ? (
                             <Loader2 className='h-4 w-4 animate-spin' />
@@ -468,7 +528,7 @@ export function RechargeFormCard({
                       {waffoPayMethods?.map((method, index) => {
                         const loadingKey = `waffo-${index}`
                         const methodKey = `${method.payMethodType ?? 'unknown'}-${method.payMethodName ?? method.name}`
-                        const waffoMin = waffoMinTopup || 0
+                        const waffoMin = Math.max(waffoMinTopup || 0, minTopup)
                         const formattedWaffoMin = formatUsdAmount(waffoMin, {
                           trimWholeCents: true,
                         })
@@ -502,14 +562,19 @@ export function RechargeFormCard({
                             key={methodKey}
                             variant='outline'
                             onClick={() => onWaffoMethodSelect(method, index)}
-                            disabled={belowMin || !!paymentLoading}
+                            disabled={!!paymentLoading}
+                            aria-disabled={belowMin}
                             title={disabledReason}
                             aria-label={
                               disabledReason
                                 ? `${method.name}. ${disabledReason}`
                                 : method.name
                             }
-                            className='min-h-14 min-w-0 justify-start gap-2.5 rounded-xl border-white/[0.08] bg-white/[0.025] px-3.5 py-2.5 text-left transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]'
+                            className={cn(
+                              'min-h-14 min-w-0 justify-start gap-2.5 rounded-xl border-white/[0.08] bg-white/[0.025] px-3.5 py-2.5 text-left transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]',
+                              belowMin &&
+                                'cursor-not-allowed opacity-50 hover:border-white/[0.08] hover:bg-white/[0.025]'
+                            )}
                           >
                             {methodIcon}
                             <span className='flex min-w-0 flex-col items-start gap-0.5'>
