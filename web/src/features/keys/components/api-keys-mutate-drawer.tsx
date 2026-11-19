@@ -288,6 +288,14 @@ export function ApiKeysMutateDrawer({
   }, [groups, form, selectedGroup])
 
   const onSubmit = async (data: ApiKeyFormValues) => {
+    if (!data.group?.trim()) {
+      form.setError('group', {
+        type: 'custom',
+        message: t('Please select a group'),
+      })
+      toast.error(t('Please fix the highlighted fields before saving'))
+      return
+    }
     setIsSubmitting(true)
     try {
       const basePayload = transformFormDataToPayload(data)
@@ -419,7 +427,9 @@ export function ApiKeysMutateDrawer({
                 name='group'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('Group')}</FormLabel>
+                    <FormLabel className="after:text-destructive after:ml-0.5 after:content-['*']">
+                      {t('Group')}
+                    </FormLabel>
                     <FormControl>
                       <ApiKeyGroupCombobox
                         options={groups}

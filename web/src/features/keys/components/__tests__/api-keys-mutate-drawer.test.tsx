@@ -424,3 +424,105 @@ describe('API keys mutate drawer user quota query switch', () => {
     expect(createdPayloads[0]?.allow_user_quota_query).toBe(false)
   })
 })
+
+describe('API keys mutate drawer required group validation', () => {
+  test('blocks creation when default_use_auto_group is false and no group is selected', async () => {
+    const createdPayloads: Array<Record<string, unknown>> = []
+    apiClient.get = async (url) => {
+      switch (url) {
+        case '/api/status':
+          return { data: { data: { default_use_auto_group: false } } }
+        case '/api/user/models':
+          return { data: { success: true, data: [] } }
+        case '/api/user/self/groups':
+          return {
+            data: {
+              success: true,
+              data: {
+                Official: { desc: 'Official API', ratio: 1.2 },
+                Proxy: { desc: 'Subscription', ratio: 0.3 },
+              },
+            },
+          }
+        case '/api/token/auto-groups':
+          return {
+            data: {
+              success: true,
+              data: { groups: [], max_count: 5 },
+            },
+          }
+        default:
+          throw new Error(`Unexpected GET ${url}`)
+      }
+    }
+    apiClient.post = async (url, data) => {
+      createdPayloads.push({ url, data })
+      return { data: { success: true, data: {} } }
+    }
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const freshAt = Date.now() + 60_000
+    queryClient.setQueryData(
+      ['status'],
+      { default_use_auto_group: false },
+      { updatedAt: freshAt }
+    )
+    renderedDrawer = { queryClient }
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <ApiKeysProvider>
+            <ApiKeysMutateDrawer open={false} onOpenChange={() => undefined} />
+          </ApiKeysProvider>
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <ApiKeysProvider>
+            <ApiKeysMutateDrawer open onOpenChange={() => undefined} />
+          </ApiKeysProvider>
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+    await waitFor(() =>
+      expect(findButton('Save changes', true)).toBeEnabled()
+    )
+
+    changeInput(getControlByLabel('Name'), 'no-group-key')
+    fireEvent.click(findButton('Save changes', true))
+
+    await waitFor(() => {
+      expect(screen.getByText('Please select a group')).toBeVisible()
+      expect(getControlByLabel('Group')).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    })
+    expect(createdPayloads).toHaveLength(0)
+
+    // Also verify pressing Enter on form submits through validation and stays blocked
+    const form = document.getElementById('api-key-form')
+    if (!form) throw new Error('Expected #api-key-form')
+    fireEvent.submit(form)
+    await waitFor(() => {
+      expect(screen.getByText('Please select a group')).toBeVisible()
+      expect(getControlByLabel('Group')).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    })
+    expect(createdPayloads).toHaveLength(0)
+
+    selectComboboxOption(getControlByLabel('Group'), 'Official API')
+    fireEvent.click(findButton('Save changes', true))
+    await waitFor(() => expect(createdPayloads).toHaveLength(1))
+    expect((createdPayloads[0]?.data as Record<string, unknown>)?.group).toBe(
+      'Official'
+    )
+  })
+})
