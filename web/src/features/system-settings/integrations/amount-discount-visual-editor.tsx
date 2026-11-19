@@ -31,6 +31,10 @@ import {
   AmountDiscountDialog,
   type AmountDiscountData,
 } from './amount-discount-dialog'
+import {
+  formatDiscountDisplay,
+  formatDiscountRateValue,
+} from './amount-discount-format'
 
 type AmountDiscountVisualEditorProps = {
   value: string
@@ -107,10 +111,17 @@ export function AmountDiscountVisualEditor({
     setDialogOpen(true)
   }
 
-  const formatPercentage = (rate: number) => {
-    if (rate >= 1) return '0%'
-    const discount = Math.round((1 - rate) * 100)
-    return `${discount}%`
+  const renderDiscountBadge = (rate: number) => {
+    const formatted = formatDiscountDisplay(rate, t)
+    return (
+      <StatusBadge
+        variant={formatted.hasDiscount ? 'info' : 'neutral'}
+        className='font-mono'
+        copyable={false}
+      >
+        {formatted.label}
+      </StatusBadge>
+    )
   }
 
   return (
@@ -160,22 +171,14 @@ export function AmountDiscountVisualEditor({
                 header: t('Discount Rate'),
                 cell: (discount) => (
                   <code className='bg-muted rounded px-1.5 py-0.5 text-sm'>
-                    {discount.discountRate.toFixed(2)}
+                    {formatDiscountRateValue(discount.discountRate)}
                   </code>
                 ),
               },
               {
                 id: 'discount',
                 header: t('Discount'),
-                cell: (discount) => (
-                  <StatusBadge
-                    variant={discount.discountRate < 1 ? 'info' : 'neutral'}
-                    className='font-mono'
-                    copyable={false}
-                  >
-                    {formatPercentage(discount.discountRate)} {t('off')}
-                  </StatusBadge>
-                ),
+                cell: (discount) => renderDiscountBadge(discount.discountRate),
               },
               {
                 id: 'actions',
@@ -204,13 +207,7 @@ export function AmountDiscountVisualEditor({
                     <div className='mb-2 font-mono text-base font-medium'>
                       ${discount.amount}
                     </div>
-                    <StatusBadge
-                      variant={discount.discountRate < 1 ? 'info' : 'neutral'}
-                      className='font-mono'
-                      copyable={false}
-                    >
-                      {formatPercentage(discount.discountRate)} {t('off')}
-                    </StatusBadge>
+                    {renderDiscountBadge(discount.discountRate)}
                   </div>
                   <div className='flex gap-1'>
                     <Button
@@ -244,7 +241,7 @@ export function AmountDiscountVisualEditor({
                     {t('Discount Rate:')}{' '}
                   </span>
                   <code className='bg-muted rounded px-1.5 py-0.5 text-xs'>
-                    {discount.discountRate.toFixed(2)}
+                    {formatDiscountRateValue(discount.discountRate)}
                   </code>
                 </div>
               </div>

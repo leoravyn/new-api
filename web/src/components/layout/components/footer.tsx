@@ -20,7 +20,7 @@ import { Link } from '@tanstack/react-router'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useStatus } from '@/hooks/use-status'
+import { LEGAL_CONFIG } from '@/features/legal/content/legal-config'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
@@ -28,7 +28,14 @@ import { cn } from '@/lib/utils'
 interface FooterLink {
   labelZh: string
   labelEn: string
-  href: string
+  href: '/pricing' | '/rankings' | '/about'
+}
+
+interface LegalLinkItem {
+  key: string
+  labelZh: string
+  labelEn: string
+  href: '/terms' | '/privacy-policy' | '/aup'
 }
 
 interface FooterProps {
@@ -39,41 +46,38 @@ interface FooterProps {
 }
 
 const FOOTER_LINKS: readonly FooterLink[] = [
-  { labelZh: '模型广场', labelEn: 'Models', href: '/pricing' },
+  { labelZh: '模型定价', labelEn: 'Pricing', href: '/pricing' },
   { labelZh: '模型榜单', labelEn: 'Rankings', href: '/rankings' },
-  { labelZh: '控制台', labelEn: 'Dashboard', href: '/dashboard' },
-  { labelZh: 'API 密钥', labelEn: 'Keys', href: '/keys' },
-  { labelZh: '调用日志', labelEn: 'Logs', href: '/usage-logs' },
+  { labelZh: '关于我们', labelEn: 'About', href: '/about' },
 ]
 
-function LegalLinks(props: { leadingSeparator?: boolean }) {
-  const { t } = useTranslation()
-  const { status } = useStatus()
-  const items: { key: string; label: string; href: string }[] = []
+const LEGAL_LINKS: readonly LegalLinkItem[] = [
+  {
+    key: 'terms',
+    labelZh: '服务条款',
+    labelEn: 'Terms of Service',
+    href: '/terms',
+  },
+  {
+    key: 'privacy-policy',
+    labelZh: '隐私政策',
+    labelEn: 'Privacy Policy',
+    href: '/privacy-policy',
+  },
+  {
+    key: 'aup',
+    labelZh: '使用规范',
+    labelEn: 'Acceptable Use',
+    href: '/aup',
+  },
+]
 
-  if (status?.user_agreement_enabled) {
-    items.push({
-      key: 'user-agreement',
-      label: t('User Agreement'),
-      href: '/user-agreement',
-    })
-  }
-  if (status?.privacy_policy_enabled) {
-    items.push({
-      key: 'privacy-policy',
-      label: t('Privacy Policy'),
-      href: '/privacy-policy',
-    })
-  }
-  if (items.length === 0) {
-    return null
-  }
-
+function LegalLinks({ isZh }: { isZh: boolean }) {
   return (
     <>
-      {items.map((item, index) => (
+      {LEGAL_LINKS.map((item, index) => (
         <Fragment key={item.key}>
-          {(props.leadingSeparator || index > 0) && (
+          {index > 0 && (
             <span aria-hidden='true' className='text-zinc-600'>
               ·
             </span>
@@ -82,7 +86,7 @@ function LegalLinks(props: { leadingSeparator?: boolean }) {
             to={item.href}
             className='text-zinc-400 transition-colors duration-200 hover:text-white'
           >
-            {item.label}
+            {isZh ? item.labelZh : item.labelEn}
           </Link>
         </Fragment>
       ))}
@@ -98,10 +102,10 @@ export function Footer(props: FooterProps) {
     'zhCN'
 
   const displayLogo = systemLogo || props.logo || '/favicon.svg'
-  const rawName = systemName || props.name || 'TOKEX'
+  const rawName = systemName || props.name || LEGAL_CONFIG.brandName
   const displayName =
     rawName.toLowerCase() === 'new api' || rawName.toLowerCase() === 'tokex'
-      ? 'TOKEX'
+      ? LEGAL_CONFIG.brandName
       : rawName
   const currentYear = new Date().getFullYear()
 
@@ -112,9 +116,13 @@ export function Footer(props: FooterProps) {
         props.className
       )}
     >
-      <div className='mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-8 sm:flex-row sm:items-center'>
+      <div className='mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-8 lg:flex-row lg:items-center'>
         <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
-          <Link to='/' aria-label={displayName} className='flex items-center gap-2'>
+          <Link
+            to='/'
+            aria-label={displayName}
+            className='flex items-center gap-2'
+          >
             {displayName === 'TOKEX' && !props.logo ? (
               <img
                 src='/logo-tokex.svg'
@@ -139,10 +147,10 @@ export function Footer(props: FooterProps) {
           <span className='text-xs text-zinc-500'>
             &copy; {currentYear} {displayName}.{' '}
             {props.copyright ??
-              (isZh ? '统一大模型网关底座' : 'The Unified Interface for LLMs.')}
+              (isZh ? '保留所有权利。' : 'All rights reserved.')}
           </span>
-          <span className='flex items-center gap-x-2 text-xs'>
-            <LegalLinks />
+          <span className='flex flex-wrap items-center gap-x-2 gap-y-1 text-xs'>
+            <LegalLinks isZh={isZh} />
           </span>
         </div>
 
@@ -159,6 +167,12 @@ export function Footer(props: FooterProps) {
               {isZh ? item.labelZh : item.labelEn}
             </Link>
           ))}
+          <a
+            href={`mailto:${LEGAL_CONFIG.supportEmail}`}
+            className='text-xs text-zinc-400 transition-colors duration-200 hover:text-white'
+          >
+            {LEGAL_CONFIG.supportEmail}
+          </a>
         </nav>
       </div>
     </footer>

@@ -36,8 +36,9 @@ import {
   type ParsedTier,
 } from './billing-expr'
 import { compileBillingExpression } from './billing-expression/parser'
-import { getDisplayGroupRatio } from './model-helpers'
+import { getDisplayGroupRatio, isNonUnitGroupRatio } from './model-helpers'
 import { withPluginPricing } from './plugin-pricing'
+import { stripTrailingZeros } from './price'
 import {
   evaluateTaskVisualConfig,
   getTaskNumberFields,
@@ -67,7 +68,9 @@ export type DynamicPriceEntry = {
   labelKind: DynamicPriceLabelKind
   value: number
   formatted: string
+  originalFormatted?: string
   formattedRange?: string
+  originalFormattedRange?: string
   minValue?: number
   maxValue?: number
   unit: 'token' | BillingUsageUnit | 'request' | 'image'
@@ -80,6 +83,7 @@ export type CardExamplePrice = {
   label: string
   total: number
   formatted: string
+  originalFormatted?: string
 }
 
 export type DynamicPricingTier = ParsedTier | ParsedTaskTier
@@ -246,6 +250,76 @@ export function formatTaskUsageUnitPrice(
   })
 }
 
+function withBaseGroupRatio(options: DynamicPriceOptions): DynamicPriceOptions {
+  return { ...options, groupRatioMultiplier: 1 }
+}
+
+function formatUnitAndOriginal(
+  value: number,
+  options: DynamicPriceOptions,
+  formatter: (val: number, opts: DynamicPriceOptions) => string
+): { formatted: string; originalFormatted?: string } {
+  const formatted = formatter(value, options)
+  const groupRatio = options.groupRatioMultiplier ?? 1
+  if (!isNonUnitGroupRatio(groupRatio)) {
+    return { formatted }
+  }
+  const originalFormatted = formatter(value, withBaseGroupRatio(options))
+  return originalFormatted !== formatted
+    ? { formatted, originalFormatted }
+    : { formatted }
+}
+
+function formatRangeAndOriginal(
+  min: number,
+  max: number,
+  options: DynamicPriceOptions,
+  formatter: (val: number, opts: DynamicPriceOptions) => string
+): { formattedRange?: string; originalFormattedRange?: string } {
+  if (min === max) return {}
+  const formatRange = (opts: DynamicPriceOptions) =>
+    `${formatter(min, opts)} – ${formatter(max, opts)}`
+  const formattedRange = formatRange(options)
+  const groupRatio = options.groupRatioMultiplier ?? 1
+  if (!isNonUnitGroupRatio(groupRatio)) {
+    return { formattedRange }
+  }
+  const originalFormattedRange = formatRange(withBaseGroupRatio(options))
+  return originalFormattedRange !== formattedRange
+    ? { formattedRange, originalFormattedRange }
+    : { formattedRange }
+}
+
+/**
+ * Resolve current and optional strikethrough 1x display strings for a dynamic
+ * price entry, consistently handling ranged vs single values.
+ */
+export function getDynamicEntryDisplayPrices(
+  entry: DynamicPriceEntry,
+  stripZeros = false
+): { current: string; original?: string } {
+  const maybeStrip = (text: string | undefined) =>
+    text !== undefined && stripZeros ? stripTrailingZeros(text) : text
+
+  if (entry.formattedRange !== undefined) {
+    const current = maybeStrip(entry.formattedRange) as string
+    const original = maybeStrip(entry.originalFormattedRange)
+    return {
+      current,
+      original:
+        original !== undefined && original !== current ? original : undefined,
+    }
+  }
+
+  const current = maybeStrip(entry.formatted) as string
+  const original = maybeStrip(entry.originalFormatted)
+  return {
+    current,
+    original:
+      original !== undefined && original !== current ? original : undefined,
+  }
+}
+
 export function getDynamicPricingTiers(
   model: PricingModel
 ): DynamicPricingTier[] {
@@ -297,7 +371,11 @@ export function getDynamicPriceEntries(
         shortLabel: tier.imageCount ? 'Per image' : 'Per-call',
         labelKind: 'i18n',
         value: tier.fixedPrice,
-        formatted: formatTaskUsageUnitPrice(tier.fixedPrice, options),
+        ...formatUnitAndOriginal(
+          tier.fixedPrice,
+          options,
+          formatTaskUsageUnitPrice
+        ),
         unit: tier.imageCount ? 'image' : 'request',
       },
     ]
@@ -317,7 +395,7 @@ export function getDynamicPriceEntries(
           shortLabel: field,
           labelKind: 'schema',
           value,
-          formatted: formatTaskUsageUnitPrice(value, options),
+          ...formatUnitAndOriginal(value, options, formatTaskUsageUnitPrice),
           unit: definition.unit,
           unitLabel: definition.unitLabel,
           description: definition.description,
@@ -332,7 +410,11 @@ export function getDynamicPriceEntries(
         shortLabel: 'Additional charge',
         labelKind: 'i18n',
         value: tier.constant,
-        formatted: formatTaskUsageUnitPrice(tier.constant, options),
+        ...formatUnitAndOriginal(
+          tier.constant,
+          options,
+          formatTaskUsageUnitPrice
+        ),
         unit: 'request',
       })
     }
@@ -373,7 +455,7 @@ export function getDynamicPriceEntries(
         shortLabel,
         labelKind: 'i18n' as const,
         value,
-        formatted: formatDynamicUnitPrice(value, options),
+        ...formatUnitAndOriginal(value, options, formatDynamicUnitPrice),
         unit: 'token' as const,
         variable,
       },
@@ -412,7 +494,11 @@ export function getDynamicPricingSummary(
         shortLabel: 'Per-call',
         labelKind: 'i18n',
         value: model.model_price,
-        formatted: formatTaskUsageUnitPrice(model.model_price, options),
+        ...formatUnitAndOriginal(
+          model.model_price,
+          options,
+          formatTaskUsageUnitPrice
+        ),
         unit: 'request',
       })
     }
@@ -443,17 +529,20 @@ export function getDynamicPricingSummary(
         })
       }
     }
-    const entries = [...ranges.values()].map(({ entry, min, max }) => ({
-      ...entry,
-      value: min,
-      minValue: min,
-      maxValue: max,
-      formatted: formatTaskUsageUnitPrice(min, options),
-      formattedRange:
-        min === max
-          ? undefined
-          : `${formatTaskUsageUnitPrice(min, options)} – ${formatTaskUsageUnitPrice(max, options)}`,
-    }))
+    const entries = [...ranges.values()].map(({ entry, min, max }) => {
+      const formatter =
+        entry.unit === 'token' && entry.variable
+          ? formatDynamicUnitPrice
+          : formatTaskUsageUnitPrice
+      return {
+        ...entry,
+        value: min,
+        minValue: min,
+        maxValue: max,
+        ...formatUnitAndOriginal(min, options, formatter),
+        ...formatRangeAndOriginal(min, max, options, formatter),
+      }
+    })
     const primaryKeys = new Set(
       summaries.flatMap((summary) =>
         summary.primaryEntries
@@ -553,10 +642,12 @@ export function getDynamicPricingSummary(
         ...entry,
         minValue: range.min,
         maxValue: range.max,
-        formattedRange:
-          range.min === range.max
-            ? undefined
-            : `${formatTaskUsageUnitPrice(range.min, options)} – ${formatTaskUsageUnitPrice(range.max, options)}`,
+        ...formatRangeAndOriginal(
+          range.min,
+          range.max,
+          options,
+          formatTaskUsageUnitPrice
+        ),
       }
     })
   }
@@ -625,6 +716,6 @@ export function getCardExamplePrice(
   return {
     label: firstExample.label,
     total: result.total,
-    formatted: formatTaskUsageUnitPrice(result.total, options),
+    ...formatUnitAndOriginal(result.total, options, formatTaskUsageUnitPrice),
   }
 }

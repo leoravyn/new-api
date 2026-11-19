@@ -21,3 +21,82 @@ export type LegalDocumentResponse = {
   message?: string
   data?: string
 }
+
+export type LegalDocumentId = 'terms' | 'privacy' | 'aup'
+
+export type LegalRoutePath =
+  | '/terms'
+  | '/user-agreement'
+  | '/privacy-policy'
+  | '/aup'
+  | '/pricing'
+
+export type LegalTextRun =
+  | string
+  | {
+      type: 'strong'
+      text: string
+    }
+  | {
+      type: 'link'
+      label: string
+      to: LegalRoutePath
+    }
+  | {
+      type: 'email'
+      email: string
+      label?: string
+    }
+  | {
+      type: 'external'
+      label: string
+      href: string
+    }
+
+export type LegalRichText = LegalTextRun | readonly LegalTextRun[]
+
+export type LegalBlock =
+  | {
+      type: 'paragraph'
+      content: LegalRichText
+    }
+  | {
+      type: 'list'
+      ordered?: boolean
+      items: readonly LegalRichText[]
+    }
+  | {
+      type: 'callout'
+      tone?: 'info' | 'warning'
+      title?: string
+      content: LegalRichText
+    }
+  | {
+      type: 'table'
+      headers: readonly string[]
+      rows: readonly (readonly LegalRichText[])[]
+    }
+
+export type LegalSection = {
+  id: string
+  number: string
+  title: string
+  blocks: readonly LegalBlock[]
+}
+
+export type LegalDocumentLocaleContent = {
+  id: LegalDocumentId
+  title: string
+  subtitle: string
+  badge: string
+  summaryPoints: readonly {
+    label: string
+    value: LegalRichText
+  }[]
+  sections: readonly LegalSection[]
+}
+
+export type BilingualLegalDocument = {
+  zhCN: LegalDocumentLocaleContent
+  en: LegalDocumentLocaleContent
+}

@@ -63,14 +63,65 @@ export function formatCurrency(amount: number | string): string {
   }).format(numeric)
 }
 
+export interface FormatUsdOptions {
+  /** Omit `.00` for whole-dollar amounts (e.g. `$10`, `$100`) */
+  trimWholeCents?: boolean
+  /** Append explicit `USD` code (e.g. `$10.00 USD`) */
+  withCode?: boolean
+}
+
+function roundPrecision(value: number): number {
+  return Math.round(value * 1e6) / 1e6
+}
+
+/**
+ * Format an amount explicitly in USD (`$`) regardless of browser locale.
+ */
+export function formatUsdAmount(
+  amount: number | string,
+  options?: FormatUsdOptions
+): string {
+  const numeric =
+    typeof amount === 'number' ? amount : Number.parseFloat(String(amount))
+  if (!Number.isFinite(numeric)) return '-'
+
+  const trimWholeCents = options?.trimWholeCents ?? false
+  const withCode = options?.withCode ?? false
+  const isWhole = Math.abs(numeric - Math.round(numeric)) < 1e-9
+
+  let minimumFractionDigits = 2
+  let maximumFractionDigits = 2
+
+  if (trimWholeCents && isWhole) {
+    minimumFractionDigits = 0
+    maximumFractionDigits = 0
+  } else if (Math.abs(numeric) > 0 && Math.abs(numeric) < 0.01) {
+    minimumFractionDigits = 2
+    maximumFractionDigits = 4
+  }
+
+  const formatted = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    currencyDisplay: 'narrowSymbol',
+    minimumFractionDigits,
+    maximumFractionDigits,
+  }).format(numeric)
+
+  return withCode ? `${formatted} USD` : formatted
+}
+
 /**
  * Get discount label for display (e.g., "20% OFF")
  */
 export function getDiscountLabel(discount: number, t: TFunction): string {
-  if (discount >= DEFAULT_DISCOUNT_RATE) {
+  if (discount <= 0 || discount >= DEFAULT_DISCOUNT_RATE) {
     return ''
   }
   const off = Math.round((1 - discount) * 100)
+  if (off <= 0) {
+    return ''
+  }
   return t('{{percent}}% OFF', { percent: off })
 }
 
@@ -83,11 +134,13 @@ export function calculatePresetPricing(
   discount: number,
   usdExchangeRate: number = 1
 ) {
-  const originalPrice = presetValue * priceRatio
-  const actualPrice = originalPrice * discount
-  const savedAmount = originalPrice - actualPrice
-  const hasDiscount = discount < 1.0
-  const displayValue = presetValue * usdExchangeRate
+  const effectiveDiscount =
+    Number.isFinite(discount) && discount > 0 && discount <= 1 ? discount : 1
+  const originalPrice = roundPrecision(presetValue * priceRatio)
+  const actualPrice = roundPrecision(originalPrice * effectiveDiscount)
+  const savedAmount = roundPrecision(originalPrice - actualPrice)
+  const hasDiscount = effectiveDiscount < 1.0 && savedAmount > 0
+  const displayValue = roundPrecision(presetValue * usdExchangeRate)
 
   return {
     displayValue,

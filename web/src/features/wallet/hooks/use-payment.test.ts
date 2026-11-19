@@ -46,4 +46,33 @@ describe('payment amount routing', () => {
     expect(amount).toBe(18.75)
     expect(calls).toEqual(['waffo:120'])
   })
+
+  test('routes Waffo Pancake to /api/user/waffo-pancake/amount calculator', async () => {
+    const calls: string[] = []
+    const amount = await requestPaymentAmount(
+      100,
+      PAYMENT_TYPES.WAFFO_PANCAKE,
+      {
+        regular: async () => {
+          calls.push('regular')
+          return { success: true, data: '600.00' }
+        },
+        stripe: async () => {
+          calls.push('stripe')
+          return { success: true, data: '800.00' }
+        },
+        waffo: async () => {
+          calls.push('waffo')
+          return { success: true, data: '95.00' }
+        },
+        waffoPancake: async (request) => {
+          calls.push(`pancake:${request.amount}`)
+          return { success: true, data: '95.00' }
+        },
+      }
+    )
+
+    expect(amount).toBe(95)
+    expect(calls).toEqual(['pancake:100'])
+  })
 })

@@ -1,6 +1,6 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-18  
+> **最后更新**：2026-11-19  
 > **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握全局结构、分支规范、2GB 内存运维边界与部署流程，无需全仓盲搜）。
 
 ---
@@ -20,6 +20,12 @@
 - **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile（`0x4AAAAAAGBJP7HOD4ZkNFVM`）、GitHub OAuth（`/oauth/github`）、Google OIDC（`/oauth/oidc`）；`v1.2.4` 修复注册与换绑邮箱验证码输入框在手机端强制数字键盘的问题（改为 `inputMode='text'`）。
 - **渠道与模型广场（`v1.2.1` ~ `v1.2.3`）**：修复通道编辑页 `filterTransformPlugins` 空 `models` 崩溃；模型广场隐藏无意义 `37.5x` 与「能力：动态计费」回退，改为分组倍率胶囊（`Official · 1.35x` / `Proxy · 0.4x`）、恢复侧边栏分组筛选、支持详情页多分组倍率切换、清理表头重复 ID 与未使用的 `default` 分组。
 - **2GB 内存与 Base64 多模态链路调优（2026-11-18）**：Nginx、New API、CLIProxyAPI 全链路请求体上限对齐为 **40 MiB**，启用 DiskCache 落盘缓冲与容器内存/GC 硬限制（详见第 3 节）。
+- **Waffo MoR 合规与定价/钱包重构（2026-11-19）**：
+  - **法务合规与全站页脚**：新增/重构公开双语页面 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（`Waffo Pancake` MoR、`support@tokex.vip`、Delaware 法律适用、24h 未使用额度退款与完整 Anthropic/OpenAI AUP 对齐）；将 `<Footer />` 移入 `PublicLayout` 覆盖全站公开页面（首页去重），同步清理认证页与关于页法务链接及冗余文案。
+  - **首页实时模型展示**：重构 `hero-section.tsx`，移除示例提示词与虚假统计，接入 live `/api/pricing` 旗舰模型报价、分组倍率对比与 `/pricing/$modelId` 直达链接。
+  - **纯美元钱包与管理员折扣**：Wallet 充值流统一为 USD（`$xx.xx USD`、`effectivePriceRatio = 1`、`usdExchangeRate = 1`）并增加结账合规提醒，与后端 `Waffo Pancake` 100% 对齐；修复管理员金额折扣展示为「`Final price multiplier (0.95 = 5% off)` / `优惠 5% (9.5折)`」，同步 `en/zh/zh-TW` i18n。
+  - **模型广场原价对比**：Model Square 对所有 `groupRatio !== 1`（含 `< 1x` 与 `> 1x`）统一展示 `1x` 删除线原价对比。
+  - **数据库 `options` 清理（`tokex-db`）**：更新 `Price=1`、`USDExchangeRate=1`，清空遗留 `TopUpLink` 与 `Footer`，修正 `UserUsableGroups` 中 `Offical API` 拼写为 `Official API`（修改前备份位于 `/opt/tokex/backups/2026-11-19-options-before.txt`）。
 
 ---
 
@@ -68,9 +74,10 @@
   - 统一深色玻璃基元：`src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty,sidebar}.tsx`
 - **核心业务页面**：
   - 首页：`src/features/home/`（`constants.ts`、`components/tokex/hero-section.tsx`、`components/hero-terminal-demo.tsx`）
-  - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`hooks/`）
-  - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/model-helpers.ts`、`components/{model-card,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`
-  - 渠道管理：`src/features/channels/`（注意 `task-plugins` 目录下的插件模型转换过滤逻辑）
+  - 法务与关于：`src/features/legal/`（`content/{legal-config,terms,privacy-policy,aup}.ts`、`components/legal-document-layout.tsx`）、`src/routes/{terms,aup,user-agreement,privacy-policy}.tsx`、`src/features/about/`
+  - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`components/{terms-footer,legal-consent}.tsx`、`hooks/`）
+  - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/{model-helpers,price,dynamic-price}.ts`、`components/{model-card,price-comparison,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`
+  - 渠道与系统设置：`src/features/channels/`（注意 `task-plugins` 目录下的插件模型转换过滤逻辑）、`src/features/system-settings/integrations/`（金额折扣等支付配置）
   - 控制台与账户：`src/features/dashboard/`、`src/features/profile/`、`src/features/security/`、`src/features/wallet/`；全部控制台路由见 `src/routes/_authenticated/`
 
 ---
@@ -78,7 +85,7 @@
 ## 5. 路由边界、接口与数据库现状
 
 ### Nginx 动静分流
-- **静态 SPA**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）、以及所有前端路由（`/`, `/pricing`, `/rankings`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
+- **静态 SPA**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）、以及所有前端路由（`/`, `/pricing`, `/rankings`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
 - **后端反代**：`location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
 ### 线上分组、渠道与关键配置（`newapi` 库）

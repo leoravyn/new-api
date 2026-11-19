@@ -16,8 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import type { SystemStatus } from '../types'
@@ -28,66 +30,56 @@ interface TermsFooterProps {
   status?: SystemStatus | null
 }
 
+const linkClassName =
+  'hover:text-primary underline decoration-white/30 underline-offset-4 transition-colors'
+
 export function TermsFooter({
   variant = 'sign-in',
   className,
-  status,
 }: TermsFooterProps) {
-  const { t } = useTranslation()
-  const text =
-    variant === 'sign-in'
-      ? 'By clicking sign in, you agree to our'
-      : 'By creating an account, you agree to our'
+  const { i18n } = useTranslation()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
 
-  const hasUserAgreement = Boolean(status?.user_agreement_enabled)
-  const hasPrivacyPolicy = Boolean(status?.privacy_policy_enabled)
-
-  if (!hasUserAgreement && !hasPrivacyPolicy) {
-    return null
+  if (isZh) {
+    return (
+      <p className={cn('text-muted-foreground text-center text-xs', className)}>
+        {variant === 'sign-in'
+          ? '点击登录即表示您同意我们的'
+          : '创建账户即表示您同意我们的'}
+        <Link to='/terms' className={linkClassName}>
+          《服务条款》
+        </Link>
+        、
+        <Link to='/privacy-policy' className={linkClassName}>
+          《隐私政策》
+        </Link>
+        与
+        <Link to='/aup' className={linkClassName}>
+          《可接受使用政策》
+        </Link>
+        。
+      </p>
+    )
   }
-
-  const agreementLink = {
-    label: 'User Agreement',
-    href: '/user-agreement',
-  }
-  const privacyLink = {
-    label: 'Privacy Policy',
-    href: '/privacy-policy',
-  }
-
-  const activeLinks =
-    hasUserAgreement || hasPrivacyPolicy
-      ? ([
-          hasUserAgreement ? agreementLink : null,
-          hasPrivacyPolicy ? privacyLink : null,
-        ].filter(Boolean) as Array<{ label: string; href: string }>)
-      : [agreementLink, privacyLink]
-
-  const [firstLink, secondLink] = activeLinks
 
   return (
     <p className={cn('text-muted-foreground text-center text-xs', className)}>
-      {text}{' '}
-      {firstLink && (
-        <a
-          href={firstLink.href}
-          className='hover:text-primary underline underline-offset-4'
-        >
-          {firstLink.label}
-        </a>
-      )}
-      {secondLink && (
-        <>
-          {' '}
-          {t('and')}{' '}
-          <a
-            href={secondLink.href}
-            className='hover:text-primary underline underline-offset-4'
-          >
-            {secondLink.label}
-          </a>
-        </>
-      )}
+      {variant === 'sign-in'
+        ? 'By clicking sign in, you agree to our '
+        : 'By creating an account, you agree to our '}
+      <Link to='/terms' className={linkClassName}>
+        Terms of Service
+      </Link>
+      ,{' '}
+      <Link to='/privacy-policy' className={linkClassName}>
+        Privacy Policy
+      </Link>
+      , and{' '}
+      <Link to='/aup' className={linkClassName}>
+        Acceptable Use Policy
+      </Link>
       .
     </p>
   )

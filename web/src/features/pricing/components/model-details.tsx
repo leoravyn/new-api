@@ -61,6 +61,7 @@ import { DEFAULT_TOKEN_UNIT } from '../constants'
 import { useBillingTime } from '../hooks/use-billing-time'
 import { usePricingData } from '../hooks/use-pricing-data'
 import {
+  getDynamicEntryDisplayPrices,
   getDynamicPriceUnitLabelKey,
   getDynamicPricingSummary,
   getTaskUsageQuantityUnitLabelKey,
@@ -73,7 +74,10 @@ import {
   getModelGroupMultipliers,
   isTokenBasedModel,
 } from '../lib/model-helpers'
-import { formatFixedPrice, formatGroupPrice } from '../lib/price'
+import {
+  getRequestPriceComparison,
+  getTokenPriceComparison,
+} from '../lib/price'
 import { getTaskEnumFields, getTaskNumberFields } from '../lib/task-expr'
 import { getTaskPricingDisplayTiers } from '../lib/task-matrix-display'
 import {
@@ -91,6 +95,7 @@ import type {
 import { DynamicPricingBreakdown } from './dynamic-pricing-breakdown'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsPerformance } from './model-details-performance'
+import { PriceComparison } from './price-comparison'
 
 // ----------------------------------------------------------------------------
 // Local UI helpers
@@ -612,15 +617,12 @@ function PriceSection(props: {
   usdExchangeRate: number
   tokenUnit: TokenUnit
   showRechargePrice: boolean
-  groupKey?: string
   groupRatioMultiplier?: number
 }) {
   const { t, i18n } = useTranslation()
   const isTokenBased = isTokenBasedModel(props.model)
   const tokenUnitLabel = props.tokenUnit === 'K' ? '1K' : '1M'
   const groupRatioMultiplier = props.groupRatioMultiplier ?? 1
-  const baseGroupKey = props.groupKey || '_base'
-  const baseGroupRatioMap = { [baseGroupKey]: groupRatioMultiplier }
   const currency = useSystemConfigStore((state) => state.config.currency)
   const billingTime = useBillingTime(props.model.billing_expr)
   const dynamicSummary = useMemo(
@@ -744,6 +746,7 @@ function PriceSection(props: {
                 i18n.language,
                 unitLabelKey ? t(unitLabelKey) : tokenUnitLabel
               )
+              const { current, original } = getDynamicEntryDisplayPrices(entry)
               return (
                 <div
                   key={entry.key}
@@ -752,12 +755,13 @@ function PriceSection(props: {
                   <div className='text-muted-foreground text-xs'>
                     <DynamicPriceEntryLabel entry={entry} />
                   </div>
-                  <div className='text-foreground mt-1 font-mono text-base font-semibold tabular-nums'>
-                    {entry.formattedRange ?? entry.formatted}
-                    <span className='text-muted-foreground/40 ml-1 text-xs font-normal'>
-                      / {unitLabel}
-                    </span>
-                  </div>
+                  <PriceComparison
+                    current={current}
+                    original={original}
+                    unitLabel={unitLabel}
+                    className='text-foreground mt-1 gap-x-1.5 text-base font-semibold'
+                    unitClassName='text-muted-foreground/40'
+                  />
                 </div>
               )
             })}
@@ -779,6 +783,8 @@ function PriceSection(props: {
                   i18n.language,
                   unitLabelKey ? t(unitLabelKey) : tokenUnitLabel
                 )
+                const { current, original } =
+                  getDynamicEntryDisplayPrices(entry)
                 return (
                   <div
                     key={entry.key}
@@ -787,12 +793,13 @@ function PriceSection(props: {
                     <span className='text-muted-foreground/70 text-sm'>
                       <DynamicPriceEntryLabel entry={entry} />
                     </span>
-                    <span className='text-muted-foreground font-mono text-sm tabular-nums'>
-                      {entry.formattedRange ?? entry.formatted}
-                      <span className='text-muted-foreground/40 ml-1 text-xs font-normal'>
-                        / {unitLabel}
-                      </span>
-                    </span>
+                    <PriceComparison
+                      current={current}
+                      original={original}
+                      unitLabel={unitLabel}
+                      className='text-muted-foreground justify-end gap-x-1.5 text-sm'
+                      unitClassName='text-muted-foreground/40'
+                    />
                   </div>
                 )
               })}
@@ -813,6 +820,12 @@ function PriceSection(props: {
   }
 
   if (!isTokenBased) {
+    const requestComparison = getRequestPriceComparison(props.model, {
+      showWithRecharge: props.showRechargePrice,
+      priceRate: props.priceRate,
+      usdExchangeRate: props.usdExchangeRate,
+      groupRatioMultiplier,
+    })
     return (
       <section>
         <SectionTitle>{t('Base Price')}</SectionTitle>
@@ -820,39 +833,39 @@ function PriceSection(props: {
           <span className='text-muted-foreground text-sm'>
             {t('Per request')}
           </span>
-          <span className='text-foreground font-mono text-sm font-semibold tabular-nums'>
-            {formatFixedPrice(
-              props.model,
-              baseGroupKey,
-              props.showRechargePrice,
-              props.priceRate,
-              props.usdExchangeRate,
-              baseGroupRatioMap
-            )}
-          </span>
+          <PriceComparison
+            current={requestComparison.current}
+            original={requestComparison.original}
+            className='text-foreground justify-end gap-x-1.5 text-sm font-semibold'
+          />
         </div>
       </section>
     )
   }
 
   const secondaryItems = secondaryPriceTypes.filter((p) => p.available)
-  const renderPrice = (type: PriceType) => (
-    <>
-      {formatGroupPrice(
-        props.model,
-        baseGroupKey,
-        type,
-        props.tokenUnit,
-        props.showRechargePrice,
-        props.priceRate,
-        props.usdExchangeRate,
-        baseGroupRatioMap
-      )}
-      <span className='text-muted-foreground/40 ml-1 text-xs font-normal'>
-        / {tokenUnitLabel}
-      </span>
-    </>
-  )
+  const renderPrice = (type: PriceType, className: string) => {
+    const comparison = getTokenPriceComparison(
+      props.model,
+      type,
+      props.tokenUnit,
+      {
+        showWithRecharge: props.showRechargePrice,
+        priceRate: props.priceRate,
+        usdExchangeRate: props.usdExchangeRate,
+        groupRatioMultiplier,
+      }
+    )
+    return (
+      <PriceComparison
+        current={comparison.current}
+        original={comparison.original}
+        unitLabel={tokenUnitLabel}
+        className={className}
+        unitClassName='text-muted-foreground/40'
+      />
+    )
+  }
 
   return (
     <section>
@@ -861,9 +874,10 @@ function PriceSection(props: {
         {primaryPriceTypes.map((item) => (
           <div key={item.type} className='bg-muted/20 rounded-lg border p-3'>
             <div className='text-muted-foreground text-xs'>{item.label}</div>
-            <div className='text-foreground mt-1 font-mono text-base font-semibold tabular-nums'>
-              {renderPrice(item.type)}
-            </div>
+            {renderPrice(
+              item.type,
+              'text-foreground mt-1 gap-x-1.5 text-base font-semibold'
+            )}
           </div>
         ))}
       </div>
@@ -878,9 +892,10 @@ function PriceSection(props: {
                 <span className='text-muted-foreground/70 text-sm'>
                   {item.label}
                 </span>
-                <span className='text-muted-foreground font-mono text-sm tabular-nums'>
-                  {renderPrice(item.type)}
-                </span>
+                {renderPrice(
+                  item.type,
+                  'text-muted-foreground justify-end gap-x-1.5 text-sm'
+                )}
               </div>
             ))}
           </div>
@@ -1040,7 +1055,6 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                 usdExchangeRate={props.usdExchangeRate}
                 tokenUnit={props.tokenUnit}
                 showRechargePrice={showRechargePrice}
-                groupKey={activeGroupEntry?.group}
                 groupRatioMultiplier={activeGroupRatio}
               />
             )}

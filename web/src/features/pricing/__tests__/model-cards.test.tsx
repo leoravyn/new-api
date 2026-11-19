@@ -170,7 +170,9 @@ describe('model cards', () => {
     })
     expect(statusStrip).toHaveTextContent('—')
     expect(statusStrip.querySelectorAll('[aria-hidden]')).toHaveLength(0)
-    expect(screen.queryByText('No description available.')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('No description available.')
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Details' })).toBeEnabled()
   })
 
@@ -354,12 +356,21 @@ describe('model cards', () => {
     expect(screen.getByText('Input').parentElement).toHaveTextContent(
       /\$3\s*\/\s*1M/
     )
+    expect(
+      within(screen.getByText('Input').parentElement!).getByText('$1')
+    ).toHaveClass('line-through')
     expect(screen.getByText('Output').parentElement).toHaveTextContent(
       /\$9\s*\/\s*1M/
     )
+    expect(
+      within(screen.getByText('Output').parentElement!).getByText('$3')
+    ).toHaveClass('line-through')
     expect(screen.getByText('Cached').parentElement).toHaveTextContent(
       /\$0\s*\/\s*1M/
     )
+    expect(
+      screen.getByText('Cached').parentElement!.querySelector('.line-through')
+    ).toBeNull()
     rerender(<ModelCard {...props} tokenUnit='K' />)
     expect(screen.getByText('Input').parentElement).toHaveTextContent(
       /\$0.003\s*\/\s*1K/
@@ -384,7 +395,10 @@ describe('model cards', () => {
         tokenUnit='K'
       />
     )
-    expect(screen.getByText(/\$0.6/)).toHaveTextContent(/\$0.6\s*\/\s*request/)
+    expect(screen.getByText('$0.6').parentElement).toHaveTextContent(
+      /\$0.6\s*\/\s*request/
+    )
+    expect(screen.getByText('$0.2')).toHaveClass('line-through')
     expect(screen.queryByText(/1K|1M/)).not.toBeInTheDocument()
     expect(screen.getAllByText('Per Request')).toHaveLength(1)
     expect(screen.queryByText('Per-request')).not.toBeInTheDocument()
