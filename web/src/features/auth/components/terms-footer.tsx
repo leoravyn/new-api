@@ -36,8 +36,16 @@ const linkClassName =
 export function TermsFooter({
   variant = 'sign-in',
   className,
+  status,
 }: TermsFooterProps) {
   const { i18n } = useTranslation()
+  const requiresExplicitConsent = Boolean(
+    status?.user_agreement_enabled || status?.privacy_policy_enabled
+  )
+  if (requiresExplicitConsent) {
+    return null
+  }
+
   const isZh =
     normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
     'zhCN'
@@ -46,7 +54,7 @@ export function TermsFooter({
     return (
       <p className={cn('text-muted-foreground text-center text-xs', className)}>
         {variant === 'sign-in'
-          ? '点击登录即表示您同意我们的'
+          ? '继续登录即表示您同意我们的'
           : '创建账户即表示您同意我们的'}
         <Link to='/terms' className={linkClassName}>
           《服务条款》
@@ -67,7 +75,7 @@ export function TermsFooter({
   return (
     <p className={cn('text-muted-foreground text-center text-xs', className)}>
       {variant === 'sign-in'
-        ? 'By clicking sign in, you agree to our '
+        ? 'By continuing, you agree to our '
         : 'By creating an account, you agree to our '}
       <Link to='/terms' className={linkClassName}>
         Terms of Service
