@@ -34,15 +34,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { formatNumber } from '@/lib/format'
+import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import {
-  formatCurrency,
+  formatUsdAmount,
   getDiscountLabel,
   getPaymentIcon,
   getMinTopupAmount,
   calculatePresetPricing,
+  isWaffoPayment,
+  isWaffoPancakePayment,
 } from '../lib'
 import type {
   PaymentMethod,
@@ -51,6 +53,10 @@ import type {
   CreemProduct,
   WaffoPayMethod,
 } from '../types'
+import {
+  CheckoutPolicyNotice,
+  WaffoSettlementNote,
+} from './checkout-policy-notice'
 import { CreemProductsSection } from './creem-products-section'
 
 interface RechargeFormCardProps {
@@ -112,7 +118,10 @@ export function RechargeFormCard({
   onWaffoMethodSelect,
   enableWaffoPancakeTopup,
 }: RechargeFormCardProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
   const [localAmount, setLocalAmount] = useState(topupAmount.toString())
 
   useEffect(() => {
@@ -124,17 +133,34 @@ export function RechargeFormCard({
 
   const handleAmountChange = (value: string) => {
     setLocalAmount(value)
-    const numValue = Number.parseInt(value) || 0
+    const numValue = Number.parseInt(value, 10) || 0
     if (numValue >= 0) {
       onTopupAmountChange(numValue)
     }
   }
 
+  const hasWaffoGateway = Boolean(
+    enableWaffoPancakeTopup ||
+    enableWaffoTopup ||
+    topupInfo?.enable_waffo_pancake_topup ||
+    topupInfo?.enable_waffo_topup ||
+    topupInfo?.pay_methods?.some(
+      (method) =>
+        isWaffoPancakePayment(method.type) || isWaffoPayment(method.type)
+    )
+  )
+  const useUnifiedUsdPricing =
+    hasWaffoGateway || !topupInfo?.enable_online_topup
+  const effectivePriceRatio = useUnifiedUsdPricing ? 1 : priceRatio
+  const effectiveUsdExchangeRate = useUnifiedUsdPricing ? 1 : usdExchangeRate
+
   const hasConfigurableTopup =
     topupInfo?.enable_online_topup ||
     topupInfo?.enable_stripe_topup ||
     enableWaffoTopup ||
-    enableWaffoPancakeTopup
+    enableWaffoPancakeTopup ||
+    topupInfo?.enable_waffo_topup ||
+    topupInfo?.enable_waffo_pancake_topup
   const hasAnyTopup = hasConfigurableTopup || enableCreemTopup
   const hasStandardPaymentMethods =
     Array.isArray(topupInfo?.pay_methods) && topupInfo.pay_methods.length > 0
@@ -224,7 +250,9 @@ export function RechargeFormCard({
               {presetAmounts.length > 0 && (
                 <div className='space-y-2.5 sm:space-y-3'>
                   <Label className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
-                    {t('Amount')}
+                    {t('Amount (USD)', {
+                      defaultValue: isZh ? '充值金额 (USD)' : 'Amount (USD)',
+                    })}
                   </Label>
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4'>
                     {presetAmounts.map((preset) => {
@@ -239,9 +267,9 @@ export function RechargeFormCard({
                         hasDiscount,
                       } = calculatePresetPricing(
                         preset.value,
-                        priceRatio,
+                        effectivePriceRatio,
                         discount,
-                        usdExchangeRate
+                        effectiveUsdExchangeRate
                       )
                       return (
                         <Button
@@ -255,24 +283,26 @@ export function RechargeFormCard({
                           )}
                           onClick={() => onSelectPreset(preset)}
                         >
-                          <div className='flex w-full items-center justify-between'>
+                          <div className='flex w-full items-center justify-between gap-1.5'>
                             <div className='font-mono text-base font-semibold text-white tabular-nums sm:text-lg'>
-                              {formatNumber(displayValue)}
+                              {formatUsdAmount(displayValue, {
+                                trimWholeCents: true,
+                              })}
                             </div>
                             {hasDiscount && (
-                              <div className='rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
+                              <div className='shrink-0 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
                                 {getDiscountLabel(discount, t)}
                               </div>
                             )}
                           </div>
-                          <div className='text-muted-foreground mt-1.5 w-full text-xs sm:mt-2'>
+                          <div className='text-muted-foreground mt-1.5 w-full text-xs tabular-nums sm:mt-2'>
                             {hasDiscount && savedAmount > 0 ? (
                               <Trans
                                 t={t}
                                 i18nKey='Pay {{amount}} <savings>• Save {{saved}}</savings>'
                                 values={{
-                                  amount: formatCurrency(actualPrice),
-                                  saved: formatCurrency(savedAmount),
+                                  amount: formatUsdAmount(actualPrice),
+                                  saved: formatUsdAmount(savedAmount),
                                 }}
                                 components={{
                                   savings: (
@@ -282,7 +312,7 @@ export function RechargeFormCard({
                               />
                             ) : (
                               t('Pay {{amount}}', {
-                                amount: formatCurrency(actualPrice),
+                                amount: formatUsdAmount(actualPrice),
                               })
                             )}
                           </div>
@@ -298,27 +328,44 @@ export function RechargeFormCard({
                   htmlFor='topup-amount'
                   className='text-muted-foreground text-xs font-medium tracking-wider uppercase'
                 >
-                  {t('Custom Amount')}
+                  {t('Custom Amount (USD)', {
+                    defaultValue: isZh
+                      ? '自定义金额 (USD)'
+                      : 'Custom Amount (USD)',
+                  })}
                 </Label>
-                <div className='grid grid-cols-[minmax(0,1fr)_minmax(110px,0.55fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center'>
-                  <Input
-                    id='topup-amount'
-                    type='number'
-                    value={localAmount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    min={minTopup}
-                    placeholder={t('Minimum {{amount}}', { amount: minTopup })}
-                    className='h-9 text-base sm:h-10 sm:text-lg'
-                  />
-                  <div className='flex min-h-9 items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 lg:min-w-52'>
+                <div className='grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'>
+                  <div className='relative'>
+                    <span className='text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-sm'>
+                      $
+                    </span>
+                    <Input
+                      id='topup-amount'
+                      type='number'
+                      value={localAmount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      min={minTopup}
+                      step={1}
+                      placeholder={t('Minimum {{amount}}', {
+                        amount: formatUsdAmount(minTopup, {
+                          trimWholeCents: true,
+                        }),
+                      })}
+                      className='h-9 pr-12 pl-7 font-mono text-base tabular-nums sm:h-10 sm:text-lg'
+                    />
+                    <span className='text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 font-mono text-xs'>
+                      USD
+                    </span>
+                  </div>
+                  <div className='flex min-h-9 items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 sm:min-h-10 sm:min-w-52'>
                     <span className='text-muted-foreground truncate text-xs'>
                       {t('Amount to pay:')}
                     </span>
                     {calculating ? (
                       <Skeleton className='h-5 w-16' />
                     ) : (
-                      <span className='text-sm font-semibold'>
-                        {formatCurrency(paymentAmount)}
+                      <span className='font-mono text-sm font-semibold tabular-nums'>
+                        {formatUsdAmount(paymentAmount, { withCode: true })}
                       </span>
                     )}
                   </div>
@@ -332,18 +379,21 @@ export function RechargeFormCard({
                 {hasStandardPaymentMethods ? (
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3'>
                     {topupInfo?.pay_methods?.map((method) => {
-                      const minTopup = Math.max(
+                      const methodMinTopup = Math.max(
                         method.min_topup || 0,
                         getMinTopupAmount(topupInfo)
                       )
-                      const disabled = minTopup > topupAmount
+                      const formattedMin = formatUsdAmount(methodMinTopup, {
+                        trimWholeCents: true,
+                      })
+                      const disabled = methodMinTopup > topupAmount
                       const disabledReason = disabled
                         ? t('Minimum topup amount: {{amount}}', {
-                            amount: minTopup,
+                            amount: formattedMin,
                           })
                         : undefined
                       const disabledLabel = disabled
-                        ? `${t('Minimum:')} ${minTopup}`
+                        ? `${t('Minimum:')} ${formattedMin}`
                         : undefined
 
                       const button = (
@@ -419,14 +469,17 @@ export function RechargeFormCard({
                         const loadingKey = `waffo-${index}`
                         const methodKey = `${method.payMethodType ?? 'unknown'}-${method.payMethodName ?? method.name}`
                         const waffoMin = waffoMinTopup || 0
+                        const formattedWaffoMin = formatUsdAmount(waffoMin, {
+                          trimWholeCents: true,
+                        })
                         const belowMin = waffoMin > topupAmount
                         const disabledReason = belowMin
                           ? t('Minimum topup amount: {{amount}}', {
-                              amount: waffoMin,
+                              amount: formattedWaffoMin,
                             })
                           : undefined
                         const disabledLabel = belowMin
-                          ? `${t('Minimum:')} ${waffoMin}`
+                          ? `${t('Minimum:')} ${formattedWaffoMin}`
                           : undefined
 
                         let methodIcon = getPaymentIcon('waffo')
@@ -486,6 +539,9 @@ export function RechargeFormCard({
                     </div>
                   </div>
                 )}
+              {useUnifiedUsdPricing && <WaffoSettlementNote />}
+
+              <CheckoutPolicyNotice />
             </>
           )}
         </div>

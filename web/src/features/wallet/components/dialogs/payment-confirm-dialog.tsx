@@ -30,11 +30,21 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatLocalCurrencyAmount } from '@/lib/currency'
+import { normalizeInterfaceLanguage } from '@/i18n/languages'
 
 import { DEFAULT_DISCOUNT_RATE } from '../../constants'
-import { formatCurrency, getPaymentIcon } from '../../lib'
+import {
+  formatUsdAmount,
+  getDiscountLabel,
+  getPaymentIcon,
+  isWaffoPayment,
+  isWaffoPancakePayment,
+} from '../../lib'
 import type { PaymentMethod } from '../../types'
+import {
+  CheckoutPolicyNotice,
+  WaffoSettlementNote,
+} from '../checkout-policy-notice'
 
 interface PaymentConfirmDialogProps {
   open: boolean
@@ -46,7 +56,6 @@ interface PaymentConfirmDialogProps {
   calculating: boolean
   processing: boolean
   discountRate?: number
-  usdExchangeRate?: number
 }
 
 export function PaymentConfirmDialog({
@@ -59,12 +68,21 @@ export function PaymentConfirmDialog({
   calculating,
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
-  usdExchangeRate = 1,
 }: PaymentConfirmDialogProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
-  const originalAmount = hasDiscount ? paymentAmount / discountRate : 0
-  const discountAmount = hasDiscount ? originalAmount - paymentAmount : 0
+  const originalAmount = hasDiscount
+    ? Math.round((paymentAmount / discountRate) * 1e6) / 1e6
+    : 0
+  const discountAmount = hasDiscount
+    ? Math.max(0, Math.round((originalAmount - paymentAmount) * 1e6) / 1e6)
+    : 0
+  const isWaffoMethod =
+    isWaffoPayment(paymentMethod?.type ?? '') ||
+    isWaffoPancakePayment(paymentMethod?.type ?? '')
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -83,14 +101,23 @@ export function PaymentConfirmDialog({
             <span className='text-muted-foreground text-sm'>
               {t('Topup Amount')}
             </span>
-            <span className='text-lg font-semibold'>
-              {formatLocalCurrencyAmount(topupAmount * usdExchangeRate, {
-                digitsLarge: 2,
-                digitsSmall: 2,
-                abbreviate: false,
-              })}
+            <span className='font-mono text-lg font-semibold tabular-nums'>
+              {formatUsdAmount(topupAmount, { withCode: true })}
             </span>
           </div>
+
+          {hasDiscount && !calculating && (
+            <div className='flex items-center justify-between'>
+              <span className='text-muted-foreground text-sm'>
+                {t('Original', {
+                  defaultValue: isZh ? '原价' : 'Original',
+                })}
+              </span>
+              <span className='text-muted-foreground font-mono text-sm tabular-nums line-through'>
+                {formatUsdAmount(originalAmount, { withCode: true })}
+              </span>
+            </div>
+          )}
 
           <div className='flex items-center justify-between'>
             <span className='text-muted-foreground text-sm'>
@@ -99,25 +126,23 @@ export function PaymentConfirmDialog({
             {calculating ? (
               <Skeleton className='h-6 w-24' />
             ) : (
-              <div className='flex items-baseline gap-2'>
-                <span className='text-2xl font-semibold'>
-                  {formatCurrency(paymentAmount)}
-                </span>
-                {hasDiscount && (
-                  <span className='text-muted-foreground text-sm line-through'>
-                    {formatCurrency(originalAmount)}
-                  </span>
-                )}
-              </div>
+              <span className='font-mono text-2xl font-semibold tabular-nums'>
+                {formatUsdAmount(paymentAmount, { withCode: true })}
+              </span>
             )}
           </div>
 
           {hasDiscount && !calculating && (
             <div className='rounded-xl border border-white/[0.07] bg-white/[0.025] p-3'>
-              <div className='flex items-center justify-between text-sm'>
-                <span className='text-muted-foreground'>{t('You save')}</span>
-                <span className='font-semibold text-emerald-400'>
-                  {formatCurrency(discountAmount)}
+              <div className='flex items-center justify-between gap-2 text-sm'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-muted-foreground'>{t('You save')}</span>
+                  <span className='rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
+                    {getDiscountLabel(discountRate, t)}
+                  </span>
+                </div>
+                <span className='font-mono font-semibold text-emerald-400 tabular-nums'>
+                  {formatUsdAmount(discountAmount, { withCode: true })}
                 </span>
               </div>
             </div>
@@ -138,7 +163,10 @@ export function PaymentConfirmDialog({
                 <span className='font-medium'>{paymentMethod?.name}</span>
               </div>
             </div>
+            {isWaffoMethod && <WaffoSettlementNote className='mt-2.5' />}
           </div>
+
+          <CheckoutPolicyNotice compact />
         </div>
 
         <AlertDialogFooter className='grid grid-cols-2 gap-2 sm:flex'>

@@ -53,6 +53,11 @@ import {
   type DynamicPriceLabelKind,
   type DynamicPriceOptions,
 } from '../lib/dynamic-price'
+import {
+  buildPriceComparison,
+  isNonUnitGroupRatio,
+  type PriceComparison as PriceComparisonData,
+} from '../lib/model-helpers'
 import { getTaskPricingDisplayTiers } from '../lib/task-matrix-display'
 import {
   taskPriceLabel,
@@ -61,6 +66,7 @@ import {
   pricingDisplayFallbackKey,
 } from '../lib/task-price-display'
 import type { BillingUsageSchema, BillingUsageUnit } from '../types'
+import { PriceComparison } from './price-comparison'
 
 type DynamicPricingBreakdownProps = {
   billingExpr: string | null | undefined
@@ -197,7 +203,25 @@ function formatBreakdownConditionSummary(
   )
 }
 
-function formatBreakdownPrice(
+function getBreakdownUnitSuffix(
+  field: BreakdownPriceField,
+  t: (key: string) => string,
+  language: string
+): string {
+  if (field.unit === 'second') return `/${t('s')}`
+  if (field.unit === 'count') {
+    return `/${taskUsageUnitLabel(field, language, t('unit'))}`
+  }
+  if (field.unit === 'credit') return `/${t('credit')}`
+  if (field.unit === 'token' && field.labelKind === 'schema') {
+    return `/${t('1M token')}`
+  }
+  if (field.unit === 'request') return `/${t('request')}`
+  if (field.unit === 'image') return `/${t('image')}`
+  return ''
+}
+
+function getBreakdownPriceComparison(
   value: number,
   field: BreakdownPriceField,
   symbol: string,
@@ -205,25 +229,76 @@ function formatBreakdownPrice(
   t: (key: string) => string,
   taskPriceOptions: DynamicPricingBreakdownProps['taskPriceOptions'],
   language: string
-): string {
+): PriceComparisonData {
   const groupRatio = taskPriceOptions?.groupRatioMultiplier ?? 1
-  const amount =
+  const formatAmount = (multiplier: number) =>
     field.labelKind === 'schema' ||
     field.unit === 'request' ||
     field.unit === 'image'
-      ? formatTaskUsageUnitPrice(value, { tokenUnit: 'M', ...taskPriceOptions })
-      : `${symbol}${(value * groupRatio * rate).toFixed(4)}`
-  if (field.unit === 'second') return `${amount}/${t('s')}`
-  if (field.unit === 'count') {
-    return `${amount}/${taskUsageUnitLabel(field, language, t('unit'))}`
+      ? formatTaskUsageUnitPrice(value, {
+          tokenUnit: 'M',
+          ...taskPriceOptions,
+          groupRatioMultiplier: multiplier,
+        })
+      : `${symbol}${(value * multiplier * rate).toFixed(4)}`
+
+  const suffix = getBreakdownUnitSuffix(field, t, language)
+  const currentAmount = formatAmount(groupRatio)
+  const originalAmount = isNonUnitGroupRatio(groupRatio)
+    ? formatAmount(1)
+    : undefined
+
+  return buildPriceComparison(
+    `${currentAmount}${suffix}`,
+    originalAmount !== undefined && originalAmount !== currentAmount
+      ? originalAmount
+      : undefined,
+    groupRatio
+  )
+}
+
+function BreakdownPriceCell(props: {
+  value: number
+  field: BreakdownPriceField
+  symbol: string
+  rate: number
+  t: (key: string) => string
+  taskPriceOptions: DynamicPricingBreakdownProps['taskPriceOptions']
+  language: string
+  compact: boolean
+  alignRight?: boolean
+}) {
+  const isAvailable =
+    props.value > 0 ||
+    ((props.field.unit === 'request' || props.field.unit === 'image') &&
+      Number.isFinite(props.value))
+  if (!isAvailable) {
+    return '-'
   }
-  if (field.unit === 'credit') return `${amount}/${t('credit')}`
-  if (field.unit === 'token' && field.labelKind === 'schema') {
-    return `${amount}/${t('1M token')}`
-  }
-  if (field.unit === 'request') return `${amount}/${t('request')}`
-  if (field.unit === 'image') return `${amount}/${t('image')}`
-  return amount
+
+  const comparison = getBreakdownPriceComparison(
+    props.value,
+    props.field,
+    props.symbol,
+    props.rate,
+    props.t,
+    props.taskPriceOptions,
+    props.language
+  )
+
+  return (
+    <PriceComparison
+      current={comparison.current}
+      original={comparison.original}
+      className={cn(
+        'gap-x-1.5',
+        props.alignRight && 'justify-end',
+        props.compact ? 'text-xs' : 'text-sm'
+      )}
+      currentClassName={cn(!props.compact && 'font-semibold')}
+      originalClassName={cn(props.compact ? 'text-[11px]' : 'text-xs')}
+    />
+  )
 }
 
 function describeCondition(
@@ -555,26 +630,17 @@ export function DynamicPricingBreakdown({
                           <div className='text-muted-foreground text-xs font-medium break-words whitespace-normal'>
                             {breakdownPriceFieldLabel(field, t)}
                           </div>
-                          <div
-                            className={cn(
-                              'break-words font-mono',
-                              compact ? 'text-xs' : 'text-sm font-semibold'
-                            )}
-                          >
-                            {value > 0 ||
-                            ((field.unit === 'request' ||
-                              field.unit === 'image') &&
-                              Number.isFinite(value))
-                              ? formatBreakdownPrice(
-                                  value,
-                                  field,
-                                  symbol,
-                                  rate,
-                                  t,
-                                  taskPriceOptions,
-                                  i18n.language
-                                )
-                              : '-'}
+                          <div className='break-words'>
+                            <BreakdownPriceCell
+                              value={value}
+                              field={field}
+                              symbol={symbol}
+                              rate={rate}
+                              t={t}
+                              taskPriceOptions={taskPriceOptions}
+                              language={i18n.language}
+                              compact={compact}
+                            />
                           </div>
                         </div>
                       )
@@ -603,9 +669,7 @@ export function DynamicPricingBreakdown({
                 matchedBillingUnit,
                 matchedFixedPrice
               )
-              return cn(
-                isMatched && 'bg-white/[0.06] hover:bg-white/[0.06]'
-              )
+              return cn(isMatched && 'bg-white/[0.06] hover:bg-white/[0.06]')
             }}
             columns={[
               {
@@ -675,26 +739,19 @@ export function DynamicPricingBreakdown({
                   'text-right align-top font-mono',
                   compact ? 'py-2' : 'py-2.5'
                 ),
-                cell: (tier: BreakdownTier) => {
-                  const value = field.value(tier)
-                  return value > 0 ||
-                    ((field.unit === 'request' || field.unit === 'image') &&
-                      Number.isFinite(value)) ? (
-                    <span className={cn(!compact && 'font-semibold')}>
-                      {formatBreakdownPrice(
-                        value,
-                        field,
-                        symbol,
-                        rate,
-                        t,
-                        taskPriceOptions,
-                        i18n.language
-                      )}
-                    </span>
-                  ) : (
-                    '-'
-                  )
-                },
+                cell: (tier: BreakdownTier) => (
+                  <BreakdownPriceCell
+                    value={field.value(tier)}
+                    field={field}
+                    symbol={symbol}
+                    rate={rate}
+                    t={t}
+                    taskPriceOptions={taskPriceOptions}
+                    language={i18n.language}
+                    compact={compact}
+                    alignRight
+                  />
+                ),
               })),
             ]}
           />

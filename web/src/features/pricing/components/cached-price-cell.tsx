@@ -25,13 +25,15 @@ import { DEFAULT_TOKEN_UNIT } from '../constants'
 import { useBillingTime } from '../hooks/use-billing-time'
 import {
   getDynamicDisplayGroupRatio,
+  getDynamicEntryDisplayPrices,
   getDynamicPricingSummary,
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { isTokenBasedModel } from '../lib/model-helpers'
-import { formatPrice, stripTrailingZeros } from '../lib/price'
+import { getTokenPriceComparison } from '../lib/price'
 import type { PricingModel } from '../types'
 import type { ModelPriceCellOptions } from './model-price-cell'
+import { PriceComparison } from './price-comparison'
 
 export function CachedPriceCell(props: {
   model: PricingModel
@@ -94,23 +96,32 @@ export function CachedPriceCell(props: {
 
     return (
       <div className='max-w-full min-w-0'>
-        {cacheEntries.map((entry) => (
-          <div
-            key={entry.field}
-            className='flex flex-wrap items-baseline gap-x-1'
-          >
-            {(cacheEntries.length > 1 || entry.field === 'imageCachePrice') && (
-              <span className='text-muted-foreground text-xs'>
-                {entry.field === 'imageCachePrice'
-                  ? t('Image Cache')
-                  : t('Cache Read')}
-              </span>
-            )}
-            <span className='font-mono text-sm tabular-nums'>
-              {stripTrailingZeros(entry.formatted)}
-            </span>
-          </div>
-        ))}
+        {cacheEntries.map((entry) => {
+          const { current, original } = getDynamicEntryDisplayPrices(
+            entry,
+            true
+          )
+          return (
+            <div
+              key={entry.field}
+              className='flex flex-wrap items-baseline gap-x-1'
+            >
+              {(cacheEntries.length > 1 ||
+                entry.field === 'imageCachePrice') && (
+                <span className='text-muted-foreground text-xs'>
+                  {entry.field === 'imageCachePrice'
+                    ? t('Image Cache')
+                    : t('Cache Read')}
+                </span>
+              )}
+              <PriceComparison
+                current={current}
+                original={original}
+                className='text-sm'
+              />
+            </div>
+          )
+        })}
         <div className='text-muted-foreground/50 text-[10px]'>
           / {tokenUnitLabel}
         </div>
@@ -128,21 +139,21 @@ export function CachedPriceCell(props: {
     return <span className='text-muted-foreground/30 text-xs'>—</span>
   }
 
-  const cachedPrice = stripTrailingZeros(
-    formatPrice(
-      model,
-      'cache',
-      tokenUnit,
-      showRechargePrice,
-      priceRate,
-      usdExchangeRate,
-      selectedGroup
-    )
-  )
+  const cachedComparison = getTokenPriceComparison(model, 'cache', tokenUnit, {
+    showWithRecharge: showRechargePrice,
+    priceRate,
+    usdExchangeRate,
+    selectedGroup,
+    stripZeros: true,
+  })
 
   return (
     <div className='max-w-full min-w-0'>
-      <span className='font-mono text-sm tabular-nums'>{cachedPrice}</span>
+      <PriceComparison
+        current={cachedComparison.current}
+        original={cachedComparison.original}
+        className='text-sm'
+      />
       <div className='text-muted-foreground/50 text-[10px]'>
         / {tokenUnitLabel}
       </div>

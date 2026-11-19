@@ -16,10 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import type { SystemStatus } from '../types'
@@ -31,22 +33,112 @@ interface LegalConsentProps {
   className?: string
 }
 
+const linkClassName = 'text-primary hover:underline underline-offset-4'
+
+function LegalDocumentLinks({ isZh }: { isZh: boolean }) {
+  if (isZh) {
+    return (
+      <>
+        <Link
+          to='/terms'
+          target='_blank'
+          rel='noopener noreferrer'
+          className={linkClassName}
+        >
+          《服务条款》
+        </Link>
+        、
+        <Link
+          to='/privacy-policy'
+          target='_blank'
+          rel='noopener noreferrer'
+          className={linkClassName}
+        >
+          《隐私政策》
+        </Link>
+        与
+        <Link
+          to='/aup'
+          target='_blank'
+          rel='noopener noreferrer'
+          className={linkClassName}
+        >
+          《可接受使用政策》
+        </Link>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Link
+        to='/terms'
+        target='_blank'
+        rel='noopener noreferrer'
+        className={linkClassName}
+      >
+        Terms of Service
+      </Link>
+      ,{' '}
+      <Link
+        to='/privacy-policy'
+        target='_blank'
+        rel='noopener noreferrer'
+        className={linkClassName}
+      >
+        Privacy Policy
+      </Link>
+      , and{' '}
+      <Link
+        to='/aup'
+        target='_blank'
+        rel='noopener noreferrer'
+        className={linkClassName}
+      >
+        Acceptable Use Policy
+      </Link>
+    </>
+  )
+}
+
 export function LegalConsent({
   status,
   checked,
   onCheckedChange,
   className,
 }: LegalConsentProps) {
-  const { t } = useTranslation()
-  const hasUserAgreement = Boolean(status?.user_agreement_enabled)
-  const hasPrivacyPolicy = Boolean(status?.privacy_policy_enabled)
-
-  if (!hasUserAgreement && !hasPrivacyPolicy) {
-    return null
-  }
+  const { i18n } = useTranslation()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
+  const requiresExplicitConsent = Boolean(
+    status?.user_agreement_enabled || status?.privacy_policy_enabled
+  )
 
   const handleChange = (value: boolean) => {
     onCheckedChange(value === true)
+  }
+
+  if (!requiresExplicitConsent) {
+    return (
+      <div
+        className={cn(
+          'border-border/60 bg-muted/40 text-muted-foreground rounded-md border px-3 py-2.5 text-left text-xs leading-5',
+          className
+        )}
+      >
+        {isZh ? (
+          <>
+            继续登录或注册即代表您已阅读并同意 <LegalDocumentLinks isZh />。
+          </>
+        ) : (
+          <>
+            By continuing, you acknowledge and agree to our{' '}
+            <LegalDocumentLinks isZh={false} />.
+          </>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -67,29 +159,15 @@ export function LegalConsent({
         className='text-muted-foreground items-start gap-1 text-left text-xs leading-5 font-normal'
       >
         <span>
-          {t('I have read and agree to the')}{' '}
-          {hasUserAgreement && (
-            <a
-              href='/user-agreement'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('User Agreement')}
-            </a>
+          {isZh ? (
+            <>
+              我已阅读并同意 <LegalDocumentLinks isZh />。
+            </>
+          ) : (
+            <>
+              I have read and agree to the <LegalDocumentLinks isZh={false} />.
+            </>
           )}
-          {hasUserAgreement && hasPrivacyPolicy && ' and the '}
-          {hasPrivacyPolicy && (
-            <a
-              href='/privacy-policy'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary hover:underline'
-            >
-              {t('Privacy Policy')}
-            </a>
-          )}
-          .
         </span>
       </Label>
     </div>

@@ -39,6 +39,46 @@ export function getAvailableGroups(
     .filter((g) => modelEnableGroups.includes(g))
 }
 
+const GROUP_RATIO_EPSILON = 1e-6
+
+/**
+ * Whether a group ratio multiplier differs meaningfully from 1x.
+ * Applies symmetrically to discounts (< 1x), free groups (0x), and markups (> 1x).
+ */
+export function isNonUnitGroupRatio(ratio: number | undefined): boolean {
+  return (
+    typeof ratio === 'number' &&
+    Number.isFinite(ratio) &&
+    Math.abs(ratio - 1) > GROUP_RATIO_EPSILON
+  )
+}
+
+export type PriceComparison = {
+  current: string
+  original?: string
+  groupRatio: number
+}
+
+/**
+ * Build a current-vs-original price comparison, omitting the strikethrough
+ * original whenever the group ratio is 1x or the formatted values match.
+ */
+export function buildPriceComparison(
+  current: string,
+  original: string | undefined,
+  groupRatio: number
+): PriceComparison {
+  const showOriginal =
+    isNonUnitGroupRatio(groupRatio) &&
+    original !== undefined &&
+    original !== current
+  return {
+    current,
+    ...(showOriginal ? { original } : {}),
+    groupRatio,
+  }
+}
+
 /**
  * Read a configured group ratio while preserving valid zero ratios.
  */
@@ -69,6 +109,7 @@ export function getDisplayGroupRatio(
   if (
     selectedGroup &&
     selectedGroup !== FILTER_ALL &&
+    !EXCLUDED_GROUPS.includes(selectedGroup) &&
     modelEnableGroups.includes(selectedGroup)
   ) {
     return getConfiguredGroupRatio(groupRatio, selectedGroup)
@@ -81,6 +122,7 @@ export function getDisplayGroupRatio(
   let minRatio = Number.POSITIVE_INFINITY
 
   for (const group of modelEnableGroups) {
+    if (EXCLUDED_GROUPS.includes(group)) continue
     const ratio = groupRatio[group]
     if (
       typeof ratio === 'number' &&

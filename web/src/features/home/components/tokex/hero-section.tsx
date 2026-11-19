@@ -1,378 +1,508 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  Copy,
-  KeyRound,
-  Send,
-  Sparkles,
-} from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, ArrowUpRight, RefreshCw } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import type { FormEvent } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Skeleton } from '@/components/ui/skeleton'
+import { usePricingData } from '@/features/pricing/hooks/use-pricing-data'
+import {
+  getDynamicPriceUnitLabelKey,
+  getDynamicPricingSummary,
+  isDynamicPricingModel,
+} from '@/features/pricing/lib/dynamic-price'
+import {
+  getDisplayGroupRatio,
+  getModelGroupMultipliers,
+  isTokenBasedModel,
+} from '@/features/pricing/lib/model-helpers'
+import {
+  formatFixedPrice,
+  formatGroupPrice,
+  formatPrice,
+  formatRequestPrice,
+} from '@/features/pricing/lib/price'
+import type { PricingModel } from '@/features/pricing/types'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { getLobeIcon } from '@/lib/lobe-icon'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
+import { useSystemConfigStore } from '@/stores/system-config-store'
 
-interface FeaturedModel {
-  id: string
-  name: string
-  shortName: string
-  provider: 'Anthropic' | 'OpenAI'
-  icon: string
-  context: string
-  maxOutput: string
-  tagZh: string
-  tagEn: string
-  pathD: string
-  endpointY: number
-}
+const FLAGSHIP_MODEL_PRIORITY = [
+  'claude-fable-5.2',
+  'claude-opus-5.5',
+  'gpt-6-astra',
+  'gpt-6.2-astra',
+  'claude-sonnet-5.5',
+  'gpt-6.2-sol',
+  'gpt-6.1-sol',
+] as const
 
-const FEATURED_MODELS: readonly FeaturedModel[] = [
-  {
-    id: 'claude-fable-5-2',
-    name: 'Claude Fable 5.2',
-    shortName: 'Fable 5.2',
-    provider: 'Anthropic',
-    icon: 'Claude',
-    context: '1M',
-    maxOutput: '128K',
-    tagZh: '前沿深度推理与长程代理',
-    tagEn: 'Frontier Reasoning & Agents',
-    pathD: 'M 8 158 C 58 158, 56 35, 112 35',
-    endpointY: 35,
-  },
-  {
-    id: 'gpt-6-astra',
-    name: 'GPT-6 Astra',
-    shortName: 'GPT-6 Astra',
-    provider: 'OpenAI',
-    icon: 'OpenAI',
-    context: '1.05M',
-    maxOutput: '128K',
-    tagZh: '旗舰推理与异步工具编排',
-    tagEn: 'Flagship Reasoning & Tools',
-    pathD: 'M 8 158 C 54 158, 62 117, 112 117',
-    endpointY: 117,
-  },
-  {
-    id: 'claude-sonnet-5-5',
-    name: 'Claude Sonnet 5.5',
-    shortName: 'Sonnet 5.5',
-    provider: 'Anthropic',
-    icon: 'Claude',
-    context: '1M',
-    maxOutput: '128K',
-    tagZh: '高速编程与智能均衡主力',
-    tagEn: 'Speed & Intelligence Balance',
-    pathD: 'M 8 158 C 54 158, 62 199, 112 199',
-    endpointY: 199,
-  },
-  {
-    id: 'gpt-6.1-sol',
-    name: 'GPT-6.1 Sol',
-    shortName: 'GPT-6.1 Sol',
-    provider: 'OpenAI',
-    icon: 'OpenAI',
-    context: '1.05M',
-    maxOutput: '128K',
-    tagZh: '高效工程与视觉理解主力',
-    tagEn: 'Balanced Coding & Vision',
-    pathD: 'M 8 158 C 58 158, 56 281, 112 281',
-    endpointY: 281,
-  },
-]
+const MAX_FLAGSHIP_MODELS = 4
+const CARD_HEIGHT = 70
+const CARD_GAP = 12
+const CARD_STEP = CARD_HEIGHT + CARD_GAP
+const EASE_LIQUID = [0.22, 1, 0.36, 1] as const
+const SKELETON_SLOTS = [0, 1, 2, 3] as const
 
-interface StatItem {
-  id: string
-  value: string
+export interface FlagshipPriceItem {
+  key: string
   labelZh: string
   labelEn: string
-  highlight?: boolean
+  current: string
+  original?: string
+  unitSuffixZh: string
+  unitSuffixEn: string
 }
 
-const GATEWAY_STATS: readonly StatItem[] = [
-  {
-    id: 'tokens',
-    value: '8.4T+',
-    labelZh: '月度稳定调度 Tokens',
-    labelEn: 'Monthly Tokens',
-    highlight: true,
-  },
-  {
-    id: 'context',
-    value: '1.05M',
-    labelZh: '最高上下文窗口支持',
-    labelEn: 'Max Context Window',
-  },
-  {
-    id: 'latency',
-    value: '< 35ms',
-    labelZh: '全球边缘路由转发开销',
-    labelEn: 'Routing Overhead',
-  },
-  {
-    id: 'uptime',
-    value: '99.99%',
-    labelZh: '多节点自动容灾 SLA',
-    labelEn: 'Global Uptime',
-  },
-]
+export interface FlagshipModelDisplay {
+  model: PricingModel
+  modelName: string
+  vendorName: string | null
+  iconKey: string
+  groupBadge: string | null
+  groupRatio: number
+  hasGroupMultiplier: boolean
+  priceItems: FlagshipPriceItem[]
+}
 
-const SAMPLE_PROMPTS_ZH: readonly string[] = [
-  '使用 Claude Fable 5.2 审查分布式网关架构并给出长程演进方案',
-  '调用 GPT-6 Astra 编排异步多智能体工具链并输出严格 TypeScript 类型',
-  '通过 Claude Sonnet 5.5 快速定位流式 SSE 路由延迟瓶颈',
-  '使用 GPT-6.1 Sol 解析设计稿并生成高可靠自动化测试用例',
-]
+interface RouteGeometry {
+  svgHeight: number
+  originY: number
+  routes: Array<{
+    endpointY: number
+    pathD: string
+  }>
+}
 
-const SAMPLE_PROMPTS_EN: readonly string[] = [
-  'Audit our distributed gateway architecture with Claude Fable 5.2',
-  'Orchestrate an async multi-agent workflow with GPT-6 Astra and strict TypeScript types',
-  'Profile SSE streaming latency bottlenecks using Claude Sonnet 5.5',
-  'Inspect UI mockups with GPT-6.1 Sol and generate end-to-end tests',
-]
+function buildRouteGeometry(count: number): RouteGeometry {
+  const safeCount = Math.max(1, count)
+  const svgHeight =
+    safeCount * CARD_HEIGHT + Math.max(0, safeCount - 1) * CARD_GAP
+  const originY = svgHeight / 2
+  const routes = Array.from({ length: safeCount }, (_, index) => {
+    const endpointY = CARD_HEIGHT / 2 + index * CARD_STEP
+    const pathD = `M 8 ${originY} C 56 ${originY}, 58 ${endpointY}, 112 ${endpointY}`
+    return { endpointY, pathD }
+  })
+  return { svgHeight, originY, routes }
+}
 
-const EASE_LIQUID = [0.22, 1, 0.36, 1] as const
+function normalizeModelSlug(modelName: string): string {
+  const trimmed = modelName.trim().toLowerCase()
+  const slashIndex = trimmed.indexOf('/')
+  return slashIndex >= 0 ? trimmed.slice(slashIndex + 1) : trimmed
+}
 
-function fallbackCopyText(text: string) {
-  if (typeof document === 'undefined') return
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.setAttribute('readonly', '')
-  textarea.style.position = 'fixed'
-  textarea.style.top = '-9999px'
-  textarea.style.left = '-9999px'
-  document.body.appendChild(textarea)
-  textarea.select()
-  try {
-    document.execCommand('copy')
-  } finally {
-    document.body.removeChild(textarea)
+/**
+ * Select up to `maxCount` flagship models from live `/api/pricing` records,
+ * prioritizing flagship IDs and filling remaining slots round-robin by vendor.
+ */
+export function selectFlagshipModels(
+  models: readonly PricingModel[],
+  maxCount = MAX_FLAGSHIP_MODELS
+): PricingModel[] {
+  if (models.length === 0 || maxCount <= 0) return []
+
+  const selected: PricingModel[] = []
+  const seenNames = new Set<string>()
+
+  const pickModel = (candidate: PricingModel | undefined) => {
+    if (!candidate || seenNames.has(candidate.model_name)) return false
+    seenNames.add(candidate.model_name)
+    selected.push(candidate)
+    return true
   }
+
+  for (const target of FLAGSHIP_MODEL_PRIORITY) {
+    if (selected.length >= maxCount) break
+    const exactMatch = models.find(
+      (model) => model.model_name.toLowerCase() === target
+    )
+    if (pickModel(exactMatch)) continue
+
+    const slugMatch = models.find(
+      (model) => normalizeModelSlug(model.model_name) === target
+    )
+    pickModel(slugMatch)
+  }
+
+  if (selected.length >= maxCount) {
+    return selected
+  }
+
+  const byVendor = new Map<string, PricingModel[]>()
+  for (const model of models) {
+    if (seenNames.has(model.model_name)) continue
+    const vendorKey =
+      model.vendor_name?.trim() ||
+      (model.vendor_id != null ? `vendor:${model.vendor_id}` : 'other')
+    const list = byVendor.get(vendorKey)
+    if (list) {
+      list.push(model)
+    } else {
+      byVendor.set(vendorKey, [model])
+    }
+  }
+
+  const vendorQueues = [...byVendor.values()]
+  while (selected.length < maxCount && vendorQueues.some((q) => q.length > 0)) {
+    for (const queue of vendorQueues) {
+      if (selected.length >= maxCount) break
+      const next = queue.shift()
+      pickModel(next)
+    }
+  }
+
+  return selected
 }
 
-function copyText(text: string) {
-  if (
-    typeof navigator !== 'undefined' &&
-    navigator.clipboard &&
-    typeof navigator.clipboard.writeText === 'function'
-  ) {
-    void navigator.clipboard.writeText(text).catch(() => {
-      fallbackCopyText(text)
+function getDynamicEntryLabels(
+  field: string,
+  unit: string,
+  shortLabel: string
+): { labelZh: string; labelEn: string } {
+  if (field === 'inputPrice') return { labelZh: '输入', labelEn: 'In' }
+  if (field === 'outputPrice') return { labelZh: '输出', labelEn: 'Out' }
+  if (unit === 'request') return { labelZh: '按次', labelEn: 'Req' }
+  if (unit === 'image') return { labelZh: '按图', labelEn: 'Img' }
+  return { labelZh: shortLabel, labelEn: shortLabel }
+}
+
+function getDynamicUnitSuffixes(unitKey: string | null): {
+  unitSuffixZh: string
+  unitSuffixEn: string
+} {
+  if (unitKey === 'request')
+    return { unitSuffixZh: '/次', unitSuffixEn: '/req' }
+  if (unitKey === 'image') return { unitSuffixZh: '/图', unitSuffixEn: '/img' }
+  if (unitKey === 's') return { unitSuffixZh: '/秒', unitSuffixEn: '/s' }
+  if (unitKey === 'unit') return { unitSuffixZh: '/次', unitSuffixEn: '/unit' }
+  if (unitKey === 'credit')
+    return { unitSuffixZh: '/点数', unitSuffixEn: '/credit' }
+  return { unitSuffixZh: '/1M', unitSuffixEn: '/1M' }
+}
+
+/**
+ * Derive real display metadata, active group badge, and formatted current vs 1x
+ * original prices from a live `PricingModel`.
+ */
+export function buildFlagshipModelDisplay(
+  model: PricingModel
+): FlagshipModelDisplay {
+  const groupRatio = getDisplayGroupRatio(model)
+  const hasGroupMultiplier = Math.abs(groupRatio - 1) > 1e-6
+  const multipliers = getModelGroupMultipliers(model)
+  const activeMultiplier =
+    multipliers.find((item) => Math.abs(item.ratio - groupRatio) <= 1e-6) ??
+    multipliers[0]
+
+  const priceItems: FlagshipPriceItem[] = []
+
+  if (isDynamicPricingModel(model)) {
+    const currentSummary = getDynamicPricingSummary(model, {
+      tokenUnit: 'M',
+      groupRatioMultiplier: groupRatio,
     })
-    return
+    const baseSummary = hasGroupMultiplier
+      ? getDynamicPricingSummary(model, {
+          tokenUnit: 'M',
+          groupRatioMultiplier: 1,
+        })
+      : null
+
+    if (currentSummary && !currentSummary.isSpecialExpression) {
+      for (const entry of currentSummary.primaryEntries.slice(0, 2)) {
+        const baseEntry = baseSummary?.primaryEntries.find(
+          (item) => item.key === entry.key && item.field === entry.field
+        )
+        const current = entry.formattedRange ?? entry.formatted
+        const rawOriginal =
+          hasGroupMultiplier && baseEntry
+            ? (baseEntry.formattedRange ?? baseEntry.formatted)
+            : undefined
+        const original =
+          rawOriginal && rawOriginal !== current ? rawOriginal : undefined
+        const labels = getDynamicEntryLabels(
+          entry.field,
+          entry.unit,
+          entry.shortLabel
+        )
+        const suffixes = getDynamicUnitSuffixes(
+          getDynamicPriceUnitLabelKey(entry)
+        )
+
+        priceItems.push({
+          key: entry.key,
+          ...labels,
+          current,
+          original,
+          ...suffixes,
+        })
+      }
+    }
+  } else if (isTokenBasedModel(model)) {
+    if (Number.isFinite(model.model_ratio)) {
+      const inputCurrent = formatPrice(
+        model,
+        'input',
+        'M',
+        false,
+        1,
+        1,
+        undefined,
+        true
+      )
+      const inputBase = hasGroupMultiplier
+        ? formatGroupPrice(model, '__base__', 'input', 'M', false, 1, 1, {})
+        : undefined
+      const outputCurrent = formatPrice(
+        model,
+        'output',
+        'M',
+        false,
+        1,
+        1,
+        undefined,
+        true
+      )
+      const outputBase = hasGroupMultiplier
+        ? formatGroupPrice(model, '__base__', 'output', 'M', false, 1, 1, {})
+        : undefined
+
+      priceItems.push(
+        {
+          key: 'input',
+          labelZh: '输入',
+          labelEn: 'In',
+          current: inputCurrent,
+          original:
+            inputBase && inputBase !== inputCurrent ? inputBase : undefined,
+          unitSuffixZh: '/1M',
+          unitSuffixEn: '/1M',
+        },
+        {
+          key: 'output',
+          labelZh: '输出',
+          labelEn: 'Out',
+          current: outputCurrent,
+          original:
+            outputBase && outputBase !== outputCurrent ? outputBase : undefined,
+          unitSuffixZh: '/1M',
+          unitSuffixEn: '/1M',
+        }
+      )
+    }
+  } else if (Number.isFinite(model.model_price)) {
+    const reqCurrent = formatRequestPrice(model, false, 1, 1, undefined, true)
+    const reqBase = hasGroupMultiplier
+      ? formatFixedPrice(model, '__base__', false, 1, 1, {})
+      : undefined
+
+    priceItems.push({
+      key: 'request',
+      labelZh: '按次',
+      labelEn: 'Req',
+      current: reqCurrent,
+      original: reqBase && reqBase !== reqCurrent ? reqBase : undefined,
+      unitSuffixZh: '/次',
+      unitSuffixEn: '/req',
+    })
   }
-  fallbackCopyText(text)
+
+  return {
+    model,
+    modelName: model.model_name,
+    vendorName: model.vendor_name?.trim() || null,
+    iconKey: model.icon || model.vendor_icon || model.vendor_name || '',
+    groupBadge: activeMultiplier?.label ?? null,
+    groupRatio,
+    hasGroupMultiplier,
+    priceItems,
+  }
+}
+
+function FlagshipPriceRow(props: {
+  item: FlagshipPriceItem
+  isZh: boolean
+  layout: 'desktop' | 'mobile'
+}) {
+  const { item, isZh, layout } = props
+  const isDesktop = layout === 'desktop'
+
+  return (
+    <span
+      className={cn(
+        'items-baseline font-mono tabular-nums',
+        isDesktop
+          ? 'flex justify-end gap-1.5 text-xs leading-5'
+          : 'inline-flex gap-1 text-[11px]'
+      )}
+    >
+      <span className={cn('text-zinc-500', isDesktop && 'text-[11px]')}>
+        {isZh ? item.labelZh : item.labelEn}
+      </span>
+      {item.original && (
+        <span
+          className={cn(
+            'text-zinc-500 line-through decoration-zinc-500/70',
+            isDesktop && 'text-[11px]'
+          )}
+        >
+          {item.original}
+        </span>
+      )}
+      <span className='font-semibold text-zinc-100'>
+        {item.current}
+        <span
+          className={cn(
+            'font-normal text-zinc-500',
+            isDesktop && 'text-[10px]'
+          )}
+        >
+          {isZh ? item.unitSuffixZh : item.unitSuffixEn}
+        </span>
+      </span>
+    </span>
+  )
+}
+
+function FlagshipPriceList(props: {
+  items: FlagshipPriceItem[]
+  isZh: boolean
+  layout: 'desktop' | 'mobile'
+}) {
+  const isDesktop = props.layout === 'desktop'
+  const containerClass = isDesktop
+    ? 'hidden shrink-0 text-right sm:block'
+    : 'mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 sm:hidden'
+
+  return (
+    <div className={containerClass}>
+      {props.items.length === 0 ? (
+        <span className='font-mono text-[11px] text-zinc-400'>
+          {props.isZh ? '按量计费' : 'Usage-based'}
+        </span>
+      ) : (
+        props.items.map((item) => (
+          <FlagshipPriceRow
+            key={item.key}
+            item={item}
+            isZh={props.isZh}
+            layout={props.layout}
+          />
+        ))
+      )}
+    </div>
+  )
 }
 
 export function TokexHeroSection() {
   const { i18n } = useTranslation()
-  const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => Boolean(s.auth.user))
+  const currency = useSystemConfigStore((s) => s.config.currency)
   const prefersReducedMotion = useReducedMotion()
 
   const isZh =
     normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
     'zhCN'
 
+  const { models, vendors, isLoading, error, refetch } = usePricingData()
+
+  const flagshipModels = useMemo(
+    () => selectFlagshipModels(models, MAX_FLAGSHIP_MODELS),
+    [models]
+  )
+
+  const flagshipDisplays = useMemo(
+    () => flagshipModels.map((model) => buildFlagshipModelDisplay(model)),
+    // Currency store is read indirectly inside billing formatters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flagshipModels, currency]
+  )
+
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
-  const [prompt, setPrompt] = useState('')
-  const [copiedKey, setCopiedKey] = useState(false)
-  const [copiedCode, setCopiedCode] = useState(false)
 
   useEffect(() => {
-    if (prefersReducedMotion || isPaused) return
+    if (prefersReducedMotion || isPaused || flagshipDisplays.length <= 1) return
 
     const timer = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % FEATURED_MODELS.length)
+      setActiveIndex((prev) => (prev + 1) % flagshipDisplays.length)
     }, 3400)
 
     return () => window.clearInterval(timer)
-  }, [isPaused, prefersReducedMotion])
+  }, [flagshipDisplays.length, isPaused, prefersReducedMotion])
 
-  const activeModel = FEATURED_MODELS[activeIndex] ?? FEATURED_MODELS[0]
-  const samplePrompts = isZh ? SAMPLE_PROMPTS_ZH : SAMPLE_PROMPTS_EN
+  const safeActiveIndex =
+    flagshipDisplays.length > 0 ? activeIndex % flagshipDisplays.length : 0
+  const activeItem = flagshipDisplays[safeActiveIndex]
 
-  const baseUrl =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://tokex.vip'
+  const routeGeometry = useMemo(
+    () =>
+      buildRouteGeometry(
+        isLoading ? SKELETON_SLOTS.length : flagshipDisplays.length
+      ),
+    [flagshipDisplays.length, isLoading]
+  )
 
-  const snippet = `from openai import OpenAI
-
-client = OpenAI(
-    base_url="${baseUrl}/v1",
-    api_key="sk-tokex-••••••••",
-)
-res = client.chat.completions.create(
-    model="${activeModel.id}",
-    messages=[{"role": "user", "content": "Hello"}],
-)`
-
-  const compactSnippet = `from openai import OpenAI
-
-client = OpenAI(base_url="${baseUrl}/v1", api_key="sk-tokex-•••")
-res = client.chat.completions.create(
-    model="${activeModel.id}",
-    messages=[{"role": "user", "content": "Hello"}],
-)`
-
-  function handlePromptSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (isAuthenticated) {
-      void navigate({ to: '/playground' })
-      return
-    }
-    void navigate({ to: '/sign-in' })
-  }
-
-  function handleCopyKey() {
-    copyText('sk-tokex-94f8d2c1b6a04e8e9d72a8c')
-    setCopiedKey(true)
-    window.setTimeout(() => setCopiedKey(false), 1800)
-  }
-
-  function handleCopyCode() {
-    copyText(snippet)
-    setCopiedCode(true)
-    window.setTimeout(() => setCopiedCode(false), 1800)
-  }
+  const activeRoute = routeGeometry.routes[safeActiveIndex]
 
   return (
-    <div className='relative overflow-hidden'>
+    <div className='relative flex min-h-[calc(100vh-4rem)] flex-col justify-center overflow-hidden'>
       {/* Minimal monochrome ambient spotlight */}
       <div
         aria-hidden='true'
         className='pointer-events-none absolute top-0 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-white/[0.03] blur-[140px]'
       />
 
-      {/* ── Section 1: OpenRouter Split Hero + Animated Routing Diagram ── */}
-      <section className='mx-auto max-w-6xl px-6 pt-10 pb-16 sm:pt-14 sm:pb-20 lg:pt-16 lg:pb-24'>
-        <div className='grid items-center gap-12 lg:grid-cols-12 lg:gap-8'>
-          {/* Left Column: Minimal Typography + Interactive Prompt Bar */}
+      <section className='mx-auto w-full max-w-6xl px-6 py-12 sm:py-16 lg:py-20'>
+        <div className='grid items-center gap-12 lg:grid-cols-12 lg:gap-10'>
+          {/* Left Column: Clean TOKEX AI API Positioning + Primary CTAs */}
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: EASE_LIQUID }}
             className='lg:col-span-6'
           >
-            <Link
-              to='/pricing'
-              className='group inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#141417] px-3 py-1 text-xs text-zinc-300 backdrop-blur-md transition-colors duration-200 hover:border-white/20 hover:bg-[#1a1a1f]'
-            >
-              <span className='size-1.5 rounded-full bg-[#fafafa] shadow-[0_0_8px_rgba(255,255,255,0.65)]' />
+            <div className='inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-[#0a0a0c] px-3 py-1 text-xs font-medium text-zinc-300'>
+              <span className='size-1.5 rounded-full bg-[#fafafa]' />
               <span>
                 {isZh
-                  ? 'TOKEX 多模型统一网关已就绪'
-                  : 'TOKEX Unified Model Router'}
+                  ? 'TOKEX · 开发者 AI 模型 API 平台'
+                  : 'TOKEX · Developer AI Model API'}
               </span>
-              <ArrowRight className='size-3 text-zinc-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white' />
-            </Link>
+            </div>
 
             <h1 className='mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
               {isZh ? (
                 <>
-                  大模型
+                  前沿 AI 模型，
                   <span className='bg-gradient-to-r from-[#ffffff] via-[#d4d4d8] to-[#a1a1aa] bg-clip-text text-transparent'>
-                    统一路由接口
+                    按量计费 API
                   </span>
                 </>
               ) : (
                 <>
-                  The Unified Interface{' '}
+                  Frontier AI Models,{' '}
                   <span className='bg-gradient-to-r from-[#ffffff] via-[#d4d4d8] to-[#a1a1aa] bg-clip-text text-transparent'>
-                    For LLMs
+                    Pay-As-You-Go API
                   </span>
                 </>
               )}
             </h1>
 
-            <p className='mt-4 max-w-lg text-base leading-relaxed text-zinc-400 sm:text-lg'>
+            <p className='mt-5 max-w-lg text-base leading-relaxed text-zinc-400 sm:text-lg'>
               {isZh
-                ? '更优费率，更高可用，无需繁琐订阅。一个兼容协议直连 Anthropic Claude 与 OpenAI ChatGPT 旗舰模型。'
-                : 'Better prices, better uptime, no subscriptions. Route requests seamlessly across Anthropic Claude and OpenAI ChatGPT flagships.'}
+                ? '通过标准 OpenAI 兼容协议直接调用 Claude 与 GPT 系列模型。实时分组费率、按 Token 透明计量、即充即用。'
+                : 'Access Claude and GPT models through standard OpenAI-compatible APIs on TOKEX. Transparent per-token pricing, live group rates, and pay-as-you-go credits.'}
             </p>
 
-            {/* OpenRouter-style Interactive Prompt Box */}
-            <form
-              onSubmit={handlePromptSubmit}
-              className='mt-8 rounded-2xl border border-[#27272a] bg-[#0a0a0c]/90 p-2.5 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.95)] backdrop-blur-2xl transition-colors duration-300 focus-within:border-white/25 focus-within:bg-[#0e0e11]'
-            >
-              <div className='flex items-center gap-2 px-2 py-1.5'>
-                <input
-                  type='text'
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={
-                    isZh
-                      ? `向 ${activeModel.name} 发送一条测试消息...`
-                      : `Start a message with ${activeModel.name}...`
-                  }
-                  aria-label={isZh ? '测试提示词输入' : 'Start a message'}
-                  className='w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none'
-                />
-                <button
-                  type='submit'
-                  aria-label={isZh ? '进入对话体验' : 'Send message'}
-                  className='inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#fafafa] text-[#09090b] shadow-sm transition-all duration-200 hover:bg-zinc-200 active:scale-95'
-                >
-                  <Send className='size-3.5' />
-                </button>
-              </div>
-
-              <div className='mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] px-2 pt-2'>
-                <div className='flex flex-wrap items-center gap-1.5'>
-                  {FEATURED_MODELS.map((model, index) => {
-                    const isSelected = index === activeIndex
-                    return (
-                      <button
-                        key={model.id}
-                        type='button'
-                        onClick={() => {
-                          setIsPaused(true)
-                          setActiveIndex(index)
-                        }}
-                        className={cn(
-                          'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all duration-200',
-                          isSelected
-                            ? 'border-white/25 bg-white/[0.1] text-[#fafafa]'
-                            : 'border-[#27272a] bg-[#141417] text-zinc-400 hover:border-white/15 hover:text-zinc-200'
-                        )}
-                      >
-                        <span className='inline-flex size-3.5 items-center justify-center'>
-                          {getLobeIcon(model.icon, 13)}
-                        </span>
-                        <span>{model.shortName}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <button
-                  type='button'
-                  onClick={() => {
-                    const nextSample =
-                      samplePrompts[activeIndex % samplePrompts.length]
-                    if (nextSample) setPrompt(nextSample)
-                  }}
-                  className='inline-flex cursor-pointer items-center gap-1 text-[11px] text-zinc-500 transition-colors hover:text-zinc-200'
-                >
-                  <Sparkles className='size-3' />
-                  <span>{isZh ? '示例提示词' : 'Try sample'}</span>
-                </button>
-              </div>
-            </form>
-
-            {/* Minimal Quick Action Links */}
-            <div className='mt-6 flex flex-wrap items-center gap-4'>
+            {/* Primary CTAs */}
+            <div className='mt-8 flex flex-wrap items-center gap-3'>
               <Link
-                to={isAuthenticated ? '/dashboard' : '/sign-in'}
+                to={isAuthenticated ? '/keys' : '/sign-in'}
                 className='inline-flex h-10 items-center gap-2 rounded-xl bg-[#fafafa] px-4 text-sm font-medium text-[#09090b] transition-all duration-200 hover:bg-zinc-200'
               >
                 <span>{isZh ? '获取 API 密钥' : 'Get API Key'}</span>
@@ -382,13 +512,60 @@ res = client.chat.completions.create(
                 to='/pricing'
                 className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#27272a] bg-[#141417] px-4 text-sm font-medium text-zinc-200 backdrop-blur-md transition-all duration-200 hover:border-white/20 hover:bg-[#1a1a1f] hover:text-white'
               >
-                <span>{isZh ? '浏览模型目录' : 'Explore Models'}</span>
+                <span>{isZh ? '模型定价' : 'Model Pricing'}</span>
                 <ArrowUpRight className='size-3.5 text-zinc-400' />
               </Link>
+              <Link
+                to='/dashboard'
+                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-transparent px-3 text-sm font-medium text-zinc-400 transition-colors duration-200 hover:bg-white/[0.05] hover:text-white'
+              >
+                <span>{isZh ? '控制台' : 'Console'}</span>
+                <ArrowRight className='size-3.5' />
+              </Link>
+            </div>
+
+            {/* Live Catalog Summary Strip (strictly factual, no fabricated stats) */}
+            <div className='mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-white/[0.08] pt-6'>
+              <div>
+                <div className='font-mono text-lg font-semibold text-white tabular-nums'>
+                  {isLoading ? (
+                    <Skeleton className='h-6 w-10 bg-white/[0.08]' />
+                  ) : models.length > 0 ? (
+                    models.length
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <p className='mt-1 text-xs text-zinc-400'>
+                  {isZh ? '在线模型' : 'Live Models'}
+                </p>
+              </div>
+              <div>
+                <div className='font-mono text-lg font-semibold text-white tabular-nums'>
+                  {isLoading ? (
+                    <Skeleton className='h-6 w-10 bg-white/[0.08]' />
+                  ) : vendors.length > 0 ? (
+                    vendors.length
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <p className='mt-1 text-xs text-zinc-400'>
+                  {isZh ? '模型厂商' : 'Vendors'}
+                </p>
+              </div>
+              <div>
+                <div className='font-mono text-lg font-semibold text-white'>
+                  USD
+                </div>
+                <p className='mt-1 text-xs text-zinc-400'>
+                  {isZh ? '按量计费' : 'Pay-as-you-go'}
+                </p>
+              </div>
             </div>
           </motion.div>
 
-          {/* Right Column: OpenRouter Animated Routing Curves & Featured Stack */}
+          {/* Right Column: Live Flagship Models & SVG Connector Stack */}
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -397,447 +574,375 @@ res = client.chat.completions.create(
             onMouseLeave={() => setIsPaused(false)}
             className='lg:col-span-6'
           >
-            <div className='mb-3 flex items-center justify-between px-1 sm:pl-24 md:pl-32'>
+            <div
+              className={cn(
+                'mb-3 flex items-center justify-between px-1',
+                (isLoading || flagshipDisplays.length > 0) &&
+                  'sm:pl-24 md:pl-32'
+              )}
+            >
               <span className='text-xs font-medium tracking-wide text-zinc-400 uppercase'>
-                {isZh ? '精选旗舰模型' : 'Featured Models'}
+                {isZh ? '实时旗舰模型报价' : 'Live Flagship Pricing'}
               </span>
               <Link
-                to='/rankings'
+                to='/pricing'
                 className='inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-white'
               >
-                <span>{isZh ? '查看趋势榜' : 'View Trending'}</span>
+                <span>{isZh ? '全部模型' : 'View All'}</span>
                 <ArrowRight className='size-3' />
               </Link>
             </div>
 
-            <div className='relative flex items-center'>
-              {/* SVG Routing Bezier Curves (Desktop / Tablet) */}
-              <svg
-                viewBox='0 0 120 316'
-                fill='none'
-                aria-hidden='true'
-                className='hidden h-[316px] w-24 shrink-0 sm:block md:w-32'
+            {isLoading ? (
+              <div
+                aria-busy='true'
+                aria-label={
+                  isZh ? '正在加载实时模型列表' : 'Loading live models'
+                }
+                className='relative flex items-center'
               >
-                <defs>
-                  <linearGradient
-                    id='tokex-route-grad'
-                    x1='0%'
-                    y1='50%'
-                    x2='100%'
-                    y2='50%'
-                  >
-                    <stop offset='0%' stopColor='#ffffff' stopOpacity='0.95' />
-                    <stop
-                      offset='55%'
-                      stopColor='#d4d4d8'
-                      stopOpacity='0.9'
+                <svg
+                  viewBox={`0 0 120 ${routeGeometry.svgHeight}`}
+                  fill='none'
+                  aria-hidden='true'
+                  style={{ height: `${routeGeometry.svgHeight}px` }}
+                  className='hidden w-24 shrink-0 sm:block md:w-32'
+                >
+                  {routeGeometry.routes.map((route) => (
+                    <path
+                      key={`skeleton-path-${route.endpointY}`}
+                      d={route.pathD}
+                      stroke='rgba(255,255,255,0.06)'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
                     />
-                    <stop
-                      offset='100%'
-                      stopColor='#a1a1aa'
-                      stopOpacity='0.85'
-                    />
-                  </linearGradient>
-                  <filter
-                    id='tokex-route-glow'
-                    x='-30%'
-                    y='-30%'
-                    width='160%'
-                    height='160%'
-                  >
-                    <feGaussianBlur stdDeviation='2.5' result='blur' />
-                    <feMerge>
-                      <feMergeNode in='blur' />
-                      <feMergeNode in='SourceGraphic' />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                {/* Passive Hairline Routing Paths */}
-                {FEATURED_MODELS.map((model) => (
-                  <path
-                    key={`base-${model.id}`}
-                    d={model.pathD}
-                    stroke='rgba(255,255,255,0.08)'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
+                  ))}
+                  <circle
+                    cx='8'
+                    cy={routeGeometry.originY}
+                    r='5'
+                    fill='rgba(255,255,255,0.25)'
                   />
-                ))}
-
-                {/* Active Animated Routing Curve */}
-                <AnimatePresence mode='wait'>
-                  <motion.path
-                    key={`active-${activeModel.id}`}
-                    d={activeModel.pathD}
-                    stroke='url(#tokex-route-grad)'
-                    strokeWidth='2'
-                    strokeLinecap='round'
-                    filter='url(#tokex-route-glow)'
-                    initial={
-                      prefersReducedMotion
-                        ? { pathLength: 1, opacity: 1 }
-                        : { pathLength: 0.25, opacity: 0.35 }
-                    }
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.45, ease: EASE_LIQUID }}
-                  />
-                </AnimatePresence>
-
-                {/* Animated Flowing Pulse Over Active Curve */}
-                {!prefersReducedMotion && (
-                  <path
-                    d={activeModel.pathD}
-                    stroke='#ffffff'
-                    strokeWidth='2'
-                    strokeLinecap='round'
-                    className='tokex-beam-flow'
-                    opacity={0.75}
-                  />
-                )}
-
-                {/* Origin Gateway Node */}
-                <circle
-                  cx='8'
-                  cy='158'
-                  r='5'
-                  fill='#fafafa'
-                  filter='url(#tokex-route-glow)'
-                />
-                <circle
-                  cx='8'
-                  cy='158'
-                  r='9'
-                  stroke='rgba(255,255,255,0.28)'
-                  strokeWidth='1.5'
-                />
-
-                {/* Destination Endpoints */}
-                {FEATURED_MODELS.map((model, index) => {
-                  const isActive = index === activeIndex
-                  return (
+                  {routeGeometry.routes.map((route) => (
                     <circle
-                      key={`dot-${model.id}`}
+                      key={`skeleton-dot-${route.endpointY}`}
                       cx='112'
-                      cy={model.endpointY}
-                      r={isActive ? 4.5 : 3}
-                      fill={isActive ? '#ffffff' : 'rgba(255,255,255,0.22)'}
-                      className='transition-all duration-300'
+                      cy={route.endpointY}
+                      r='3'
+                      fill='rgba(255,255,255,0.16)'
                     />
-                  )
-                })}
-              </svg>
+                  ))}
+                </svg>
 
-              {/* Featured Model Cards Stack */}
-              <div className='flex w-full flex-1 flex-col gap-3'>
-                {FEATURED_MODELS.map((model, index) => {
-                  const isActive = index === activeIndex
-                  return (
-                    <motion.div
-                      key={model.id}
-                      onMouseEnter={() => setActiveIndex(index)}
-                      animate={
-                        prefersReducedMotion
-                          ? undefined
-                          : { x: isActive ? 4 : 0 }
-                      }
-                      transition={{ duration: 0.28, ease: EASE_LIQUID }}
-                      className={cn(
-                        'group relative flex min-h-[70px] items-center overflow-hidden rounded-2xl border px-4 py-3.5 backdrop-blur-xl transition-all duration-300',
-                        isActive
-                          ? 'border-white/25 bg-[#111114] shadow-[0_18px_48px_-18px_rgba(255,255,255,0.12)]'
-                          : 'border-[#27272a]/85 bg-[#0a0a0c] hover:border-white/[0.16] hover:bg-[#111114]'
-                      )}
+                <div className='flex w-full flex-1 flex-col gap-3'>
+                  {SKELETON_SLOTS.map((slot) => (
+                    <div
+                      key={slot}
+                      data-testid='flagship-model-skeleton'
+                      className='flex min-h-[70px] items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-[#0a0a0c] px-4 py-3'
                     >
-                      {/* Subtle monochrome silver highlight when active */}
-                      <div
-                        aria-hidden='true'
-                        className={cn(
-                          'pointer-events-none absolute inset-0 bg-gradient-to-r from-white/[0.06] via-zinc-300/[0.02] to-transparent opacity-0 transition-opacity duration-500',
-                          isActive && 'opacity-100'
-                        )}
+                      <div className='flex items-center gap-3'>
+                        <Skeleton className='size-9 rounded-xl bg-white/[0.06]' />
+                        <div className='space-y-2'>
+                          <Skeleton className='h-4 w-32 bg-white/[0.08]' />
+                          <Skeleton className='h-3 w-24 bg-white/[0.05]' />
+                        </div>
+                      </div>
+                      <div className='hidden space-y-1.5 sm:block'>
+                        <Skeleton className='ml-auto h-3.5 w-20 bg-white/[0.07]' />
+                        <Skeleton className='ml-auto h-3.5 w-24 bg-white/[0.05]' />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : error || flagshipDisplays.length === 0 ? (
+              <div
+                role='status'
+                className='rounded-2xl border border-[#27272a] bg-[#0a0a0c] p-6 text-left shadow-[0_18px_48px_-24px_rgba(0,0,0,0.9)]'
+              >
+                <p className='text-sm font-medium text-white'>
+                  {error
+                    ? isZh
+                      ? '暂时无法获取实时模型报价'
+                      : 'Live model pricing is temporarily unavailable'
+                    : isZh
+                      ? '当前暂无可展示模型'
+                      : 'No models are currently published'}
+                </p>
+                <p className='mt-1.5 text-xs leading-relaxed text-zinc-400'>
+                  {error
+                    ? isZh
+                      ? '请点击重试拉取最新模型目录，或前往模型定价页面查看。'
+                      : 'Retry fetching the live catalog or open the model pricing directory directly.'
+                    : isZh
+                      ? '前往模型定价目录查看完整模型配置与分组状态。'
+                      : 'Visit the model pricing directory to view catalog status.'}
+                </p>
+                <div className='mt-4 flex flex-wrap items-center gap-2.5'>
+                  {error && (
+                    <button
+                      type='button'
+                      onClick={() => void refetch()}
+                      className='inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.08] px-3 text-xs font-medium text-white transition-colors hover:bg-white/[0.14]'
+                    >
+                      <RefreshCw className='size-3' />
+                      <span>{isZh ? '重试' : 'Retry'}</span>
+                    </button>
+                  )}
+                  <Link
+                    to='/pricing'
+                    className='inline-flex h-8 items-center gap-1 rounded-lg border border-[#27272a] bg-[#141417] px-3 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:text-white'
+                  >
+                    <span>{isZh ? '前往模型定价' : 'Open Model Pricing'}</span>
+                    <ArrowUpRight className='size-3 text-zinc-400' />
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className='relative flex items-center'>
+                {/* SVG Connector Curves (Desktop / Tablet) */}
+                <svg
+                  viewBox={`0 0 120 ${routeGeometry.svgHeight}`}
+                  fill='none'
+                  aria-hidden='true'
+                  style={{ height: `${routeGeometry.svgHeight}px` }}
+                  className='hidden w-24 shrink-0 sm:block md:w-32'
+                >
+                  <defs>
+                    <linearGradient
+                      id='tokex-route-grad'
+                      x1='0%'
+                      y1='50%'
+                      x2='100%'
+                      y2='50%'
+                    >
+                      <stop
+                        offset='0%'
+                        stopColor='#ffffff'
+                        stopOpacity='0.95'
                       />
+                      <stop
+                        offset='55%'
+                        stopColor='#d4d4d8'
+                        stopOpacity='0.9'
+                      />
+                      <stop
+                        offset='100%'
+                        stopColor='#a1a1aa'
+                        stopOpacity='0.85'
+                      />
+                    </linearGradient>
+                    <filter
+                      id='tokex-route-glow'
+                      filterUnits='userSpaceOnUse'
+                      x='-20'
+                      y='-20'
+                      width='160'
+                      height={routeGeometry.svgHeight + 40}
+                    >
+                      <feGaussianBlur stdDeviation='2.5' result='blur' />
+                      <feMerge>
+                        <feMergeNode in='blur' />
+                        <feMergeNode in='SourceGraphic' />
+                      </feMerge>
+                    </filter>
+                  </defs>
 
-                      <div className='relative flex w-full items-center gap-2.5'>
-                        <button
-                          type='button'
-                          aria-pressed={isActive}
-                          onClick={() => {
-                            setIsPaused(true)
-                            setActiveIndex(index)
-                          }}
-                          className='flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40'
+                  {/* Passive Hairline Connector Paths */}
+                  {flagshipDisplays.map((item, index) => {
+                    const route = routeGeometry.routes[index]
+                    if (!route) return null
+                    return (
+                      <path
+                        key={`base-${item.modelName}`}
+                        d={route.pathD}
+                        stroke='rgba(255,255,255,0.08)'
+                        strokeWidth='1.5'
+                        strokeLinecap='round'
+                      />
+                    )
+                  })}
+
+                  {/* Active Animated Connector Curve */}
+                  {activeItem && activeRoute && (
+                    <AnimatePresence mode='wait'>
+                      <motion.path
+                        key={`active-${activeItem.modelName}`}
+                        d={activeRoute.pathD}
+                        stroke='url(#tokex-route-grad)'
+                        strokeWidth='2'
+                        strokeLinecap='round'
+                        filter='url(#tokex-route-glow)'
+                        initial={
+                          prefersReducedMotion
+                            ? { pathLength: 1, opacity: 1 }
+                            : { pathLength: 0.25, opacity: 0.35 }
+                        }
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.45, ease: EASE_LIQUID }}
+                      />
+                    </AnimatePresence>
+                  )}
+
+                  {/* Animated Flowing Pulse Over Active Curve */}
+                  {!prefersReducedMotion && activeRoute && (
+                    <path
+                      d={activeRoute.pathD}
+                      stroke='#ffffff'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      className='tokex-beam-flow'
+                      opacity={0.75}
+                    />
+                  )}
+
+                  {/* Origin API Node */}
+                  <circle
+                    cx='8'
+                    cy={routeGeometry.originY}
+                    r='5'
+                    fill='#fafafa'
+                    filter='url(#tokex-route-glow)'
+                  />
+                  <circle
+                    cx='8'
+                    cy={routeGeometry.originY}
+                    r='9'
+                    stroke='rgba(255,255,255,0.28)'
+                    strokeWidth='1.5'
+                  />
+
+                  {/* Destination Endpoints */}
+                  {flagshipDisplays.map((item, index) => {
+                    const route = routeGeometry.routes[index]
+                    if (!route) return null
+                    const isActive = index === safeActiveIndex
+                    return (
+                      <circle
+                        key={`dot-${item.modelName}`}
+                        cx='112'
+                        cy={route.endpointY}
+                        r={isActive ? 4.5 : 3}
+                        fill={isActive ? '#ffffff' : 'rgba(255,255,255,0.22)'}
+                        className='transition-all duration-300'
+                      />
+                    )
+                  })}
+                </svg>
+
+                {/* Live Flagship Model Cards Stack */}
+                <div className='flex w-full flex-1 flex-col gap-3'>
+                  {flagshipDisplays.map((item, index) => {
+                    const isActive = index === safeActiveIndex
+                    return (
+                      <motion.div
+                        key={item.modelName}
+                        onMouseEnter={() => {
+                          setIsPaused(true)
+                          setActiveIndex(index)
+                        }}
+                        onFocus={() => {
+                          setIsPaused(true)
+                          setActiveIndex(index)
+                        }}
+                        animate={
+                          prefersReducedMotion
+                            ? undefined
+                            : { x: isActive ? 4 : 0 }
+                        }
+                        transition={{ duration: 0.28, ease: EASE_LIQUID }}
+                      >
+                        <Link
+                          to='/pricing/$modelId'
+                          params={{ modelId: item.modelName }}
+                          aria-current={isActive ? 'true' : undefined}
+                          className={cn(
+                            'group relative flex min-h-[70px] items-center overflow-hidden rounded-2xl border px-4 py-3 backdrop-blur-xl transition-all duration-300 focus-visible:ring-1 focus-visible:ring-white/40 focus-visible:outline-none',
+                            isActive
+                              ? 'border-white/25 bg-[#111114] shadow-[0_18px_48px_-18px_rgba(255,255,255,0.12)]'
+                              : 'border-[#27272a]/85 bg-[#0a0a0c] hover:border-white/[0.16] hover:bg-[#111114]'
+                          )}
                         >
-                          <div className='flex min-w-0 items-center gap-3'>
-                            <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-100'>
-                              {getLobeIcon(model.icon, 20)}
-                            </div>
-                            <div className='min-w-0'>
-                              <div className='flex items-center gap-2'>
-                                <span className='truncate text-sm font-semibold text-white'>
-                                  {model.name}
-                                </span>
-                                {isActive && (
-                                  <span className='hidden rounded-full border border-white/20 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium text-zinc-100 sm:inline-flex'>
-                                    {isZh ? '路由中' : 'Active'}
+                          {/* Subtle monochrome silver highlight when active */}
+                          <div
+                            aria-hidden='true'
+                            className={cn(
+                              'pointer-events-none absolute inset-0 bg-gradient-to-r from-white/[0.06] via-zinc-300/[0.02] to-transparent opacity-0 transition-opacity duration-500',
+                              isActive && 'opacity-100'
+                            )}
+                          />
+
+                          <div className='relative flex w-full min-w-0 items-center justify-between gap-3'>
+                            <div className='flex min-w-0 flex-1 items-center gap-3'>
+                              <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-100'>
+                                {item.iconKey ? (
+                                  getLobeIcon(item.iconKey, 20)
+                                ) : (
+                                  <span className='text-xs font-bold text-zinc-300'>
+                                    {item.modelName.charAt(0).toUpperCase() ||
+                                      '?'}
                                   </span>
                                 )}
                               </div>
-                              <p className='mt-0.5 truncate text-xs text-zinc-400'>
-                                {model.provider} ·{' '}
-                                {isZh ? model.tagZh : model.tagEn}
-                              </p>
-                              <p className='mt-1 truncate font-mono text-[11px] text-zinc-400 sm:hidden'>
-                                {model.id} · {model.context} ctx ·{' '}
-                                {model.maxOutput} out
-                              </p>
+
+                              <div className='min-w-0 flex-1'>
+                                <div className='flex items-center gap-2'>
+                                  <span className='truncate font-mono text-sm font-semibold text-white'>
+                                    {item.modelName}
+                                  </span>
+                                  {isActive && (
+                                    <span className='hidden shrink-0 rounded-full border border-white/20 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium text-zinc-100 sm:inline-flex'>
+                                      {isZh ? '在线' : 'Live'}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className='mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400'>
+                                  {item.vendorName && (
+                                    <span className='truncate'>
+                                      {item.vendorName}
+                                    </span>
+                                  )}
+                                  {item.groupBadge && (
+                                    <span
+                                      className={cn(
+                                        'shrink-0 rounded border px-1.5 py-px font-mono text-[10px] leading-tight',
+                                        item.groupRatio < 1
+                                          ? 'border-white/[0.16] bg-white/[0.08] text-[#fafafa]'
+                                          : 'border-white/[0.08] bg-[#141417] text-zinc-300'
+                                      )}
+                                    >
+                                      {item.groupBadge}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <FlagshipPriceList
+                                  items={item.priceItems}
+                                  isZh={isZh}
+                                  layout='mobile'
+                                />
+                              </div>
+                            </div>
+
+                            <div className='flex shrink-0 items-center gap-2.5'>
+                              <FlagshipPriceList
+                                items={item.priceItems}
+                                isZh={isZh}
+                                layout='desktop'
+                              />
+                              <ArrowUpRight className='size-3.5 shrink-0 text-zinc-500 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white' />
                             </div>
                           </div>
-
-                          <div className='hidden shrink-0 text-right sm:block'>
-                            <div className='font-mono text-xs font-medium text-zinc-200'>
-                              {model.id}
-                            </div>
-                            <div className='mt-0.5 font-mono text-[11px] text-zinc-500'>
-                              {model.context} ctx · {model.maxOutput} out
-                            </div>
-                          </div>
-                        </button>
-
-                        <Link
-                          to='/pricing'
-                          aria-label={
-                            isZh
-                              ? `在模型目录查看 ${model.name}`
-                              : `View ${model.name} in model directory`
-                          }
-                          className='inline-flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-400 transition-colors hover:border-white/25 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40'
-                        >
-                          <ArrowUpRight className='size-3.5' />
                         </Link>
-                      </div>
-                    </motion.div>
-                  )
-                })}
+                      </motion.div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Brand Flagship Visual Banner ── */}
-      <section className='mx-auto max-w-6xl px-6 pb-14 sm:pb-20'>
-        <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.65, ease: EASE_LIQUID }}
-          className='overflow-hidden rounded-2xl border border-white/[0.08] bg-[#06080E] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.95),inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-colors duration-300 hover:border-white/[0.15]'
-        >
-          <img
-            src='/banner-tokex.svg'
-            alt='TOKEX — High-Throughput AI Token Exchange'
-            width={1200}
-            height={400}
-            loading='eager'
-            decoding='async'
-            className='block aspect-[3/1] h-auto w-full object-cover select-none'
-          />
-        </motion.div>
-      </section>
-
-      {/* ── Section 2: OpenRouter Minimalist 4-Metric Typography Strip ── */}
-      <section className='border-y border-white/[0.08] bg-white/[0.012]'>
-        <div className='mx-auto grid max-w-6xl grid-cols-2 divide-x divide-y divide-white/[0.08] px-0 sm:divide-y-0 md:grid-cols-4'>
-          {GATEWAY_STATS.map((stat, index) => (
-            <motion.div
-              key={stat.id}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{
-                duration: 0.5,
-                delay: index * 0.06,
-                ease: EASE_LIQUID,
-              }}
-              className='px-6 py-8 text-center sm:py-10'
-            >
-              <div
-                className={cn(
-                  'font-mono text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl',
-                  stat.highlight
-                    ? 'bg-gradient-to-r from-[#ffffff] via-[#d4d4d8] to-[#a1a1aa] bg-clip-text text-transparent'
-                    : 'text-white'
-                )}
-              >
-                {stat.value}
-              </div>
-              <p className='mt-2 text-xs font-medium text-zinc-400 sm:text-sm'>
-                {isZh ? stat.labelZh : stat.labelEn}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Section 3: Compact 3-Step Visual Onboarding Strip ── */}
-      <section className='mx-auto max-w-6xl px-6 py-16 sm:py-24'>
-        <div className='grid gap-5 md:grid-cols-3'>
-          {/* Step 1: Sign up */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.55, delay: 0, ease: EASE_LIQUID }}
-            className='tokex-glass tokex-glass-interactive flex flex-col justify-between rounded-2xl p-6'
-          >
-            <div>
-              <div className='flex items-center gap-2.5'>
-                <span className='inline-flex size-6 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] font-mono text-xs text-zinc-200'>
-                  1
-                </span>
-                <h2 className='text-base font-semibold text-white'>
-                  {isZh ? '注册并开通账号' : 'Signup'}
-                </h2>
-              </div>
-              <p className='mt-2 text-xs leading-relaxed text-zinc-400'>
-                {isZh
-                  ? '无需绑定繁琐海外信用卡，开箱即用按量计费。'
-                  : 'Create an account in seconds and start routing with pay-as-you-go billing.'}
-              </p>
-            </div>
-
-            <div className='mt-6 rounded-xl border border-[#27272a] bg-[#050506]/85 p-3.5'>
-              <div className='flex items-center justify-between text-[11px] text-zinc-400'>
-                <span>{isZh ? '快速登录通道' : 'Workspace Access'}</span>
-                <span className='text-zinc-200'>
-                  {isZh ? '即时开通' : 'Instant'}
-                </span>
-              </div>
-              <div className='mt-3 flex items-center gap-2'>
-                <span className='rounded-lg border border-[#27272a] bg-[#141417] px-2.5 py-1 text-xs text-zinc-200'>
-                  GitHub
-                </span>
-                <span className='rounded-lg border border-[#27272a] bg-[#141417] px-2.5 py-1 text-xs text-zinc-200'>
-                  SSO / Email
-                </span>
-                <Link
-                  to={isAuthenticated ? '/dashboard' : '/sign-up'}
-                  className='ml-auto inline-flex items-center gap-1 text-xs font-medium text-zinc-200 transition-colors hover:text-white'
-                >
-                  <span>{isZh ? '前往' : 'Start'}</span>
-                  <ArrowRight className='size-3' />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Step 2: Get API Key */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.55, delay: 0.08, ease: EASE_LIQUID }}
-            className='tokex-glass tokex-glass-interactive flex flex-col justify-between rounded-2xl p-6'
-          >
-            <div>
-              <div className='flex items-center gap-2.5'>
-                <span className='inline-flex size-6 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] font-mono text-xs text-zinc-200'>
-                  2
-                </span>
-                <h2 className='text-base font-semibold text-white'>
-                  {isZh ? '生成统一密钥' : 'Get your API key'}
-                </h2>
-              </div>
-              <p className='mt-2 text-xs leading-relaxed text-zinc-400'>
-                {isZh
-                  ? '单枚密钥集中调度 Anthropic Claude 与 OpenAI ChatGPT 全系模型并统一计费。'
-                  : 'Use one unified key across Anthropic Claude and OpenAI ChatGPT models.'}
-              </p>
-            </div>
-
-            <div className='mt-6 rounded-xl border border-[#27272a] bg-[#050506]/85 p-3.5'>
-              <div className='flex items-center justify-between text-[11px] text-zinc-400'>
-                <span className='inline-flex items-center gap-1'>
-                  <KeyRound className='size-3 text-zinc-300' />
-                  <span>TOKEX_API_KEY</span>
-                </span>
-                <span className='rounded border border-[#27272a] bg-[#141417] px-1.5 py-0.5 text-[10px] text-zinc-300'>
-                  Claude & OpenAI
-                </span>
-              </div>
-              <div className='mt-2.5 flex items-center justify-between gap-2 rounded-lg border border-[#27272a] bg-[#141417] px-2.5 py-1.5'>
-                <code className='truncate font-mono text-xs text-zinc-200'>
-                  sk-tokex-94f••••••••2a8c
-                </code>
-                <button
-                  type='button'
-                  onClick={handleCopyKey}
-                  aria-label={isZh ? '复制示例密钥' : 'Copy sample key'}
-                  className='inline-flex shrink-0 cursor-pointer items-center gap-1 text-[11px] text-zinc-400 transition-colors hover:text-white'
-                >
-                  {copiedKey ? (
-                    <Check className='size-3.5 text-white' />
-                  ) : (
-                    <Copy className='size-3.5' />
-                  )}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Step 3: Unified Integration */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.55, delay: 0.16, ease: EASE_LIQUID }}
-            className='tokex-glass tokex-glass-interactive flex flex-col justify-between rounded-2xl p-6'
-          >
-            <div>
-              <div className='flex items-center gap-2.5'>
-                <span className='inline-flex size-6 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] font-mono text-xs text-zinc-200'>
-                  3
-                </span>
-                <h2 className='text-base font-semibold text-white'>
-                  {isZh ? '一行接入全网模型' : 'One unified endpoint'}
-                </h2>
-              </div>
-              <p className='mt-2 text-xs leading-relaxed text-zinc-400'>
-                {isZh
-                  ? '直接替换 OpenAI SDK Base URL，零改造成本切换 Claude 与 ChatGPT 模型。'
-                  : 'Point your OpenAI-compatible SDK to TOKEX and route Claude & ChatGPT with zero rewrites.'}
-              </p>
-            </div>
-
-            <div className='mt-6 rounded-xl border border-[#27272a] bg-[#050506]/90 p-3'>
-              <div className='mb-1.5 flex items-center justify-between text-[11px] text-zinc-400'>
-                <span className='font-mono text-zinc-300'>quickstart.py</span>
-                <button
-                  type='button'
-                  onClick={handleCopyCode}
-                  aria-label={isZh ? '复制接入代码' : 'Copy integration snippet'}
-                  className='inline-flex cursor-pointer items-center gap-1 text-[11px] text-zinc-400 transition-colors hover:text-white'
-                >
-                  {copiedCode ? (
-                    <>
-                      <Check className='size-3 text-white' />
-                      <span className='text-white'>
-                        {isZh ? '已复制' : 'Copied'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className='size-3' />
-                      <span>{isZh ? '复制' : 'Copy'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              <pre className='overflow-x-auto font-mono text-[11px] leading-relaxed text-zinc-300'>
-                <code>{compactSnippet}</code>
-              </pre>
-            </div>
+            )}
           </motion.div>
         </div>
       </section>

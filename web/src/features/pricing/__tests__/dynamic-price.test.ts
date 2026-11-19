@@ -24,6 +24,7 @@ import { parseTiersFromExpr } from '../lib/billing-expr'
 import { getBillingModeLabelKey } from '../lib/billing-mode'
 import {
   getCardExamplePrice,
+  getDynamicEntryDisplayPrices,
   getDynamicPriceUnitLabelKey,
   getDynamicPricingSummary,
   getDynamicPricingTiers,
@@ -31,7 +32,11 @@ import {
   hasTaskUsageSchema,
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
-import { isTokenBasedModel } from '../lib/model-helpers'
+import { isNonUnitGroupRatio, isTokenBasedModel } from '../lib/model-helpers'
+import {
+  getRequestPriceComparison,
+  getTokenPriceComparison,
+} from '../lib/price'
 import type { PricingModel } from '../types'
 
 function pricingModel(overrides: Partial<PricingModel>): PricingModel {
@@ -795,6 +800,158 @@ describe('shared plugin price summaries', () => {
       label: 'Beta sample',
       total: 3,
       formatted: '$3',
+      originalFormatted: '$1.5',
     })
+  })
+})
+
+describe('group ratio 1x original price comparisons', () => {
+  test('treats ratios beyond epsilon as non-1x for both discounts and markups', () => {
+    expect(isNonUnitGroupRatio(0.4)).toBe(true)
+    expect(isNonUnitGroupRatio(1.35)).toBe(true)
+    expect(isNonUnitGroupRatio(0)).toBe(true)
+    expect(isNonUnitGroupRatio(1)).toBe(false)
+    expect(isNonUnitGroupRatio(1 + 1e-8)).toBe(false)
+    expect(isNonUnitGroupRatio(undefined)).toBe(false)
+  })
+
+  test('computes originalFormatted for dynamic token, task range, and example prices when ratio != 1', () => {
+    const tokenModel = pricingModel({
+      billing_mode: 'tiered_expr',
+      billing_expr: 'tier("base", p * 2 + cr * 0 + c * 8)',
+    })
+
+    const discount = getDynamicPricingSummary(tokenModel, {
+      tokenUnit: 'M',
+      groupRatioMultiplier: 0.4,
+    })
+    expect(discount?.primaryEntries[0]).toMatchObject({
+      formatted: '$0.8',
+      originalFormatted: '$2',
+    })
+    expect(discount?.primaryEntries[1]).toMatchObject({
+      formatted: '$3.2',
+      originalFormatted: '$8',
+    })
+    // Explicit $0 rate omits redundant strikethrough
+    expect(discount?.secondaryEntries[0]).toMatchObject({
+      formatted: '$0',
+    })
+    expect(discount?.secondaryEntries[0]?.originalFormatted).toBeUndefined()
+
+    const markup = getDynamicPricingSummary(tokenModel, {
+      tokenUnit: 'M',
+      groupRatioMultiplier: 1.35,
+    })
+    expect(markup?.primaryEntries[0]).toMatchObject({
+      formatted: '$2.7',
+      originalFormatted: '$2',
+    })
+    expect(markup?.primaryEntries[1]).toMatchObject({
+      formatted: '$10.8',
+      originalFormatted: '$8',
+    })
+
+    const unit = getDynamicPricingSummary(tokenModel, {
+      tokenUnit: 'M',
+      groupRatioMultiplier: 1,
+    })
+    expect(unit?.primaryEntries[0]?.originalFormatted).toBeUndefined()
+
+    const taskModel = pricingModel({
+      billing_mode: 'tiered_expr',
+      billing_expr:
+        'u("mode") == "pro" ? tier("pro", u("seconds") * 0.8) : tier("free", u("seconds") * 0)',
+      billing_usage_schema: {
+        seconds: { type: 'number', unit: 'second' },
+        mode: { enum: ['free', 'pro'] },
+      },
+      billing_usage_examples: [
+        { label: '5s pro', facts: { seconds: 5, mode: 'pro' } },
+      ],
+    })
+    const taskDiscount = getDynamicPricingSummary(taskModel, {
+      tokenUnit: 'M',
+      groupRatioMultiplier: 0.4,
+    })
+    const rangeEntry = taskDiscount?.primaryEntries[0]
+    expect(rangeEntry).toBeDefined()
+    expect(rangeEntry?.formattedRange).toBe('$0 – $0.32')
+    expect(rangeEntry?.originalFormattedRange).toBe('$0 – $0.8')
+    expect(getDynamicEntryDisplayPrices(rangeEntry!)).toEqual({
+      current: '$0 – $0.32',
+      original: '$0 – $0.8',
+    })
+
+    expect(
+      getCardExamplePrice(taskModel, {
+        tokenUnit: 'M',
+        groupRatioMultiplier: 0.4,
+      })
+    ).toEqual({
+      label: '5s pro',
+      total: 4,
+      formatted: '$1.6',
+      originalFormatted: '$4',
+    })
+    expect(
+      getCardExamplePrice(taskModel, {
+        tokenUnit: 'M',
+        groupRatioMultiplier: 1,
+      })?.originalFormatted
+    ).toBeUndefined()
+  })
+
+  test('computes legacy token and request price comparisons consistently across <1x, >1x, 0x, and 1x', () => {
+    const tokenModel = pricingModel({
+      model_ratio: 1,
+      completion_ratio: 4,
+      cache_ratio: 0,
+      enable_groups: ['discount', 'standard', 'vip', 'free'],
+      group_ratio: { discount: 0.4, standard: 1, vip: 1.35, free: 0 },
+    })
+
+    expect(
+      getTokenPriceComparison(tokenModel, 'input', 'M', {
+        selectedGroup: 'discount',
+      })
+    ).toEqual({ current: '$0.8', original: '$2', groupRatio: 0.4 })
+    expect(
+      getTokenPriceComparison(tokenModel, 'output', 'M', {
+        selectedGroup: 'vip',
+      })
+    ).toEqual({ current: '$10.8', original: '$8', groupRatio: 1.35 })
+    expect(
+      getTokenPriceComparison(tokenModel, 'input', 'M', {
+        selectedGroup: 'standard',
+      })
+    ).toEqual({ current: '$2', groupRatio: 1 })
+    expect(
+      getTokenPriceComparison(tokenModel, 'input', 'M', {
+        selectedGroup: 'free',
+      })
+    ).toEqual({ current: '$0', original: '$2', groupRatio: 0 })
+    expect(
+      getTokenPriceComparison(tokenModel, 'cache', 'M', {
+        selectedGroup: 'discount',
+      })
+    ).toEqual({ current: '$0', groupRatio: 0.4 })
+
+    const requestModel = pricingModel({
+      quota_type: 1,
+      model_price: 0.2,
+      enable_groups: ['discount', 'standard', 'vip'],
+      group_ratio: { discount: 0.4, standard: 1, vip: 1.35 },
+    })
+
+    expect(
+      getRequestPriceComparison(requestModel, { selectedGroup: 'discount' })
+    ).toEqual({ current: '$0.08', original: '$0.2', groupRatio: 0.4 })
+    expect(
+      getRequestPriceComparison(requestModel, { selectedGroup: 'vip' })
+    ).toEqual({ current: '$0.27', original: '$0.2', groupRatio: 1.35 })
+    expect(
+      getRequestPriceComparison(requestModel, { selectedGroup: 'standard' })
+    ).toEqual({ current: '$0.2', groupRatio: 1 })
   })
 })

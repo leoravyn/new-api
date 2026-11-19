@@ -26,14 +26,19 @@ import { DEFAULT_TOKEN_UNIT } from '../constants'
 import { useBillingTime } from '../hooks/use-billing-time'
 import {
   getDynamicDisplayGroupRatio,
+  getDynamicEntryDisplayPrices,
   getDynamicPriceUnitLabelKey,
   getDynamicPricingSummary,
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { isTokenBasedModel } from '../lib/model-helpers'
-import { formatPrice, formatRequestPrice } from '../lib/price'
+import {
+  getRequestPriceComparison,
+  getTokenPriceComparison,
+} from '../lib/price'
 import { taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, TokenUnit } from '../types'
+import { PriceComparison } from './price-comparison'
 
 export type ModelPriceCellOptions = {
   tokenUnit?: TokenUnit
@@ -83,7 +88,7 @@ export function ModelPriceCell(props: {
       currency,
     ]
   )
-  let metrics: Array<{ label: string; value: string }>
+  let metrics: Array<{ label: string; current: string; original?: string }>
   const providerCaption = dynamic?.providerCount
     ? t('{{count}} providers', { count: dynamic.providerCount })
     : ''
@@ -133,12 +138,14 @@ export function ModelPriceCell(props: {
         if (hasRequestPrice && entry.unit === 'token') {
           suffix = `/${t('{{unit}} tokens', { unit: tokenUnitLabel })}`
         }
+        const { current, original } = getDynamicEntryDisplayPrices(entry)
         return {
           label:
             entry.labelKind === 'schema'
               ? entry.shortLabel
               : t(entry.shortLabel),
-          value: `${entry.formattedRange ?? entry.formatted}${suffix}`,
+          current: `${current}${suffix}`,
+          original,
         }
       })
     if (metrics.length === 0) {
@@ -188,46 +195,50 @@ export function ModelPriceCell(props: {
       )
     }
     if (tokenBased) {
+      const priceOptions = {
+        showWithRecharge: options.showRechargePrice,
+        priceRate: options.priceRate,
+        usdExchangeRate: options.usdExchangeRate,
+        selectedGroup: options.selectedGroup,
+        showCurrencySymbol: false,
+      }
+      const inputPrice = getTokenPriceComparison(
+        props.model,
+        'input',
+        tokenUnit,
+        priceOptions
+      )
+      const outputPrice = getTokenPriceComparison(
+        props.model,
+        'output',
+        tokenUnit,
+        priceOptions
+      )
       metrics = [
         {
           label: t('Input'),
-          value: formatPrice(
-            props.model,
-            'input',
-            tokenUnit,
-            options.showRechargePrice,
-            options.priceRate,
-            options.usdExchangeRate,
-            options.selectedGroup,
-            false
-          ),
+          current: inputPrice.current,
+          original: inputPrice.original,
         },
         {
           label: t('Output'),
-          value: formatPrice(
-            props.model,
-            'output',
-            tokenUnit,
-            options.showRechargePrice,
-            options.priceRate,
-            options.usdExchangeRate,
-            options.selectedGroup,
-            false
-          ),
+          current: outputPrice.current,
+          original: outputPrice.original,
         },
       ]
     } else {
+      const requestPrice = getRequestPriceComparison(props.model, {
+        showWithRecharge: options.showRechargePrice,
+        priceRate: options.priceRate,
+        usdExchangeRate: options.usdExchangeRate,
+        selectedGroup: options.selectedGroup,
+        showCurrencySymbol: false,
+      })
       metrics = [
         {
           label: t('Per-request'),
-          value: formatRequestPrice(
-            props.model,
-            options.showRechargePrice,
-            options.priceRate,
-            options.usdExchangeRate,
-            options.selectedGroup,
-            false
-          ),
+          current: requestPrice.current,
+          original: requestPrice.original,
         },
       ]
       caption = `${currencyLabel} / ${t('request')}`
@@ -249,12 +260,18 @@ export function ModelPriceCell(props: {
             >
               {metric.label}
             </span>
-            <span
-              className='min-w-0 font-mono text-sm break-words whitespace-normal tabular-nums'
-              title={metric.value}
-            >
-              {metric.value}
-            </span>
+            <PriceComparison
+              current={metric.current}
+              original={metric.original}
+              className='min-w-0 text-sm break-words whitespace-normal'
+              currentClassName='break-words whitespace-normal'
+              originalClassName='break-words whitespace-normal'
+              title={
+                metric.original
+                  ? `${metric.original} → ${metric.current}`
+                  : metric.current
+              }
+            />
           </span>
         ))}
       </span>

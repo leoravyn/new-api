@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
 import { useStatus } from '@/hooks/use-status'
-import { useSystemConfig } from '@/hooks/use-system-config'
 import { getSelf } from '@/lib/api'
 
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
@@ -46,6 +45,9 @@ import {
   getDefaultPaymentType,
   getMinTopupAmount,
   dispatchSelectedPayment,
+  isStripePayment,
+  isWaffoPayment,
+  isWaffoPancakePayment,
 } from './lib'
 import type {
   UserWalletData,
@@ -81,15 +83,7 @@ export function Wallet(props: WalletProps) {
   const [showSubscriptionPanel, setShowSubscriptionPanel] = useState(true)
 
   const { status } = useStatus()
-  const { currency } = useSystemConfig()
   const { topupInfo, presetAmounts, loading: topupLoading } = useTopupInfo()
-
-  // Calculate effective exchange rate - when display type is USD, use rate of 1
-  const effectiveUsdExchangeRate = useMemo(() => {
-    return currency?.quotaDisplayType === 'USD'
-      ? 1
-      : currency?.usdExchangeRate || 1
-  }, [currency?.quotaDisplayType, currency?.usdExchangeRate])
   const {
     amount: paymentAmount,
     calculating,
@@ -155,6 +149,28 @@ export function Wallet(props: WalletProps) {
     return selectedPaymentMethod?.type || getDefaultPaymentType(topupInfo)
   }, [selectedPaymentMethod, topupInfo])
 
+  const activePaymentType = getCurrentPaymentType()
+
+  // Waffo and Waffo Pancake settle in USD (1:1); only Epay uses status.price
+  const effectivePriceRatio = useMemo(() => {
+    if (
+      isWaffoPancakePayment(activePaymentType) ||
+      isWaffoPayment(activePaymentType) ||
+      !topupInfo?.enable_online_topup
+    ) {
+      return 1
+    }
+    if (isStripePayment(activePaymentType)) {
+      return (status?.stripe_unit_price as number) || 1
+    }
+    return (status?.price as number) || 1
+  }, [
+    activePaymentType,
+    status?.price,
+    status?.stripe_unit_price,
+    topupInfo?.enable_online_topup,
+  ])
+
   // Handle preset selection
   const handleSelectPreset = (preset: PresetAmount) => {
     setTopupAmount(preset.value)
@@ -177,7 +193,10 @@ export function Wallet(props: WalletProps) {
 
     try {
       // Validate minimum topup
-      const minTopup = getMinTopupAmount(topupInfo)
+      const minTopup = Math.max(
+        method.min_topup || 0,
+        getMinTopupAmount(topupInfo)
+      )
       if (topupAmount < minTopup) {
         return
       }
@@ -263,6 +282,10 @@ export function Wallet(props: WalletProps) {
     setPaymentLoading(loadingKey)
 
     try {
+      const waffoMin = topupInfo?.waffo_min_topup || 0
+      if (topupAmount < waffoMin) {
+        return
+      }
       await calculatePaymentAmount(topupAmount, PAYMENT_TYPES.WAFFO)
       setConfirmDialogOpen(true)
     } finally {
@@ -315,8 +338,8 @@ export function Wallet(props: WalletProps) {
                   redeeming={redeeming}
                   topupLink={topupInfo?.topup_link}
                   loading={topupLoading}
-                  priceRatio={(status?.price as number) || 1}
-                  usdExchangeRate={effectiveUsdExchangeRate}
+                  priceRatio={effectivePriceRatio}
+                  usdExchangeRate={1}
                   onOpenBilling={() => setBillingDialogOpen(true)}
                   creemProducts={topupInfo?.creem_products}
                   enableCreemTopup={topupInfo?.enable_creem_topup}
@@ -362,7 +385,6 @@ export function Wallet(props: WalletProps) {
         calculating={calculating}
         processing={processing || waffoProcessing || pancakeProcessing}
         discountRate={getDiscountRate()}
-        usdExchangeRate={effectiveUsdExchangeRate}
       />
 
       <TransferDialog

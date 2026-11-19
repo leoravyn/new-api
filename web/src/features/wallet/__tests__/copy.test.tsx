@@ -73,55 +73,99 @@ it('translates billing history statuses and updates them when the language chang
   }
 })
 
-it.each([
-  { priceRatio: 7.3, paid: '584', saved: '146', full: '146' },
-  { priceRatio: 0.000123, paid: '0.0098', saved: '0.0025', full: '0.0025' },
-])(
-  'translates recharge presets and minimum amount without changing precision at price ratio $priceRatio',
-  async ({ priceRatio, paid, saved, full }) => {
-    render(
-      <I18nextProvider i18n={i18n}>
-        <RechargeFormCard
-          topupInfo={{
-            enable_online_topup: true,
-            enable_stripe_topup: false,
-            pay_methods: [],
-            min_topup: 1,
-            stripe_min_topup: 1,
-            amount_options: [100, 20],
-            discount: {},
-          }}
-          presetAmounts={[{ value: 100, discount: 0.8 }, { value: 20 }]}
-          selectedPreset={null}
-          topupAmount={1}
-          paymentAmount={priceRatio}
-          priceRatio={priceRatio}
-          calculating={false}
-          paymentLoading={null}
-          redemptionCode=''
-          redeeming={false}
-          onSelectPreset={vi.fn()}
-          onTopupAmountChange={vi.fn()}
-          onPaymentMethodSelect={vi.fn()}
-          onRedemptionCodeChange={vi.fn()}
-          onRedeem={vi.fn()}
-        />
-      </I18nextProvider>
+it('translates unified USD recharge presets, Waffo note, minimum amount, and checkout legal links', async () => {
+  render(
+    <I18nextProvider i18n={i18n}>
+      <RechargeFormCard
+        topupInfo={{
+          enable_online_topup: false,
+          enable_stripe_topup: false,
+          enable_waffo_pancake_topup: true,
+          pay_methods: [
+            { name: 'Waffo Pancake', type: 'waffo_pancake', min_topup: 1 },
+          ],
+          min_topup: 1,
+          stripe_min_topup: 1,
+          waffo_pancake_min_topup: 1,
+          amount_options: [100, 20],
+          discount: { 100: 0.95 },
+        }}
+        presetAmounts={[{ value: 100, discount: 0.95 }, { value: 20 }]}
+        selectedPreset={100}
+        topupAmount={100}
+        paymentAmount={95}
+        priceRatio={6}
+        usdExchangeRate={7}
+        calculating={false}
+        paymentLoading={null}
+        redemptionCode=''
+        redeeming={false}
+        enableWaffoPancakeTopup
+        onSelectPreset={vi.fn()}
+        onTopupAmountChange={vi.fn()}
+        onPaymentMethodSelect={vi.fn()}
+        onRedemptionCodeChange={vi.fn()}
+        onRedeem={vi.fn()}
+      />
+    </I18nextProvider>
+  )
+  expect(screen.getByRole('button', { name: /^\$100 / })).toHaveTextContent(
+    '优惠 5%支付 $95.00 • 节省 $5.00'
+  )
+  expect(screen.getByRole('button', { name: /^\$20 / })).toHaveTextContent(
+    '支付 $20.00'
+  )
+  expect(screen.getByPlaceholderText('最低 $1')).toBeVisible()
+  expect(screen.getByText('$95.00 USD')).toBeVisible()
+  expect(
+    screen.getByText(
+      /订单以美元 \(USD\) 通过 Waffo 结算；如使用本地货币支付，Waffo 将在结账页自动按汇率换算。/
     )
-    expect(screen.getByRole('button', { name: /^100 / })).toHaveTextContent(
-      `优惠 20%支付 ${paid} • 节省 ${saved}`
+  ).toBeVisible()
+  expect(
+    screen.getByText(
+      /数字 API 额度支付后即时到账；24 小时内未消费额度可申请退款。/
     )
-    expect(screen.getByRole('button', { name: /^20 / })).toHaveTextContent(
-      `支付 ${full}`
+  ).toBeVisible()
+  expect(screen.getByRole('link', { name: '服务条款' })).toHaveAttribute(
+    'href',
+    '/terms'
+  )
+  expect(screen.getByRole('link', { name: '隐私政策' })).toHaveAttribute(
+    'href',
+    '/privacy-policy'
+  )
+  expect(screen.getByRole('link', { name: '可接受使用政策' })).toHaveAttribute(
+    'href',
+    '/aup'
+  )
+
+  await act(() => i18n.changeLanguage('en'))
+  expect(screen.getByRole('button', { name: /^\$100 / })).toHaveTextContent(
+    '5% OFFPay $95.00 • Save $5.00'
+  )
+  expect(screen.getByRole('button', { name: /^\$20 / })).toHaveTextContent(
+    'Pay $20.00'
+  )
+  expect(screen.getByPlaceholderText('Minimum $1')).toBeVisible()
+  expect(
+    screen.getByText(
+      /Orders are settled in USD via Waffo\. If you pay in a local currency, Waffo applies exchange rates at checkout\./
     )
-    expect(screen.getByPlaceholderText('最低 1')).toBeVisible()
-    await act(() => i18n.changeLanguage('en'))
-    expect(screen.getByRole('button', { name: /^100 / })).toHaveTextContent(
-      `20% OFFPay ${paid} • Save ${saved}`
+  ).toBeVisible()
+  expect(
+    screen.getByText(
+      /Digital API credits are delivered instantly upon payment\. Unused credits are refundable within 24 hours\./
     )
-    expect(screen.getByRole('button', { name: /^20 / })).toHaveTextContent(
-      `Pay ${full}`
-    )
-    expect(screen.getByPlaceholderText('Minimum 1')).toBeVisible()
-  }
-)
+  ).toBeVisible()
+  expect(
+    screen.getByRole('link', { name: 'Terms of Service' })
+  ).toHaveAttribute('href', '/terms')
+  expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
+    'href',
+    '/privacy-policy'
+  )
+  expect(
+    screen.getByRole('link', { name: 'Acceptable Use Policy' })
+  ).toHaveAttribute('href', '/aup')
+})

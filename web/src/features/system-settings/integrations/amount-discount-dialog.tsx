@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
+import { formatDiscountDisplay } from './amount-discount-format'
+
 const createAmountDiscountDialogSchema = (t: (key: string) => string) =>
   z.object({
     amount: z
@@ -85,10 +87,10 @@ export function AmountDiscountDialog({
 
   const discountRate = form.watch('discountRate')
 
-  const discountPercentage = useMemo(() => {
-    if (!discountRate || discountRate >= 1) return 0
-    return Math.round((1 - discountRate) * 100)
-  }, [discountRate])
+  const discountPreview = useMemo(
+    () => formatDiscountDisplay(discountRate, t),
+    [discountRate, t]
+  )
 
   useEffect(() => {
     if (editData) {
@@ -193,14 +195,18 @@ export function AmountDiscountDialog({
                   />
                 </FormControl>
                 <FormDescription>
-                  {t('Final price multiplier (0.95 = 5% discount')}
-                  {discountPercentage > 0 && (
-                    <span className='ml-1 font-medium text-green-600 dark:text-green-400'>
-                      = {discountPercentage}
-                      {t('% off')}
+                  <span>{t('Final price multiplier (0.95 = 5% off)')}</span>
+                  {discountPreview.isValid && (
+                    <span
+                      className={
+                        discountPreview.hasDiscount
+                          ? 'ml-1.5 font-medium text-green-600 dark:text-green-400'
+                          : 'text-muted-foreground ml-1.5 font-medium'
+                      }
+                    >
+                      · {discountPreview.label}
                     </span>
                   )}
-                  )
                 </FormDescription>
                 <FormMessage />
               </FormItem>
