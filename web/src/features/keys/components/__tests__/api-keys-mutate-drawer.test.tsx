@@ -525,4 +525,66 @@ describe('API keys mutate drawer required group validation', () => {
       'Official'
     )
   })
+
+  test('keeps admin-defined group descriptions like Subscription untranslated in zh locale', async () => {
+    const zhI18n = createInstance()
+    await zhI18n.use(initReactI18next).init({
+      lng: 'zh',
+      resources: {
+        zh: {
+          translation: {
+            Subscription: '订阅',
+            'Default group': '默认分组',
+          },
+        },
+      },
+    })
+
+    apiClient.get = async (url) => {
+      switch (url) {
+        case '/api/status':
+          return { data: { data: { default_use_auto_group: false } } }
+        case '/api/user/models':
+          return { data: { success: true, data: [] } }
+        case '/api/user/self/groups':
+          return {
+            data: {
+              success: true,
+              data: {
+                Official: { desc: 'Official API', ratio: 1.2 },
+                Proxy: { desc: 'Subscription', ratio: 0.3 },
+                default: { desc: 'Default group', ratio: 1 },
+              },
+            },
+          }
+        case '/api/token/auto-groups':
+          return { data: { success: true, data: { groups: [], max_count: 5 } } }
+        default:
+          throw new Error(`Unexpected GET ${url}`)
+      }
+    }
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    renderedDrawer = { queryClient }
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={zhI18n}>
+          <ApiKeysProvider>
+            <ApiKeysMutateDrawer open onOpenChange={() => undefined} />
+          </ApiKeysProvider>
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+    await waitFor(() =>
+      expect(findButton('Save changes', true)).toBeEnabled()
+    )
+
+    fireEvent.click(getControlByLabel('Group'))
+    expect(await screen.findByText('Subscription')).toBeInTheDocument()
+    expect(screen.queryByText('订阅')).toBeNull()
+    expect(screen.getByText('默认分组')).toBeInTheDocument()
+  })
 })

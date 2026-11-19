@@ -101,6 +101,12 @@ type ApiKeyMutateDrawerProps = {
   currentRow?: ApiKey
 }
 
+const BUILTIN_GROUP_DESCS = new Set([
+  'Default group',
+  'VIP group',
+  'User group',
+])
+
 export function ApiKeysMutateDrawer({
   open,
   onOpenChange,
@@ -167,7 +173,11 @@ export function ApiKeysMutateDrawer({
       Object.entries(groupsData?.data || {}).map(([key, info]) => ({
         value: key,
         label: key,
-        desc: info.desc ? translateServerText(t, info.desc) : key,
+        desc: info.desc
+          ? BUILTIN_GROUP_DESCS.has(info.desc)
+            ? translateServerText(t, info.desc)
+            : info.desc
+          : key,
         ratio: info.ratio,
       })),
     [groupsData, t]
