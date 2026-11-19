@@ -385,7 +385,7 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     expect(dialog).toHaveTextContent('You save')
     expect(dialog).toHaveTextContent('$5.00 USD')
     expect(dialog).toHaveTextContent(
-      'Digital API credits are delivered instantly upon payment. Unused credits are refundable within 24 hours.'
+      'Digital API credits are delivered instantly upon payment.'
     )
     expect(dialog).toHaveTextContent(
       'Orders are settled in USD via Waffo. If you pay in a local currency, Waffo applies exchange rates at checkout.'

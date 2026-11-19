@@ -77,18 +77,19 @@ describe('legal-config and compliance content integrity', () => {
     expect(fullText).not.toContain('support@quantumnous.com')
   })
 
-  it('covers all Waffo ToS V2 credit/MoR/24h-refund requirements without subscription clauses', () => {
+  it('covers concise Terms requirements without subscription or 24h-refund clauses', () => {
     const enText = collectAllDocumentText(TERMS_OF_SERVICE_CONTENT.en)
     const zhText = collectAllDocumentText(TERMS_OF_SERVICE_CONTENT.zhCN)
 
-    expect(TERMS_OF_SERVICE_CONTENT.en.sections).toHaveLength(16)
-    expect(TERMS_OF_SERVICE_CONTENT.zhCN.sections).toHaveLength(16)
+    expect(TERMS_OF_SERVICE_CONTENT.en.sections).toHaveLength(10)
+    expect(TERMS_OF_SERVICE_CONTENT.zhCN.sections).toHaveLength(10)
 
-    // No subscription / auto-renew billing offerings
+    // No subscription / auto-renew billing offerings and no 24-hour refund rule
     expect(enText).not.toMatch(/auto-?renewing subscription/i)
     expect(enText).toMatch(/no recurring subscription/i)
+    expect(enText).not.toMatch(/24 hours/i)
+    expect(zhText).not.toMatch(/24 小时/)
 
-    // Key entities & rules
     for (const pattern of [
       /TOKEX Individual Operator/,
       /Waffo Pancake/,
@@ -96,9 +97,9 @@ describe('legal-config and compliance content integrity', () => {
       /support@tokex\.vip/,
       /does NOT sell, resell, proxy, activate, or top up third-party consumer AI accounts/i,
       /never expire/i,
-      /24 hours/,
-      /mandatory statutory consumer protection/i,
-      /Multiple \/ Repeat Top-Up Orders/i,
+      /non-refundable/i,
+      /statutory consumer protection/i,
+      /Technical Billing Errors vs\. Repeat Orders/i,
       /2 business days/,
       /5 business days/,
       /does NOT use your API Inputs or Outputs to train/i,
@@ -115,21 +116,21 @@ describe('legal-config and compliance content integrity', () => {
       /support@tokex\.vip/,
       /绝对不提供任何第三方官方消费端 AI 账号或会员的代开通、代充值/,
       /长期有效/,
-      /24 小时内/,
-      /法定消费者不可放弃权益保留/,
-      /用户多次\/误操作重复充值与技术性重复扣款之区分/,
+      /充值到账后不支持退款/,
+      /法定消费者权益保留/,
+      /技术性重复扣款与用户多次充值区分/,
       /美国特拉华州法律/,
     ]) {
       expect(zhText).toMatch(pattern)
     }
   })
 
-  it('covers all 14 Privacy Policy sections and subprocessors in en and zhCN', () => {
+  it('covers all 9 Privacy Policy sections and subprocessors in en and zhCN', () => {
     const enText = collectAllDocumentText(PRIVACY_POLICY_CONTENT.en)
     const zhText = collectAllDocumentText(PRIVACY_POLICY_CONTENT.zhCN)
 
-    expect(PRIVACY_POLICY_CONTENT.en.sections).toHaveLength(14)
-    expect(PRIVACY_POLICY_CONTENT.zhCN.sections).toHaveLength(14)
+    expect(PRIVACY_POLICY_CONTENT.en.sections).toHaveLength(9)
+    expect(PRIVACY_POLICY_CONTENT.zhCN.sections).toHaveLength(9)
 
     for (const pattern of [
       /Waffo Pancake/,
@@ -147,7 +148,6 @@ describe('legal-config and compliance content integrity', () => {
       /Standard Contractual Clauses/,
       /18 years/,
       /15 days/,
-      /09:00 – 18:00 \(UTC\+8\)/,
     ]) {
       expect(enText).toMatch(pattern)
     }
@@ -156,12 +156,12 @@ describe('legal-config and compliance content integrity', () => {
     expect(zhText).toMatch(/30 个日历日内/)
   })
 
-  it('covers all 10 AUP sections aligned with Waffo, Anthropic, and OpenAI policies', () => {
+  it('covers all 7 AUP sections aligned with Anthropic and OpenAI policies', () => {
     const enText = collectAllDocumentText(AUP_CONTENT.en)
     const zhText = collectAllDocumentText(AUP_CONTENT.zhCN)
 
-    expect(AUP_CONTENT.en.sections).toHaveLength(10)
-    expect(AUP_CONTENT.zhCN.sections).toHaveLength(10)
+    expect(AUP_CONTENT.en.sections).toHaveLength(7)
+    expect(AUP_CONTENT.zhCN.sections).toHaveLength(7)
 
     for (const pattern of [
       /Pornography, Sexually Explicit Content \(NSFW\) & NCII/,
@@ -170,7 +170,7 @@ describe('legal-config and compliance content integrity', () => {
       /Child Safety & CSAM \/ CSAE/,
       /NCMEC/,
       /Deepfakes & Non-Consensual Real-Person Impersonation/,
-      /Copyright, Trademark, IP Infringement & Plagiarism/,
+      /Copyright, Trademark & IP Infringement/,
       /CBRN \/ CBRNE/,
       /Cyberattacks, Malware & Critical Infrastructure/,
       /Biometric Scraping & Criminal-Justice Scoring/i,
@@ -188,7 +188,7 @@ describe('legal-config and compliance content integrity', () => {
       expect(enText).toMatch(pattern)
     }
 
-    expect(zhText).toMatch(/六大强制禁止内容类别/)
+    expect(zhText).toMatch(/六大禁止内容类别/)
     expect(zhText).toMatch(/Anthropic 与 OpenAI/)
     expect(zhText).toMatch(/独立申诉复核流程/)
   })
