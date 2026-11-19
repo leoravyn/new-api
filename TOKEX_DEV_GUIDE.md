@@ -17,7 +17,7 @@
 
 ### 已完成关键改造摘要
 - **品牌与设计定稿（`v1.0.0` ~ `v1.2.0`）**：极黑单色体系（`#000000`/`#050506`/`#0a0a0c` + 1px 微光边框），永久锁定暗黑模式与 `zhCN`/`en` 双语；替换 `favicon.svg` / `logo-tokex.svg` / `banner-tokex.svg`；重构首页、顶部导航、公告栏、头像菜单、个人资料/安全/钱包与通用弹窗基元；移除「关于」与风格抽屉。
-- **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile（`0x4AAAAAAGBJP7HOD4ZkNFVM`）、GitHub OAuth（`/oauth/github`）、Google OIDC（`/oauth/oidc`）；`v1.2.4` 修复注册与换绑邮箱验证码输入框在手机端强制数字键盘的问题（改为 `inputMode='text'`）。
+- **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile（`0x4AAAAAAGBJP7HOD4ZkNFVM`）、GitHub OAuth（`/oauth/github`）、Google 自定义 OAuth 提供商（Custom OAuth，`/oauth/google`，`OAuthProviders` 按 `provider.icon` 大小写兼容映射 `google` 至标准 Google "G" SVG 图标，已停用内置 OIDC）；`v1.2.4` 修复注册与换绑邮箱验证码输入框在手机端强制数字键盘的问题（改为 `inputMode='text'`）。
 - **渠道与模型广场（`v1.2.1` ~ `v1.2.3`）**：修复通道编辑页 `filterTransformPlugins` 空 `models` 崩溃；模型广场隐藏无意义 `37.5x` 与「能力：动态计费」回退，改为分组倍率胶囊（`Official · 1.35x` / `Proxy · 0.4x`）、恢复侧边栏分组筛选、支持详情页多分组倍率切换、清理表头重复 ID 与未使用的 `default` 分组。
 - **2GB 内存与 Base64 多模态链路调优（2026-11-18）**：Nginx、New API、CLIProxyAPI 全链路请求体上限对齐为 **40 MiB**，启用 DiskCache 落盘缓冲与容器内存/GC 硬限制（详见第 3 节）。
 - **Waffo MoR 合规与定价/钱包重构（2026-11-19）**：

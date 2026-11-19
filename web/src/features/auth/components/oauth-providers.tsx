@@ -48,6 +48,16 @@ function IconGoogle({ className }: { className?: string }) {
   )
 }
 
+const CUSTOM_OAUTH_ICONS: Record<string, () => ReactNode> = {
+  google: () => <IconGoogle className='h-4 w-4' />,
+}
+
+function getCustomOAuthIcon(icon?: string): ReactNode {
+  const key = icon?.trim().toLowerCase()
+  if (!key) return undefined
+  return CUSTOM_OAUTH_ICONS[key]?.()
+}
+
 type OAuthProvidersProps = {
   status: SystemStatus | null
   disabled?: boolean
@@ -119,14 +129,12 @@ export function OAuthProviders({
 
   if (status?.oidc_enabled) {
     const oidcDisplayName = status.oidc_display_name?.trim() || 'OIDC'
-    const isGoogle = oidcDisplayName.toLowerCase() === 'google'
     providerButtons.push({
       key: 'oidc',
       label: t('Continue with {{name}}', {
         name: oidcDisplayName,
       }),
       onClick: handleOIDCLogin,
-      icon: isGoogle ? <IconGoogle className='h-4 w-4' /> : undefined,
     })
   }
 
@@ -156,6 +164,7 @@ export function OAuthProviders({
         key: `custom-${provider.slug}`,
         label: t('Continue with {{name}}', { name: provider.name }),
         onClick: () => handleCustomOAuthLogin(provider),
+        icon: getCustomOAuthIcon(provider.icon),
       })
     }
   }
