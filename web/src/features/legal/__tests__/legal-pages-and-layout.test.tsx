@@ -285,7 +285,7 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     ).toBeGreaterThan(0)
   })
 
-  it('renders localized TermsFooter and LegalConsent links even when DB legal flags are disabled', async () => {
+  it('renders only TermsFooter links when DB legal flags are disabled (no duplicate LegalConsent banner)', async () => {
     const onCheckedChange = vi.fn()
     renderWithRouter(
       <div>
@@ -310,45 +310,77 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     expect(
       await screen.findByText(/By creating an account, you agree to our/)
     ).toBeVisible()
+    expect(screen.queryByRole('checkbox')).toBeNull()
     expect(
       screen.getAllByRole('link', { name: 'Terms of Service' })
-    ).toHaveLength(2)
+    ).toHaveLength(1)
     expect(
       screen.getAllByRole('link', { name: 'Privacy Policy' })
-    ).toHaveLength(2)
+    ).toHaveLength(1)
     expect(
       screen.getAllByRole('link', { name: 'Acceptable Use Policy' })
-    ).toHaveLength(2)
+    ).toHaveLength(1)
 
     await act(() => i18next.changeLanguage('zhCN'))
     expect(screen.getByText(/创建账户即表示您同意我们的/)).toBeVisible()
     expect(screen.getAllByRole('link', { name: '《服务条款》' })).toHaveLength(
-      2
+      1
     )
     expect(screen.getAllByRole('link', { name: '《隐私政策》' })).toHaveLength(
-      2
+      1
     )
     expect(
       screen.getAllByRole('link', { name: '《可接受使用政策》' })
-    ).toHaveLength(2)
+    ).toHaveLength(1)
   })
 
-  it('renders interactive Checkbox in LegalConsent when backend agreement flags are enabled', async () => {
+  it('renders localized sign-in TermsFooter copy covering password and OAuth login', async () => {
+    renderWithRouter(
+      <TermsFooter
+        variant='sign-in'
+        status={{
+          user_agreement_enabled: false,
+          privacy_policy_enabled: false,
+        }}
+      />
+    )
+
+    expect(
+      await screen.findByText(/By continuing, you agree to our/)
+    ).toBeVisible()
+
+    await act(() => i18next.changeLanguage('zhCN'))
+    expect(screen.getByText(/继续登录即表示您同意我们的/)).toBeVisible()
+  })
+
+  it('renders interactive Checkbox in LegalConsent and hides TermsFooter when backend agreement flags are enabled', async () => {
     const user = userEvent.setup()
     const onCheckedChange = vi.fn()
     renderWithRouter(
-      <LegalConsent
-        status={{
-          user_agreement_enabled: true,
-          privacy_policy_enabled: true,
-        }}
-        checked={false}
-        onCheckedChange={onCheckedChange}
-      />
+      <div>
+        <LegalConsent
+          status={{
+            user_agreement_enabled: true,
+            privacy_policy_enabled: true,
+          }}
+          checked={false}
+          onCheckedChange={onCheckedChange}
+        />
+        <TermsFooter
+          variant='sign-in'
+          status={{
+            user_agreement_enabled: true,
+            privacy_policy_enabled: true,
+          }}
+        />
+      </div>
     )
 
     const checkbox = await screen.findByRole('checkbox')
     expect(checkbox).not.toBeChecked()
+    expect(
+      screen.getAllByRole('link', { name: 'Terms of Service' })
+    ).toHaveLength(1)
     await user.click(checkbox)
     expect(onCheckedChange).toHaveBeenCalledWith(true)
   })

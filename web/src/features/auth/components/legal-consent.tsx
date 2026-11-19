@@ -120,25 +120,7 @@ export function LegalConsent({
   }
 
   if (!requiresExplicitConsent) {
-    return (
-      <div
-        className={cn(
-          'border-border/60 bg-muted/40 text-muted-foreground rounded-md border px-3 py-2.5 text-left text-xs leading-5',
-          className
-        )}
-      >
-        {isZh ? (
-          <>
-            继续登录或注册即代表您已阅读并同意 <LegalDocumentLinks isZh />。
-          </>
-        ) : (
-          <>
-            By continuing, you acknowledge and agree to our{' '}
-            <LegalDocumentLinks isZh={false} />.
-          </>
-        )}
-      </div>
-    )
+    return null
   }
 
   return (
