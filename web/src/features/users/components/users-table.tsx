@@ -248,6 +248,7 @@ export function UsersTable() {
             options: (groupsData?.data ?? []).map((group) => ({
               label: group,
               value: group,
+              rawLabel: true,
             })),
             singleSelect: true,
           },

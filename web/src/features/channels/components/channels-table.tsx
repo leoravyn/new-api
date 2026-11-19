@@ -493,10 +493,11 @@ export function ChannelsTable() {
   }, [t, typeCounts, typeFilter])
 
   const groupFilterOptions = [
-    { label: t('All Groups'), value: 'all' },
+    { label: t('All Groups'), value: 'all', rawLabel: true },
     ...groupOptions.map((option) => ({
       ...option,
       label: sensitiveVisible ? option.label : '••••',
+      rawLabel: true,
     })),
   ]
 
