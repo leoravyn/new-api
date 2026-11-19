@@ -21,6 +21,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createInstance } from 'i18next'
 import type { ReactNode } from 'react'
 import { I18nextProvider, initReactI18next } from 'react-i18next'
+import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Wallet } from '@/features/wallet'
@@ -30,7 +31,12 @@ import {
   calculatePresetPricing,
   formatUsdAmount,
   getDiscountLabel,
+  getMatchedAmountDiscount,
 } from '@/features/wallet/lib/format'
+import {
+  getMinTopupAmount,
+  mergePresetAmounts,
+} from '@/features/wallet/lib/payment'
 import en from '@/i18n/locales/en.json'
 import zh from '@/i18n/locales/zh.json'
 import { api } from '@/lib/api'
@@ -110,6 +116,74 @@ describe('USD formatting and preset discount pricing', () => {
     expect(getDiscountLabel(0.95, i18n.t.bind(i18n))).toBe('5% OFF')
     expect(getDiscountLabel(0.85, i18n.t.bind(i18n))).toBe('15% OFF')
     expect(getDiscountLabel(1, i18n.t.bind(i18n))).toBe('')
+  })
+
+  it('matches the highest tiered discount threshold <= amount', () => {
+    const discounts = { 100: 0.95, 200: 0.9 }
+    expect(getMatchedAmountDiscount(99, discounts)).toBe(1.0)
+    expect(getMatchedAmountDiscount(100, discounts)).toBe(0.95)
+    expect(getMatchedAmountDiscount(105, discounts)).toBe(0.95)
+    expect(getMatchedAmountDiscount(200, discounts)).toBe(0.9)
+    expect(getMatchedAmountDiscount(250, discounts)).toBe(0.9)
+    expect(getMatchedAmountDiscount(0, discounts)).toBe(1.0)
+    expect(getMatchedAmountDiscount(150, {})).toBe(1.0)
+    expect(getMatchedAmountDiscount(150, null)).toBe(1.0)
+    expect(getMatchedAmountDiscount(250, { 0: 0.5, 100: 0.95, 200: 0 })).toBe(
+      0.95
+    )
+
+    expect(mergePresetAmounts([99, 105, 250], discounts)).toEqual([
+      { value: 99, discount: 1.0 },
+      { value: 105, discount: 0.95 },
+      { value: 250, discount: 0.9 },
+    ])
+  })
+
+  it('respects global min_topup floor even when enable_online_topup is false', () => {
+    expect(
+      getMinTopupAmount({
+        enable_online_topup: false,
+        enable_stripe_topup: false,
+        enable_waffo_topup: false,
+        enable_waffo_pancake_topup: true,
+        pay_methods: [],
+        min_topup: 10,
+        stripe_min_topup: 1,
+        waffo_pancake_min_topup: 1,
+        amount_options: [],
+        discount: {},
+      })
+    ).toBe(10)
+
+    expect(
+      getMinTopupAmount({
+        enable_online_topup: false,
+        enable_stripe_topup: false,
+        enable_waffo_topup: true,
+        enable_waffo_pancake_topup: false,
+        pay_methods: [],
+        min_topup: 10,
+        stripe_min_topup: 1,
+        waffo_min_topup: 2,
+        amount_options: [],
+        discount: {},
+      })
+    ).toBe(10)
+
+    expect(
+      getMinTopupAmount({
+        enable_online_topup: false,
+        enable_stripe_topup: false,
+        enable_waffo_topup: false,
+        enable_waffo_pancake_topup: true,
+        pay_methods: [],
+        min_topup: 10,
+        stripe_min_topup: 1,
+        waffo_pancake_min_topup: 15,
+        amount_options: [],
+        discount: {},
+      })
+    ).toBe(15)
   })
 })
 
@@ -298,9 +372,8 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
       expect.anything()
     )
 
-    const waffoButton = screen.getByRole('button', { name: /Waffo Pancake/ })
     await act(async () => {
-      fireEvent.click(waffoButton)
+      fireEvent.click(screen.getByRole('button', { name: /Waffo Pancake/ }))
     })
 
     const dialog = await screen.findByRole('alertdialog')
@@ -322,5 +395,162 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
       dialog.querySelector('a[href="/privacy-policy"]')
     ).toBeInTheDocument()
     expect(dialog.querySelector('a[href="/aup"]')).toBeInTheDocument()
+  })
+
+  it('applies tiered discount for custom amount 105 and enforces min_topup=10 with inline warning and toast.error', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    const discountMap: Record<number, number> = {
+      100: 0.95,
+      200: 0.9,
+    }
+
+    vi.spyOn(api, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/user/self') {
+        return {
+          data: {
+            success: true,
+            data: {
+              id: 1,
+              username: 'tester',
+              quota: 5000000,
+              used_quota: 0,
+              request_count: 0,
+              aff_quota: 0,
+              aff_history_quota: 0,
+              aff_count: 0,
+              group: 'Official',
+            },
+          },
+        }
+      }
+      if (url === '/api/user/topup/info') {
+        return {
+          data: {
+            success: true,
+            data: {
+              enable_online_topup: false,
+              enable_stripe_topup: false,
+              enable_waffo_topup: false,
+              enable_waffo_pancake_topup: true,
+              enable_redemption: true,
+              payment_compliance_confirmed: true,
+              pay_methods: [
+                {
+                  name: 'Waffo Pancake',
+                  type: PAYMENT_TYPES.WAFFO_PANCAKE,
+                  min_topup: 1,
+                },
+              ],
+              min_topup: 10,
+              stripe_min_topup: 1,
+              waffo_pancake_min_topup: 1,
+              amount_options: [10, 50, 100, 200],
+              discount: discountMap,
+            },
+          },
+        }
+      }
+      if (url === '/api/user/aff') {
+        return { data: { success: true, data: 'REF123' } }
+      }
+      if (url === '/api/subscription/plans') {
+        return { data: { success: true, message: 'success', data: [] } }
+      }
+      if (url === '/api/subscription/self') {
+        return {
+          data: {
+            success: true,
+            message: 'success',
+            data: {
+              billing_preference: 'subscription_first',
+              subscriptions: [],
+              all_subscriptions: [],
+            },
+          },
+        }
+      }
+      return { data: { success: true, data: null } }
+    })
+
+    vi.spyOn(api, 'post').mockImplementation(
+      async (url: string, body?: unknown) => {
+        if (url === '/api/user/waffo-pancake/amount') {
+          const amount = Number((body as { amount?: number })?.amount ?? 0)
+          const discount = getMatchedAmountDiscount(amount, discountMap)
+          return {
+            data: {
+              message: 'success',
+              data: (amount * discount).toFixed(2),
+            },
+          }
+        }
+        return { data: { message: 'error', data: 'unexpected' } }
+      }
+    )
+
+    const toastErrorSpy = vi.spyOn(toast, 'error').mockImplementation(() => '')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <Wallet />
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+
+    const amountInput = await screen.findByPlaceholderText('Minimum $10')
+    await waitFor(() => {
+      expect(amountInput).toHaveValue(10)
+    })
+
+    // Enter amount below min_topup (5 < 10)
+    await act(async () => {
+      fireEvent.change(amountInput, { target: { value: '5' } })
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Minimum topup amount: $10'
+    )
+    expect(amountInput).toHaveAttribute('aria-invalid', 'true')
+
+    const waffoButton = screen.getByRole('button', { name: /Waffo Pancake/ })
+    expect(waffoButton).toHaveAttribute('aria-disabled', 'true')
+
+    await act(async () => {
+      fireEvent.click(waffoButton)
+    })
+
+    expect(toastErrorSpy).toHaveBeenCalledWith('Minimum topup amount: $10')
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+
+    // Enter custom amount 105 -> matches 100: 0.95 tier
+    await act(async () => {
+      fireEvent.change(amountInput, { target: { value: '105' } })
+    })
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    const customDiscount = screen.getByTestId('custom-amount-discount')
+    expect(customDiscount).toHaveTextContent('5% OFF')
+    expect(customDiscount).toHaveTextContent('Save $5.25')
+
+    await waitFor(() => {
+      expect(screen.getByText('$99.75 USD')).toBeVisible()
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Waffo Pancake/ }))
+    })
+
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('Original')
+    expect(dialog).toHaveTextContent('$105.00 USD')
+    expect(dialog).toHaveTextContent('You Pay')
+    expect(dialog).toHaveTextContent('$99.75 USD')
+    expect(dialog).toHaveTextContent('You save')
+    expect(dialog).toHaveTextContent('5% OFF')
+    expect(dialog).toHaveTextContent('$5.25 USD')
   })
 })

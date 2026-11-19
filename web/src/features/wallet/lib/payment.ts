@@ -25,6 +25,7 @@ import {
   DEFAULT_MIN_TOPUP,
 } from '../constants'
 import type { PaymentMethod, PresetAmount, TopupInfo } from '../types'
+import { getMatchedAmountDiscount } from './format'
 
 // ============================================================================
 // Payment Processing Functions
@@ -173,23 +174,20 @@ export function getMinTopupAmount(topupInfo: TopupInfo | null): number {
     return DEFAULT_MIN_TOPUP
   }
 
+  const globalMin = topupInfo.min_topup || 0
+  let gatewayMin = 0
+
   if (topupInfo.enable_online_topup) {
-    return topupInfo.min_topup
+    gatewayMin = topupInfo.min_topup || 0
+  } else if (topupInfo.enable_stripe_topup) {
+    gatewayMin = topupInfo.stripe_min_topup || 0
+  } else if (topupInfo.enable_waffo_topup) {
+    gatewayMin = topupInfo.waffo_min_topup || 0
+  } else if (topupInfo.enable_waffo_pancake_topup) {
+    gatewayMin = topupInfo.waffo_pancake_min_topup || 0
   }
 
-  if (topupInfo.enable_stripe_topup) {
-    return topupInfo.stripe_min_topup
-  }
-
-  if (topupInfo.enable_waffo_topup) {
-    return topupInfo.waffo_min_topup || DEFAULT_MIN_TOPUP
-  }
-
-  if (topupInfo.enable_waffo_pancake_topup) {
-    return topupInfo.waffo_pancake_min_topup || DEFAULT_MIN_TOPUP
-  }
-
-  return DEFAULT_MIN_TOPUP
+  return Math.max(globalMin, gatewayMin) || DEFAULT_MIN_TOPUP
 }
 
 /**
@@ -214,6 +212,6 @@ export function mergePresetAmounts(
 
   return amountOptions.map((amount) => ({
     value: amount,
-    discount: discounts[amount] || 1.0,
+    discount: getMatchedAmountDiscount(amount, discounts),
   }))
 }

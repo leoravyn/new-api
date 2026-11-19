@@ -95,12 +95,7 @@ func getWaffoPayMoney(amount float64, group string) float64 {
 	if topupGroupRatio == 0 {
 		topupGroupRatio = 1
 	}
-	discount := 1.0
-	if ds, ok := operation_setting.GetPaymentSetting().AmountDiscount[int(originalAmount)]; ok {
-		if ds > 0 {
-			discount = ds
-		}
-	}
+	discount := operation_setting.GetPaymentSetting().MatchAmountDiscount(int64(originalAmount))
 	return amount * setting.WaffoUnitPrice * topupGroupRatio * discount
 }
 
@@ -118,7 +113,7 @@ func RequestWaffoAmount(c *gin.Context) {
 		return
 	}
 
-	waffoMinTopup := int64(setting.WaffoMinTopUp)
+	waffoMinTopup := effectiveGatewayMinTopUpAmount(setting.WaffoMinTopUp)
 	if req.Amount < waffoMinTopup {
 		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": waffoMinTopup}))
 		return
@@ -155,7 +150,7 @@ func RequestWaffoPay(c *gin.Context) {
 		paymentError(c, common.NewMessage("Invalid parameters"))
 		return
 	}
-	waffoMinTopup := int64(setting.WaffoMinTopUp)
+	waffoMinTopup := effectiveGatewayMinTopUpAmount(setting.WaffoMinTopUp)
 	if req.Amount < waffoMinTopup {
 		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": waffoMinTopup}))
 		return

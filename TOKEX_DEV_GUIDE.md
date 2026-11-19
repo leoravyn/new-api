@@ -11,7 +11,7 @@
 - **CPA 上游管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 原生后端**
   - **前端产物**：基于原 New API 前端（`/home/ubuntu/tokex/web`）重构，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管静态资源。
-  - **后端网关**：`tokex-web`（官方 `calciumion/new-api:latest`，当前 `v1.0.0-rc.51`，`127.0.0.1:3000`），Root Go 源码仅作路由/后端逻辑对照参考，**未自定义编译后端镜像**。
+  - **后端网关**：`tokex-web`（本地自定义镜像 `tokex-web:v1.0.0-rc.51-tokex`，基于 `v1.0.0-rc.51` 源码构建，`127.0.0.1:3000`），针对阶梯金额折扣（`MatchAmountDiscount`）与全局 `MinTopUp` 下限强制校验进行了补丁编译；备份于 `/opt/tokex/backups/2026-11-19-docker-compose-before.yml`。
   - **数据库**：`tokex-db`（`mariadb:10.11`，库名 `newapi`，Docker 内网 `tokex-net:3306`）。
   - **上游代理**：`tokex-cpa`（官方 `eceasy/cli-proxy-api:latest`，当前 `v8.0.76`，`127.0.0.1:8317` / 内网 `http://tokex-cpa:8317`）。
 
@@ -26,6 +26,7 @@
   - **纯美元钱包与管理员折扣**：Wallet 充值流统一为 USD（`$xx.xx USD`、`effectivePriceRatio = 1`、`usdExchangeRate = 1`）并增加结账合规提醒，与后端 `Waffo Pancake` 100% 对齐；修复管理员金额折扣展示为「`Final price multiplier (0.95 = 5% off)` / `优惠 5% (9.5折)`」，同步 `en/zh/zh-TW` i18n。
   - **模型广场原价对比**：Model Square 对所有 `groupRatio !== 1`（含 `< 1x` 与 `> 1x`）统一展示 `1x` 删除线原价对比。
   - **数据库 `options` 清理（`tokex-db`）**：更新 `Price=1`、`USDExchangeRate=1`，清空遗留 `TopUpLink` 与 `Footer`，修正 `UserUsableGroups` 中 `Offical API` 拼写为 `Official API`（修改前备份位于 `/opt/tokex/backups/2026-11-19-options-before.txt`）。
+  - **后端自定义构建与充值计价/下限修复（`tokex-web:v1.0.0-rc.51-tokex`）**：新增 `PaymentSetting.MatchAmountDiscount` 阶梯折扣匹配（`>= threshold` 匹配最高满足档位）与全局 `MinTopUp` 下限校验（覆盖 `GetTopUpInfo` 及 Waffo Pancake / Waffo / Stripe 支付路由，防止被网关单独最小值绕过），同步修复前端钱包阶梯折扣展示、自定义金额折扣试算与最低充值校验提示，并补充 `DESIGN.md`（Waffo Pancake 托管结账暗黑视觉规范）。
 
 ---
 

@@ -163,6 +163,52 @@ describe('AmountDiscountDialog', () => {
       target: { value: '0.95' },
     })
     expect(screen.getByText(/· 5% off/)).toBeVisible()
+    expect(
+      screen.getByLabelText('Recharge Amount Threshold (≥ USD)')
+    ).toBeVisible()
+    expect(
+      screen.getByText(
+        'Threshold cannot be changed when editing. Applies when top-up amount ≥ this threshold (highest matching tier applies).'
+      )
+    ).toBeVisible()
+  })
+
+  it('clarifies >= threshold helper copy when adding a new discount tier', async () => {
+    render(
+      <I18nextProvider i18n={i18n}>
+        <AmountDiscountDialog
+          open
+          onOpenChange={vi.fn()}
+          onSave={vi.fn()}
+          editData={null}
+        />
+      </I18nextProvider>
+    )
+
+    expect(screen.getByLabelText('充值金额阈值 (≥ 美元)')).toBeVisible()
+    expect(
+      screen.getByText(
+        '当充值金额达到或超过该阈值（≥ 金额）时生效；自动匹配最高满足的档位。'
+      )
+    ).toBeVisible()
+
+    await act(() => i18n.changeLanguage('en'))
+    expect(
+      screen.getByLabelText('Recharge Amount Threshold (≥ USD)')
+    ).toBeVisible()
+    expect(
+      screen.getByText(
+        'Applies when top-up amount reaches or exceeds this threshold (≥ amount); the highest matching tier applies.'
+      )
+    ).toBeVisible()
+
+    await act(() => i18n.changeLanguage('zhTW'))
+    expect(screen.getByLabelText('儲值金額閾值 (≥ 美元)')).toBeVisible()
+    expect(
+      screen.getByText(
+        '當儲值金額達到或超過此閾值（≥ 金額）時生效；自動套用最高符合的級距。'
+      )
+    ).toBeVisible()
   })
 })
 
@@ -185,6 +231,12 @@ describe('AmountDiscountVisualEditor', () => {
     expect(screen.getAllByText('优惠 10% (9折)')).toHaveLength(2)
     expect(screen.getAllByText('优惠 15% (8.5折)')).toHaveLength(2)
     expect(screen.getAllByText('原价')).toHaveLength(2)
+    expect(screen.getAllByText('≥ $100')).toHaveLength(2)
+    expect(
+      screen.getByText(
+        '配置阶梯充值折扣率。充值金额 ≥ 阈值时自动匹配最高满足的折扣档位。'
+      )
+    ).toBeVisible()
     expect(container.textContent).not.toContain('关闭')
     expect(container.textContent).not.toContain('= 5折')
 
@@ -193,5 +245,10 @@ describe('AmountDiscountVisualEditor', () => {
     expect(screen.getAllByText('10% off')).toHaveLength(2)
     expect(screen.getAllByText('15% off')).toHaveLength(2)
     expect(screen.getAllByText('No discount')).toHaveLength(2)
+    expect(
+      screen.getByText(
+        'Configure tiered discount rates. Orders ≥ threshold automatically match the highest qualifying tier.'
+      )
+    ).toBeVisible()
   })
 })

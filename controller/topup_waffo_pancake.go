@@ -29,8 +29,9 @@ func RequestWaffoPancakeAmount(c *gin.Context) {
 		return
 	}
 
-	if req.Amount < int64(setting.WaffoPancakeMinTopUp) {
-		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": setting.WaffoPancakeMinTopUp}))
+	minTopup := effectiveGatewayMinTopUpAmount(setting.WaffoPancakeMinTopUp)
+	if req.Amount < minTopup {
+		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": minTopup}))
 		return
 	}
 	id := c.GetInt("id")
@@ -64,10 +65,7 @@ func getWaffoPancakePayMoney(amount int64, group string) float64 {
 		topupGroupRatio = 1
 	}
 
-	discount := 1.0
-	if ds, ok := operation_setting.GetPaymentSetting().AmountDiscount[int(amount)]; ok && ds > 0 {
-		discount = ds
-	}
+	discount := operation_setting.GetPaymentSetting().MatchAmountDiscount(amount)
 
 	payMoney := dAmount.
 		Mul(decimal.NewFromFloat(setting.WaffoPancakeUnitPrice)).
@@ -350,8 +348,9 @@ func RequestWaffoPancakePay(c *gin.Context) {
 		paymentError(c, common.NewMessage("Invalid parameters"))
 		return
 	}
-	if req.Amount < int64(setting.WaffoPancakeMinTopUp) {
-		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": setting.WaffoPancakeMinTopUp}))
+	minTopup := effectiveGatewayMinTopUpAmount(setting.WaffoPancakeMinTopUp)
+	if req.Amount < minTopup {
+		paymentError(c, common.NewMessage("Top-up amount cannot be less than {{min}}", map[string]any{"min": minTopup}))
 		return
 	}
 	id := c.GetInt("id")

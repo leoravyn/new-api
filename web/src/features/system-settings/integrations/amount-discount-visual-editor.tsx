@@ -128,7 +128,9 @@ export function AmountDiscountVisualEditor({
     <div className='space-y-4'>
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <p className='text-muted-foreground text-sm'>
-          {t('Configure discount rates based on recharge amounts')}
+          {t(
+            'Configure tiered discount rates. Orders ≥ threshold automatically match the highest qualifying tier.'
+          )}
         </p>
         <Button
           type='button'
@@ -161,9 +163,11 @@ export function AmountDiscountVisualEditor({
             columns={[
               {
                 id: 'amount',
-                header: t('Recharge Amount'),
+                header: t('Recharge Amount (≥)'),
                 cell: (discount) => (
-                  <span className='font-mono text-sm'>${discount.amount}</span>
+                  <span className='font-mono text-sm'>
+                    ≥ ${discount.amount}
+                  </span>
                 ),
               },
               {
@@ -205,7 +209,7 @@ export function AmountDiscountVisualEditor({
                 <div className='mb-3 flex items-start justify-between'>
                   <div className='flex-1'>
                     <div className='mb-2 font-mono text-base font-medium'>
-                      ${discount.amount}
+                      ≥ ${discount.amount}
                     </div>
                     {renderDiscountBadge(discount.discountRate)}
                   </div>
