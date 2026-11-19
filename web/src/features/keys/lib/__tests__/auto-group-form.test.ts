@@ -209,3 +209,33 @@ describe('API key user quota query form mapping', () => {
     }
   )
 })
+
+describe('API key required group validation', () => {
+  test('rejects empty or whitespace-only group selection', () => {
+    const schema = getApiKeyFormSchema(t, 2)
+    for (const group of ['', '   ']) {
+      const result = schema.safeParse({
+        ...getApiKeyFormDefaultValues(false),
+        name: 'my-key',
+        group,
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0]?.message).toBe('Please select a group')
+      }
+    }
+  })
+
+  test.each(['Official', 'Proxy'])(
+    'accepts explicit group selection %s',
+    (group) => {
+      const schema = getApiKeyFormSchema(t, 2)
+      const result = schema.safeParse({
+        ...getApiKeyFormDefaultValues(false),
+        name: 'my-key',
+        group,
+      })
+      expect(result.success).toBe(true)
+    }
+  )
+})

@@ -46,6 +46,7 @@ type DataTableFacetedFilterProps<TData, TValue> = {
   options: {
     label: string
     value: string
+    rawLabel?: boolean
     icon?: React.ComponentType<{ className?: string }>
     iconNode?: React.ReactNode
     count?: number
@@ -112,7 +113,7 @@ function DataTableFacetedFilterInner<TData, TValue>({
                       key={option.value}
                       className='rounded-sm px-1 font-normal'
                     >
-                      {t(option.label)}
+                      {option.rawLabel ? option.label : t(option.label)}
                     </Badge>
                   ))
               )}
@@ -128,6 +129,9 @@ function DataTableFacetedFilterInner<TData, TValue>({
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
+                const displayLabel = option.rawLabel
+                  ? option.label
+                  : t(option.label)
                 return (
                   <CommandItem
                     key={option.value}
@@ -152,9 +156,9 @@ function DataTableFacetedFilterInner<TData, TValue>({
                     ) : null}
                     <span
                       className='min-w-0 flex-1 truncate'
-                      title={t(option.label)}
+                      title={displayLabel}
                     >
-                      {t(option.label)}
+                      {displayLabel}
                     </span>
                     {typeof option.count === 'number' ? (
                       <span className='text-muted-foreground ms-auto flex h-4 min-w-4 items-center justify-center font-mono text-xs'>
