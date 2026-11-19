@@ -198,7 +198,7 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     expect(
       await screen.findByRole('heading', { name: '服务条款' })
     ).toBeVisible()
-    expect(screen.getByText(/用户多次\/误操作重复充值/)).toBeVisible()
+    expect(screen.getByText(/技术性重复扣款与用户多次充值区分/)).toBeVisible()
   })
 
   it('renders /user-agreement, /privacy-policy, and /aup with full unauthenticated content', async () => {
@@ -223,7 +223,7 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     ).toBeVisible()
     expect(
       screen.getByRole('heading', {
-        name: /Zero-Tolerance Security & Harm Prohibitions/i,
+        name: /Security & Illegal Activity Prohibitions/i,
       })
     ).toBeVisible()
   })

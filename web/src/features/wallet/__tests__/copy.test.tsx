@@ -123,9 +123,7 @@ it('translates unified USD recharge presets, Waffo note, minimum amount, and che
     )
   ).toBeVisible()
   expect(
-    screen.getByText(
-      /数字 API 额度支付后即时到账；24 小时内未消费额度可申请退款。/
-    )
+    screen.getByText(/数字 API 额度支付后即时到账。/)
   ).toBeVisible()
   expect(screen.getByRole('link', { name: '服务条款' })).toHaveAttribute(
     'href',
@@ -155,7 +153,7 @@ it('translates unified USD recharge presets, Waffo note, minimum amount, and che
   ).toBeVisible()
   expect(
     screen.getByText(
-      /Digital API credits are delivered instantly upon payment\. Unused credits are refundable within 24 hours\./
+      /Digital API credits are delivered instantly upon payment\./
     )
   ).toBeVisible()
   expect(

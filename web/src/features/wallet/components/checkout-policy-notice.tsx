@@ -67,8 +67,8 @@ const policyLinkClassName =
   'text-foreground/90 hover:text-foreground underline underline-offset-4 transition-colors'
 
 /**
- * Checkout compliance notice showing instant digital delivery, 24h unused-credit
- * refund terms, and links to Terms of Service, Privacy Policy, and AUP.
+ * Checkout compliance notice showing instant digital delivery
+ * and links to Terms of Service, Privacy Policy, and AUP.
  */
 export function CheckoutPolicyNotice({
   compact = false,
@@ -91,14 +91,11 @@ export function CheckoutPolicyNotice({
         <ShieldCheck className='mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400/85' />
         <div className='space-y-1'>
           <p>
-            {t(
-              'Digital API credits are delivered instantly upon payment. Unused credits are refundable within 24 hours.',
-              {
-                defaultValue: isZh
-                  ? '数字 API 额度支付后即时到账；24 小时内未消费额度可申请退款。'
-                  : 'Digital API credits are delivered instantly upon payment. Unused credits are refundable within 24 hours.',
-              }
-            )}
+            {t('Digital API credits are delivered instantly upon payment.', {
+              defaultValue: isZh
+                ? '数字 API 额度支付后即时到账。'
+                : 'Digital API credits are delivered instantly upon payment.',
+            })}
           </p>
           <p>
             <Trans

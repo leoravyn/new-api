@@ -79,8 +79,8 @@ function AboutOverviewState() {
             </div>
             <p className='mt-2 text-xs leading-5 text-zinc-400'>
               {isZh
-                ? 'PCI-DSS 合规支付处理，TOKEX 不存储任何银行卡信息，零消耗额度购入 24 小时内支持全额退款。'
-                : 'PCI-DSS compliant checkout with local tax handling and zero card storage on TOKEX servers. Unused credits refundable within 24 hours.'}
+                ? 'PCI-DSS 合规支付处理，TOKEX 不存储任何银行卡信息。'
+                : 'PCI-DSS compliant checkout with local tax handling and zero card storage on TOKEX servers.'}
             </p>
           </div>
 
