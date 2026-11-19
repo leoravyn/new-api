@@ -51,6 +51,9 @@ export type ApiKeyGroupOption = {
 }
 
 type ApiKeyGroupComboboxProps = {
+  id?: string
+  'aria-describedby'?: string
+  'aria-invalid'?: boolean
   options: ApiKeyGroupOption[]
   value?: string
   onValueChange: (value: string) => void
@@ -59,6 +62,9 @@ type ApiKeyGroupComboboxProps = {
 }
 
 export function ApiKeyGroupCombobox({
+  id,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
   options,
   value,
   onValueChange,
@@ -98,6 +104,9 @@ export function ApiKeyGroupCombobox({
       <PopoverTrigger
         render={
           <Button
+            id={id}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={ariaInvalid}
             type='button'
             variant='outline'
             role='combobox'
