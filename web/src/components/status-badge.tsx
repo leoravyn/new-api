@@ -39,7 +39,6 @@ For commercial licensing, please contact support@quantumnous.com
 import * as React from 'react'
 
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { stringToColor } from '@/lib/colors'
 import { cn } from '@/lib/utils'
 
 export const dotColorMap = {
@@ -156,7 +155,7 @@ export function StatusBadge({
   const type = typeProp ?? contextType
 
   const computedVariant: StatusVariant = autoColor
-    ? (stringToColor(autoColor) as StatusVariant)
+    ? 'blue'
     : (variant ?? 'neutral')
 
   const handleClick = (e: React.MouseEvent<HTMLSpanElement>) => {
