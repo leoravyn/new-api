@@ -53,13 +53,15 @@ function collectAllDocumentText(doc: LegalDocumentLocaleContent): string {
 }
 
 describe('legal-config and compliance content integrity', () => {
-  it('defines verified TOKEX details with zero placeholders', () => {
+  it('defines verified TOKEX details with zero placeholders or Delaware references', () => {
     expect(LEGAL_CONFIG.brandName).toBe('TOKEX')
     expect(LEGAL_CONFIG.siteUrl).toBe('https://tokex.vip')
     expect(LEGAL_CONFIG.supportEmail).toBe('support@tokex.vip')
-    expect(LEGAL_CONFIG.operatorName).toBe('TOKEX Individual Operator')
-    expect(LEGAL_CONFIG.governingLawEn).toBe('State of Delaware, United States')
-    expect(LEGAL_CONFIG.effectiveDate).toBe('2026-11-19')
+    expect(LEGAL_CONFIG.lastUpdated).toBe('2026-11-22')
+    expect(LEGAL_CONFIG.governingLawEn).toBe(
+      'Hong Kong Special Administrative Region'
+    )
+    expect(LEGAL_CONFIG.governingLawZh).toBe('中华人民共和国香港特别行政区法律')
     expect(LEGAL_CONFIG.paymentProcessor).toBe('Waffo Pancake')
   })
 
@@ -70,126 +72,114 @@ describe('legal-config and compliance content integrity', () => {
     ['Privacy zhCN', PRIVACY_POLICY_CONTENT.zhCN],
     ['AUP en', AUP_CONTENT.en],
     ['AUP zhCN', AUP_CONTENT.zhCN],
-  ])('%s contains zero template bracket placeholders', (_name, docContent) => {
-    const fullText = collectAllDocumentText(docContent)
-    expect(fullText).not.toMatch(/\[[A-Za-z0-9_\s/+.-]{2,}\]/)
-    expect(fullText).not.toContain('PLACEHOLDER')
-    expect(fullText).not.toContain('support@quantumnous.com')
-  })
+  ])(
+    '%s contains zero placeholders and no US/Delaware regulatory references',
+    (_name, docContent) => {
+      const fullText = collectAllDocumentText(docContent)
+      expect(fullText).not.toMatch(/\[[A-Za-z0-9_\s/+.-]{2,}\]/)
+      expect(fullText).not.toContain('PLACEHOLDER')
+      expect(fullText).not.toContain('support@quantumnous.com')
+      expect(fullText).not.toMatch(/Delaware|特拉华/i)
+      expect(fullText).not.toMatch(/NCMEC|CCPA|CPRA|FTC|SEC\b/i)
+    }
+  )
 
-  it('covers concise Terms requirements without subscription or 24h-refund clauses', () => {
+  it('covers all 10 Terms of Service sections in en and zhCN', () => {
     const enText = collectAllDocumentText(TERMS_OF_SERVICE_CONTENT.en)
     const zhText = collectAllDocumentText(TERMS_OF_SERVICE_CONTENT.zhCN)
 
     expect(TERMS_OF_SERVICE_CONTENT.en.sections).toHaveLength(10)
     expect(TERMS_OF_SERVICE_CONTENT.zhCN.sections).toHaveLength(10)
 
-    // No subscription / auto-renew billing offerings and no 24-hour refund rule
-    expect(enText).not.toMatch(/auto-?renewing subscription/i)
-    expect(enText).toMatch(/no recurring subscription/i)
-    expect(enText).not.toMatch(/24 hours/i)
-    expect(zhText).not.toMatch(/24 小时/)
-
     for (const pattern of [
-      /TOKEX Individual Operator/,
-      /Waffo Pancake/,
-      /PCI-DSS/,
+      /https:\/\/tokex\.vip/,
       /support@tokex\.vip/,
-      /does NOT sell, resell, proxy, activate, or top up third-party consumer AI accounts/i,
-      /never expire/i,
+      /Waffo Pancake/,
+      /outside Mainland China/i,
       /non-refundable/i,
-      /statutory consumer protection/i,
-      /Technical Billing Errors vs\. Repeat Orders/i,
-      /2 business days/,
-      /5 business days/,
-      /does NOT use your API Inputs or Outputs to train/i,
-      /90 days/,
-      /12 MONTHS/i,
-      /State of Delaware, United States/,
-      /14 days/,
+      /10% administrative and account settlement fee/i,
+      /three \(3\) months/i,
+      /Hong Kong Special Administrative Region/,
+      /Hong Kong International Arbitration Centre \(HKIAC\)/,
     ]) {
       expect(enText).toMatch(pattern)
     }
 
     for (const pattern of [
-      /Waffo Pancake/,
+      /https:\/\/tokex\.vip/,
       /support@tokex\.vip/,
-      /绝对不提供任何第三方官方消费端 AI 账号或会员的代开通、代充值/,
-      /长期有效/,
-      /充值到账后不支持退款/,
-      /法定消费者权益保留/,
-      /技术性重复扣款与用户多次充值区分/,
-      /美国特拉华州法律/,
+      /Waffo Pancake/,
+      /不向中国大陆境内提供服务/,
+      /绝对不提供任何第三方官方消费端 AI 账号或会员的代开通、代充值、合租或转售服务/,
+      /扣除 10% 作为账户清算与行政管理手续费/,
+      /3 个月/,
+      /中华人民共和国香港特别行政区法律/,
+      /香港国际仲裁中心（HKIAC）/,
     ]) {
       expect(zhText).toMatch(pattern)
     }
   })
 
-  it('covers all 9 Privacy Policy sections and subprocessors in en and zhCN', () => {
+  it('covers all 7 Privacy Policy sections in en and zhCN', () => {
     const enText = collectAllDocumentText(PRIVACY_POLICY_CONTENT.en)
     const zhText = collectAllDocumentText(PRIVACY_POLICY_CONTENT.zhCN)
 
-    expect(PRIVACY_POLICY_CONTENT.en.sections).toHaveLength(9)
-    expect(PRIVACY_POLICY_CONTENT.zhCN.sections).toHaveLength(9)
+    expect(PRIVACY_POLICY_CONTENT.en.sections).toHaveLength(7)
+    expect(PRIVACY_POLICY_CONTENT.zhCN.sections).toHaveLength(7)
 
     for (const pattern of [
+      /https:\/\/tokex\.vip/,
+      /support@tokex\.vip/,
       /Waffo Pancake/,
-      /Anthropic/,
-      /OpenAI/,
       /Resend/,
       /Cloudflare/,
       /GitHub/,
       /Google/,
-      /Do Not Sell Personal Information/i,
-      /72 hours/,
-      /90 days/,
-      /5–7 years/,
-      /30 calendar days/,
-      /Standard Contractual Clauses/,
-      /18 years/,
-      /15 days/,
+      /never sells, rents, or trades your personal information/i,
     ]) {
       expect(enText).toMatch(pattern)
     }
 
-    expect(zhText).toMatch(/绝不出售您的个人信息/)
-    expect(zhText).toMatch(/30 个日历日内/)
+    for (const pattern of [
+      /https:\/\/tokex\.vip/,
+      /support@tokex\.vip/,
+      /Waffo Pancake/,
+      /Resend/,
+      /Cloudflare/,
+      /绝不向任何第三方出售、出租或交易您的个人信息/,
+    ]) {
+      expect(zhText).toMatch(pattern)
+    }
   })
 
-  it('covers all 7 AUP sections aligned with Anthropic and OpenAI policies', () => {
+  it('covers all 6 AUP sections in en and zhCN', () => {
     const enText = collectAllDocumentText(AUP_CONTENT.en)
     const zhText = collectAllDocumentText(AUP_CONTENT.zhCN)
 
-    expect(AUP_CONTENT.en.sections).toHaveLength(7)
-    expect(AUP_CONTENT.zhCN.sections).toHaveLength(7)
+    expect(AUP_CONTENT.en.sections).toHaveLength(6)
+    expect(AUP_CONTENT.zhCN.sections).toHaveLength(6)
 
     for (const pattern of [
-      /Pornography, Sexually Explicit Content \(NSFW\) & NCII/,
-      /Violence, Gore, Terrorism & Self-Harm/,
-      /Hate Speech, Harassment & Doxxing/,
-      /Child Safety & CSAM \/ CSAE/,
-      /NCMEC/,
-      /Deepfakes & Non-Consensual Real-Person Impersonation/,
-      /Copyright, Trademark & IP Infringement/,
-      /CBRN \/ CBRNE/,
-      /Cyberattacks, Malware & Critical Infrastructure/,
-      /Biometric Scraping & Criminal-Justice Scoring/i,
-      /Election Interference/,
-      /Jailbreaking/i,
-      /Model Distillation/i,
-      /Qualified Human-in-the-Loop Review/,
-      /Within 2 hours/,
-      /Within 24 hours/,
-      /Within 3 business days/,
-      /Within 7 business days/,
-      /Within 15 business days/,
-      /Independent Appeals/,
+      /CSAM\/CSAE/,
+      /NCII/,
+      /Deepfakes/i,
+      /jailbreak/i,
+      /distill/i,
+      /seven \(7\) calendar days/i,
+      /support@tokex\.vip/,
     ]) {
       expect(enText).toMatch(pattern)
     }
 
-    expect(zhText).toMatch(/六大禁止内容类别/)
-    expect(zhText).toMatch(/Anthropic 与 OpenAI/)
-    expect(zhText).toMatch(/独立申诉复核流程/)
+    for (const pattern of [
+      /CSAM\/CSAE/,
+      /NCII/,
+      /Deepfakes/,
+      /越狱提示/,
+      /7 个日历日内/,
+      /support@tokex\.vip/,
+    ]) {
+      expect(zhText).toMatch(pattern)
+    }
   })
 })

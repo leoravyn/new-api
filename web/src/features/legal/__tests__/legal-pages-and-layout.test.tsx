@@ -198,7 +198,7 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     expect(
       await screen.findByRole('heading', { name: '服务条款' })
     ).toBeVisible()
-    expect(screen.getByText(/技术性重复扣款与用户多次充值区分/)).toBeVisible()
+    expect(screen.getByText(/香港国际仲裁中心（HKIAC）/)).toBeVisible()
   })
 
   it('renders /user-agreement, /privacy-policy, and /aup with full unauthenticated content', async () => {
@@ -212,18 +212,20 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     expect(
       await screen.findByRole('heading', { name: 'Privacy Policy' })
     ).toBeVisible()
-    expect(screen.getByText(/Do Not Sell Personal Information/i)).toBeVisible()
+    expect(
+      screen.getByText(/never sells, rents, or trades your personal information/i)
+    ).toBeVisible()
     cleanup()
 
     renderAtPath('/aup')
     expect(
       await screen.findByRole('heading', {
-        name: 'Acceptable Use Policy & AI Model Usage Guidelines',
+        name: 'Acceptable Use Policy',
       })
     ).toBeVisible()
     expect(
       screen.getByRole('heading', {
-        name: /Security & Illegal Activity Prohibitions/i,
+        name: /Platform Security and Anti-Abuse Rules/i,
       })
     ).toBeVisible()
   })
