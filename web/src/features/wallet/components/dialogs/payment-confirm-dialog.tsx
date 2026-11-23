@@ -34,15 +34,19 @@ import { normalizeInterfaceLanguage } from '@/i18n/languages'
 
 import { DEFAULT_DISCOUNT_RATE } from '../../constants'
 import {
+  formatSettlementAmount,
   formatUsdAmount,
   getDiscountLabel,
   getPaymentIcon,
+  getPaymentSettlementCurrency,
+  isEpayMethodType,
   isWaffoPayment,
   isWaffoPancakePayment,
 } from '../../lib'
 import type { PaymentMethod } from '../../types'
 import {
   CheckoutPolicyNotice,
+  EpaySettlementNote,
   WaffoSettlementNote,
 } from '../checkout-policy-notice'
 
@@ -83,6 +87,10 @@ export function PaymentConfirmDialog({
   const isWaffoMethod =
     isWaffoPayment(paymentMethod?.type ?? '') ||
     isWaffoPancakePayment(paymentMethod?.type ?? '')
+  const isEpayMethod = isEpayMethodType(paymentMethod?.type ?? '')
+  const settlementCurrency = getPaymentSettlementCurrency(
+    paymentMethod?.type ?? ''
+  )
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -114,7 +122,9 @@ export function PaymentConfirmDialog({
                 })}
               </span>
               <span className='text-muted-foreground font-mono text-sm tabular-nums line-through'>
-                {formatUsdAmount(originalAmount, { withCode: true })}
+                {formatSettlementAmount(originalAmount, settlementCurrency, {
+                  withCode: true,
+                })}
               </span>
             </div>
           )}
@@ -127,7 +137,9 @@ export function PaymentConfirmDialog({
               <Skeleton className='h-6 w-24' />
             ) : (
               <span className='font-mono text-2xl font-semibold tabular-nums'>
-                {formatUsdAmount(paymentAmount, { withCode: true })}
+                {formatSettlementAmount(paymentAmount, settlementCurrency, {
+                  withCode: true,
+                })}
               </span>
             )}
           </div>
@@ -142,7 +154,9 @@ export function PaymentConfirmDialog({
                   </span>
                 </div>
                 <span className='font-mono font-semibold text-emerald-400 tabular-nums'>
-                  {formatUsdAmount(discountAmount, { withCode: true })}
+                  {formatSettlementAmount(discountAmount, settlementCurrency, {
+                    withCode: true,
+                  })}
                 </span>
               </div>
             </div>
@@ -164,6 +178,7 @@ export function PaymentConfirmDialog({
               </div>
             </div>
             {isWaffoMethod && <WaffoSettlementNote className='mt-2.5' />}
+            {isEpayMethod && <EpaySettlementNote className='mt-2.5' />}
           </div>
 
           <CheckoutPolicyNotice compact />

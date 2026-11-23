@@ -21,6 +21,9 @@ import { describe, expect, test } from 'vitest'
 import { PAYMENT_TYPES } from '../constants'
 import {
   dispatchSelectedPayment,
+  getDefaultPaymentType,
+  getPaymentSettlementCurrency,
+  isEpayMethodType,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
@@ -33,6 +36,46 @@ describe('payment type classification', () => {
     expect(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO_PANCAKE)).toBe(true)
     expect(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO)).toBe(false)
     expect(isStripePayment(PAYMENT_TYPES.STRIPE)).toBe(true)
+  })
+
+  test('classifies Epay methods (alipay, wxpay, etc.) as CNY and Waffo/Stripe as USD', () => {
+    expect(isEpayMethodType('alipay')).toBe(true)
+    expect(isEpayMethodType('wxpay')).toBe(true)
+    expect(isEpayMethodType(PAYMENT_TYPES.WAFFO_PANCAKE)).toBe(false)
+    expect(isEpayMethodType(PAYMENT_TYPES.WAFFO)).toBe(false)
+    expect(isEpayMethodType(PAYMENT_TYPES.STRIPE)).toBe(false)
+
+    expect(getPaymentSettlementCurrency('alipay')).toBe('CNY')
+    expect(getPaymentSettlementCurrency('wxpay')).toBe('CNY')
+    expect(getPaymentSettlementCurrency(PAYMENT_TYPES.WAFFO_PANCAKE)).toBe(
+      'USD'
+    )
+    expect(getPaymentSettlementCurrency(PAYMENT_TYPES.WAFFO)).toBe('USD')
+    expect(getPaymentSettlementCurrency(PAYMENT_TYPES.STRIPE)).toBe('USD')
+  })
+
+  test('prefers Waffo Pancake as default preview type even when Epay methods come first', () => {
+    expect(
+      getDefaultPaymentType({
+        enable_online_topup: true,
+        enable_stripe_topup: false,
+        enable_waffo_topup: false,
+        enable_waffo_pancake_topup: true,
+        pay_methods: [
+          { name: 'Alipay', type: 'alipay', min_topup: 5 },
+          { name: 'WeChat Pay', type: 'wxpay', min_topup: 5 },
+          {
+            name: 'Waffo Pancake',
+            type: PAYMENT_TYPES.WAFFO_PANCAKE,
+            min_topup: 10,
+          },
+        ],
+        min_topup: 5,
+        stripe_min_topup: 5,
+        amount_options: [],
+        discount: {},
+      })
+    ).toBe(PAYMENT_TYPES.WAFFO_PANCAKE)
   })
 })
 
