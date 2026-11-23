@@ -1,6 +1,6 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-20  
+> **最后更新**：2026-11-23  
 > **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握当前架构、分支规范、主机运维边界与发布流程）。
 
 ---
@@ -19,8 +19,11 @@
 1. **品牌视觉与双语**：纯黑单色深色体系（`#000000`/`#050506`/`#0a0a0c` + 1px 描边），锁定 `dark` 模式与 `zhCN`/`en` 双语；Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
 2. **首页与模型广场**：首页右侧实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
 3. **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile、GitHub OAuth 与 Google OIDC。
-4. **Waffo MoR 合规与法务页面**：免登录公开路由 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（`Waffo Pancake` MoR、`support@tokex.vip`、美国特拉华州适用法律、24 小时未使用额度退款条款、完整 Anthropic/OpenAI 对齐使用规范）；全站 `PublicLayout` 页脚、认证页及钱包结账页均常驻合规入口。
-5. **纯美元（USD）充值与后端补丁**：前端钱包与系统折扣设置统一按 `USD` 展示；后端相对 `v1.0.0-rc.51` 仅新增 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配）与全局 `MinTopUp` 下限校验（已提交上游 PR #8399 / #8400，待官方合入发版后可切回官方镜像）。
+4. **Waffo MoR 合规与法务页面**：免登录公开路由 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（仅面向中国大陆以外非受限地区、`Waffo Pancake` MoR、`support@tokex.vip`、10% 清算与行政管理手续费例外条款、中国香港特别行政区法律与 HKIAC 仲裁）；全站 `PublicLayout` 页脚、认证页及钱包结账页均常驻合规入口。
+5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
+   - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`1.0` USD 结算，内置 W 图标需在 `PayMethods` 中将 `icon` 留空）与 **Epay / Zpay**（`https://zpayz.cn`，涵盖 `alipay`、`wxpay` 等非 Waffo/Stripe 渠道，按 `Price=7` 折算 `CNY` 结算）共存时，前端按 `getPaymentSettlementCurrency` 在充值页、确认弹窗与账单历史中自动区分展示 `USD` 与 `CNY`（默认预览优先对齐 Waffo Pancake 的 `USD` 展示）。
+   - Epay 支付完成回跳 `/usage-logs` 时，前端路由 `src/routes/_authenticated/usage-logs/index.tsx` 通过 `isEpayReturnQuery` 识别回调参数（`trade_status` / `out_trade_no` / `trade_no`）并直接重定向回 `/wallet`；常规访问 `/usage-logs` 仍跳转 `/usage-logs/common`。
+   - 后端相对 `v1.0.0-rc.51` 仅新增 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配）与全局 `MinTopUp` 下限校验（已提交上游 PR #8399 / #8400，待官方合入发版后可切回官方镜像）。
 
 ---
 
@@ -84,11 +87,11 @@
 - **后端反代**：`location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
 ### 线上计费、分组与渠道现状（`newapi` 库）
-- **计费与支付口径**：`QuotaDisplayType=USD`、`Price=1`、`USDExchangeRate=1`；支付通道为 `Waffo Pancake`（`USD` 结算）。
-- **现行分组**：`Official`（`1.35x`）、`Proxy`（`0.4x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
+- **计费与支付口径**：`QuotaDisplayType=USD`、`USDExchangeRate=1`、`MinTopUp=5`、`Price=7`（Epay/Zpay CNY 汇率）；启用 `Waffo Pancake`（`USD` 结算，`min_topup=10`，`icon` 留空使用内置 W 图标）与 `Epay / Zpay`（`Alipay`，`CNY` 结算，`min_topup=5`）。
+- **现行分组**：`Codex Pro`（`0.36x`）、`Claude Max`（`0.46x`）、`Official`（`1.2x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
 - **启用渠道**（`channels` 表）：
-  - `id=2`：`OpenRouter`（`status=1`, `group=Official`, `claude-fable-5.2`）
-  - `id=3`：`Codex-Pool`（`status=1`, `group=Proxy`, `http://tokex-cpa:8317`, `gpt-6-astra` / `gpt-6.1-sol` / `gpt-6.2-sol` / `gpt-6.2-astra`）
+  - `id=3`：`Codex-Pool`（`status=1`, `group=Codex Pro`, `http://tokex-cpa:8317`, `gpt-6.1-sol` / `gpt-6-astra` / `gpt-6.2-sol` / `gpt-6.2-astra`）
+  - `id=5`：`CCone`（`status=1`, `group=Claude Max`, `https://api.ccone.cc`, `claude-fable-5.2` / `claude-opus-5.5` / `claude-sonnet-5.5`）
 - **重要提示**：直接修改库内 `options` 后需 `docker restart tokex-web` 重载；连接凭据见 `/opt/tokex/docker-compose.yml`。
 
 ---
