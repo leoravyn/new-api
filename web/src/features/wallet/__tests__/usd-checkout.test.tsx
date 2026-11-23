@@ -29,6 +29,8 @@ import { PaymentConfirmDialog } from '@/features/wallet/components/dialogs/payme
 import { PAYMENT_TYPES } from '@/features/wallet/constants'
 import {
   calculatePresetPricing,
+  formatCnyAmount,
+  formatSettlementAmount,
   formatUsdAmount,
   getDiscountLabel,
   getMatchedAmountDiscount,
@@ -88,6 +90,15 @@ describe('USD formatting and preset discount pricing', () => {
     expect(formatUsdAmount(95, { withCode: true })).toBe('$95.00 USD')
     expect(formatUsdAmount(0.0098)).toBe('$0.0098')
     expect(formatUsdAmount(Number.NaN)).toBe('-')
+    expect(formatCnyAmount(70)).toBe('¥70.00')
+    expect(formatCnyAmount(70, { trimWholeCents: true })).toBe('¥70')
+    expect(formatCnyAmount(137.2, { withCode: true })).toBe('¥137.20 CNY')
+    expect(formatSettlementAmount(70, 'CNY', { withCode: true })).toBe(
+      '¥70.00 CNY'
+    )
+    expect(formatSettlementAmount(10, 'USD', { withCode: true })).toBe(
+      '$10.00 USD'
+    )
   })
 
   it('computes 1:1 USD preset prices and discounts without float drift', () => {
@@ -552,5 +563,143 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     expect(dialog).toHaveTextContent('You save')
     expect(dialog).toHaveTextContent('5% OFF')
     expect(dialog).toHaveTextContent('$5.25 USD')
+  })
+
+  it('displays CNY settlement amounts for Epay (alipay and wxpay) while keeping Waffo Pancake in USD', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const discountMap: Record<number, number> = { 100: 0.95 }
+
+    vi.spyOn(api, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/user/self') {
+        return {
+          data: {
+            success: true,
+            data: {
+              id: 1,
+              username: 'tester',
+              quota: 5000000,
+              used_quota: 0,
+              request_count: 0,
+              aff_quota: 0,
+              aff_history_quota: 0,
+              aff_count: 0,
+              group: 'Official',
+            },
+          },
+        }
+      }
+      if (url === '/api/user/topup/info') {
+        return {
+          data: {
+            success: true,
+            data: {
+              enable_online_topup: true,
+              enable_stripe_topup: false,
+              enable_waffo_topup: false,
+              enable_waffo_pancake_topup: true,
+              enable_redemption: true,
+              payment_compliance_confirmed: true,
+              pay_methods: [
+                { name: 'Alipay', type: 'alipay', min_topup: 5 },
+                { name: 'WeChat Pay', type: 'wxpay', min_topup: 5 },
+                {
+                  name: 'Waffo Pancake',
+                  type: PAYMENT_TYPES.WAFFO_PANCAKE,
+                  min_topup: 10,
+                },
+              ],
+              min_topup: 5,
+              stripe_min_topup: 5,
+              waffo_pancake_min_topup: 10,
+              amount_options: [10, 100],
+              discount: discountMap,
+            },
+          },
+        }
+      }
+      if (url === '/api/user/aff') {
+        return { data: { success: true, data: 'REF123' } }
+      }
+      if (url === '/api/subscription/plans') {
+        return { data: { success: true, message: 'success', data: [] } }
+      }
+      if (url === '/api/subscription/self') {
+        return {
+          data: {
+            success: true,
+            message: 'success',
+            data: {
+              billing_preference: 'subscription_first',
+              subscriptions: [],
+              all_subscriptions: [],
+            },
+          },
+        }
+      }
+      return { data: { success: true, data: null } }
+    })
+
+    vi.spyOn(api, 'post').mockImplementation(
+      async (url: string, body?: unknown) => {
+        const amount = Number((body as { amount?: number })?.amount ?? 0)
+        const discount = getMatchedAmountDiscount(amount, discountMap)
+        if (url === '/api/user/waffo-pancake/amount') {
+          return {
+            data: { message: 'success', data: (amount * discount).toFixed(2) },
+          }
+        }
+        if (url === '/api/user/amount') {
+          // Mock status.price = 6 from useStatus mock above
+          return {
+            data: {
+              message: 'success',
+              data: (amount * 6 * discount).toFixed(2),
+            },
+          }
+        }
+        return { data: { message: 'error', data: 'unexpected' } }
+      }
+    )
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <Wallet />
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+
+    const hundredBtn = await screen.findByRole('button', { name: /^\$100 / })
+    await act(async () => {
+      fireEvent.click(hundredBtn)
+    })
+
+    // Default preview prefers Waffo Pancake (USD)
+    await waitFor(() => {
+      expect(screen.getByText('$95.00 USD')).toBeVisible()
+    })
+
+    const alipayButton = screen.getByRole('button', { name: /^Alipay$/ })
+    const wxpayButton = screen.getByRole('button', { name: /^WeChat Pay$/ })
+    const waffoButton = screen.getByRole('button', { name: /^Waffo Pancake$/ })
+    expect(alipayButton).toHaveTextContent('CNY · ≈ ¥570.00')
+    expect(wxpayButton).toHaveTextContent('CNY · ≈ ¥570.00')
+    expect(waffoButton).toHaveTextContent('USD')
+
+    // Click WeChat Pay -> CNY settlement dialog
+    await act(async () => {
+      fireEvent.click(wxpayButton)
+    })
+
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('$100.00 USD')
+    expect(dialog).toHaveTextContent('¥600.00 CNY')
+    expect(dialog).toHaveTextContent('¥570.00 CNY')
+    expect(dialog).toHaveTextContent('¥30.00 CNY')
+    expect(dialog).toHaveTextContent(
+      'Orders are settled in CNY and credited to your USD wallet balance upon payment.'
+    )
   })
 })

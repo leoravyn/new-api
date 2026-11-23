@@ -58,6 +58,38 @@ export function WaffoSettlementNote({ className }: WaffoSettlementNoteProps) {
   )
 }
 
+/**
+ * Concise notice explaining that Epay/Zpay top-ups are settled in CNY
+ * and credited to the user's USD wallet balance upon payment.
+ */
+export function EpaySettlementNote({ className }: WaffoSettlementNoteProps) {
+  const { t, i18n } = useTranslation()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
+
+  return (
+    <p
+      className={cn(
+        'text-muted-foreground flex items-start gap-1.5 text-xs leading-relaxed',
+        className
+      )}
+    >
+      <Globe className='mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-400/80' />
+      <span>
+        {t(
+          'Orders are settled in CNY and credited to your USD wallet balance upon payment.',
+          {
+            defaultValue: isZh
+              ? '订单以人民币 (CNY) 结算，支付后将按等值美元额度实时计入您的账户余额。'
+              : 'Orders are settled in CNY and credited to your USD wallet balance upon payment.',
+          }
+        )}
+      </span>
+    </p>
+  )
+}
+
 interface CheckoutPolicyNoticeProps {
   compact?: boolean
   className?: string

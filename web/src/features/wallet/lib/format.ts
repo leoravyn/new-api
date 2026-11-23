@@ -63,10 +63,12 @@ export function formatCurrency(amount: number | string): string {
   }).format(numeric)
 }
 
+export type SettlementCurrency = 'USD' | 'CNY'
+
 export interface FormatUsdOptions {
   /** Omit `.00` for whole-dollar amounts (e.g. `$10`, `$100`) */
   trimWholeCents?: boolean
-  /** Append explicit `USD` code (e.g. `$10.00 USD`) */
+  /** Append explicit currency code (e.g. `$10.00 USD`, `¥70.00 CNY`) */
   withCode?: boolean
 }
 
@@ -74,11 +76,10 @@ function roundPrecision(value: number): number {
   return Math.round(value * 1e6) / 1e6
 }
 
-/**
- * Format an amount explicitly in USD (`$`) regardless of browser locale.
- */
-export function formatUsdAmount(
+function formatCurrencyAmount(
   amount: number | string,
+  currency: SettlementCurrency,
+  locale: string,
   options?: FormatUsdOptions
 ): string {
   const numeric =
@@ -100,15 +101,48 @@ export function formatUsdAmount(
     maximumFractionDigits = 4
   }
 
-  const formatted = new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency,
     currencyDisplay: 'narrowSymbol',
     minimumFractionDigits,
     maximumFractionDigits,
   }).format(numeric)
 
-  return withCode ? `${formatted} USD` : formatted
+  return withCode ? `${formatted} ${currency}` : formatted
+}
+
+/**
+ * Format an amount explicitly in USD (`$`) regardless of browser locale.
+ */
+export function formatUsdAmount(
+  amount: number | string,
+  options?: FormatUsdOptions
+): string {
+  return formatCurrencyAmount(amount, 'USD', 'en-US', options)
+}
+
+/**
+ * Format an amount explicitly in CNY (`¥`) regardless of browser locale.
+ */
+export function formatCnyAmount(
+  amount: number | string,
+  options?: FormatUsdOptions
+): string {
+  return formatCurrencyAmount(amount, 'CNY', 'zh-CN', options)
+}
+
+/**
+ * Format a settlement amount in the given currency (`USD` or `CNY`).
+ */
+export function formatSettlementAmount(
+  amount: number | string,
+  currency: SettlementCurrency = 'USD',
+  options?: FormatUsdOptions
+): string {
+  return currency === 'CNY'
+    ? formatCnyAmount(amount, options)
+    : formatUsdAmount(amount, options)
 }
 
 /**

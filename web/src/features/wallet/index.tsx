@@ -47,6 +47,7 @@ import {
   getDefaultPaymentType,
   getMatchedAmountDiscount,
   getMinTopupAmount,
+  getPaymentSettlementCurrency,
   dispatchSelectedPayment,
   isStripePayment,
   isWaffoPayment,
@@ -153,6 +154,8 @@ export function Wallet(props: WalletProps) {
   }, [selectedPaymentMethod, topupInfo])
 
   const activePaymentType = getCurrentPaymentType()
+  const activePaymentCurrency = getPaymentSettlementCurrency(activePaymentType)
+  const epayPriceRatio = (status?.price as number) || 1
 
   // Waffo and Waffo Pancake settle in USD (1:1); only Epay uses status.price
   const effectivePriceRatio = useMemo(() => {
@@ -355,6 +358,8 @@ export function Wallet(props: WalletProps) {
                   topupLink={topupInfo?.topup_link}
                   loading={topupLoading}
                   priceRatio={effectivePriceRatio}
+                  epayPriceRatio={epayPriceRatio}
+                  paymentCurrency={activePaymentCurrency}
                   usdExchangeRate={1}
                   onOpenBilling={() => setBillingDialogOpen(true)}
                   creemProducts={topupInfo?.creem_products}

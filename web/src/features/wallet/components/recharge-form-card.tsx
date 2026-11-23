@@ -38,14 +38,18 @@ import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import {
+  formatCnyAmount,
+  formatSettlementAmount,
   formatUsdAmount,
   getDiscountLabel,
   getMatchedAmountDiscount,
   getPaymentIcon,
   getMinTopupAmount,
   calculatePresetPricing,
+  isEpayMethodType,
   isWaffoPayment,
   isWaffoPancakePayment,
+  type SettlementCurrency,
 } from '../lib'
 import type {
   PaymentMethod,
@@ -78,6 +82,8 @@ interface RechargeFormCardProps {
   topupLink?: string
   loading?: boolean
   priceRatio?: number
+  epayPriceRatio?: number
+  paymentCurrency?: SettlementCurrency
   usdExchangeRate?: number
   onOpenBilling?: () => void
   creemProducts?: CreemProduct[]
@@ -108,6 +114,8 @@ export function RechargeFormCard({
   topupLink,
   loading,
   priceRatio = 1,
+  epayPriceRatio,
+  paymentCurrency = 'USD',
   usdExchangeRate = 1,
   onOpenBilling,
   creemProducts,
@@ -165,6 +173,10 @@ export function RechargeFormCard({
   const hasAnyTopup = hasConfigurableTopup || enableCreemTopup
   const hasStandardPaymentMethods =
     Array.isArray(topupInfo?.pay_methods) && topupInfo.pay_methods.length > 0
+  const hasEpayPaymentMethods = Boolean(
+    topupInfo?.pay_methods?.some((method) => isEpayMethodType(method.type))
+  )
+  const resolvedEpayPriceRatio = epayPriceRatio ?? priceRatio
   const hasWaffoPaymentMethods =
     Array.isArray(waffoPayMethods) && waffoPayMethods.length > 0
   const minTopup = getMinTopupAmount(topupInfo)
@@ -388,7 +400,9 @@ export function RechargeFormCard({
                       <Skeleton className='h-5 w-16' />
                     ) : (
                       <span className='font-mono text-sm font-semibold tabular-nums'>
-                        {formatUsdAmount(paymentAmount, { withCode: true })}
+                        {formatSettlementAmount(paymentAmount, paymentCurrency, {
+                          withCode: true,
+                        })}
                       </span>
                     )}
                   </div>
@@ -450,6 +464,26 @@ export function RechargeFormCard({
                       const disabledLabel = disabled
                         ? `${t('Minimum:')} ${formattedMin}`
                         : undefined
+                      let currencyHint: string | undefined
+                      if (!disabled && hasWaffoGateway && hasEpayPaymentMethods) {
+                        if (isEpayMethodType(method.type)) {
+                          const cnyEstimate =
+                            topupAmount > 0
+                              ? calculatePresetPricing(
+                                  topupAmount,
+                                  resolvedEpayPriceRatio,
+                                  customDiscount
+                                ).actualPrice
+                              : 0
+                          currencyHint =
+                            cnyEstimate > 0
+                              ? `CNY · ≈ ${formatCnyAmount(cnyEstimate)}`
+                              : 'CNY'
+                        } else if (isWaffoPancakePayment(method.type)) {
+                          currencyHint = 'USD'
+                        }
+                      }
+                      const methodSubLabel = disabledLabel ?? currencyHint
 
                       const button = (
                         <Button
@@ -484,9 +518,9 @@ export function RechargeFormCard({
                             <span className='max-w-full truncate'>
                               {method.name}
                             </span>
-                            {disabledLabel && (
+                            {methodSubLabel && (
                               <span className='text-muted-foreground max-w-full truncate text-[11px] leading-4 font-normal'>
-                                {disabledLabel}
+                                {methodSubLabel}
                               </span>
                             )}
                           </span>

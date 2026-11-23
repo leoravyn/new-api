@@ -25,6 +25,7 @@ import {
   DEFAULT_MIN_TOPUP,
 } from '../constants'
 import type { PaymentMethod, PresetAmount, TopupInfo } from '../types'
+import type { SettlementCurrency } from './format'
 import { getMatchedAmountDiscount } from './format'
 
 // ============================================================================
@@ -112,6 +113,29 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.WAFFO_PANCAKE
 }
 
+/**
+ * Epay / Zpay handles all standard payment methods other than Stripe, Waffo,
+ * and Waffo Pancake (e.g., alipay, wxpay, qqpay, or future Epay channels).
+ */
+export function isEpayMethodType(paymentType: string): boolean {
+  return (
+    Boolean(paymentType) &&
+    !isStripePayment(paymentType) &&
+    !isWaffoPayment(paymentType) &&
+    !isWaffoPancakePayment(paymentType)
+  )
+}
+
+/**
+ * Return the checkout settlement currency for a payment method type.
+ * Waffo, Waffo Pancake, and Stripe settle in USD; Epay channels settle in CNY.
+ */
+export function getPaymentSettlementCurrency(
+  paymentType: string
+): SettlementCurrency {
+  return isEpayMethodType(paymentType) ? 'CNY' : 'USD'
+}
+
 export interface PaymentProcessors {
   regular: (topupAmount: number, paymentType: string) => Promise<boolean>
   waffo: (topupAmount: number, payMethodIndex: number) => Promise<boolean>
@@ -139,11 +163,19 @@ export async function dispatchSelectedPayment(
 }
 
 /**
- * Get default payment type from topup info
+ * Get default payment type from topup info.
+ * Prefer Waffo Pancake when enabled so the default preview aligns with USD preset cards.
  */
 export function getDefaultPaymentType(topupInfo: TopupInfo | null): string {
   if (!topupInfo) {
     return DEFAULT_PAYMENT_TYPE
+  }
+
+  if (
+    topupInfo.enable_waffo_pancake_topup ||
+    topupInfo.pay_methods?.some((method) => isWaffoPancakePayment(method.type))
+  ) {
+    return PAYMENT_TYPES.WAFFO_PANCAKE
   }
 
   // Return first available payment method or default
@@ -157,10 +189,6 @@ export function getDefaultPaymentType(topupInfo: TopupInfo | null): string {
 
   if (topupInfo.enable_waffo_topup) {
     return PAYMENT_TYPES.WAFFO
-  }
-
-  if (topupInfo.enable_waffo_pancake_topup) {
-    return PAYMENT_TYPES.WAFFO_PANCAKE
   }
 
   return DEFAULT_PAYMENT_TYPE
