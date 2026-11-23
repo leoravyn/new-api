@@ -19,9 +19,22 @@ For commercial licensing, please contact support@quantumnous.com
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { USAGE_LOGS_DEFAULT_SECTION } from '@/features/usage-logs/section-registry'
+import { isEpayReturnQuery } from '@/features/wallet/lib/payment'
 
 export const Route = createFileRoute('/_authenticated/usage-logs/')({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
+    if (
+      isEpayReturnQuery(
+        location.searchStr,
+        location.search as Record<string, unknown>
+      )
+    ) {
+      throw redirect({
+        to: '/wallet',
+        replace: true,
+      })
+    }
+
     throw redirect({
       to: '/usage-logs/$section',
       params: { section: USAGE_LOGS_DEFAULT_SECTION },

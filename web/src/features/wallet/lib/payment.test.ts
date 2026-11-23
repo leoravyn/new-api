@@ -24,6 +24,7 @@ import {
   getDefaultPaymentType,
   getPaymentSettlementCurrency,
   isEpayMethodType,
+  isEpayReturnQuery,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
@@ -76,6 +77,22 @@ describe('payment type classification', () => {
         discount: {},
       })
     ).toBe(PAYMENT_TYPES.WAFFO_PANCAKE)
+  })
+
+  test('detects Zpay/Epay return_url query parameters for wallet redirect', () => {
+    expect(
+      isEpayReturnQuery(
+        '?pid=2026112020260672&trade_no=202611232300143295&out_trade_no=USR1NOBrAcxb&type=alipay&money=1.00&trade_status=TRADE_SUCCESS&sign=abc&sign_type=MD5'
+      )
+    ).toBe(true)
+    expect(
+      isEpayReturnQuery('', {
+        out_trade_no: 'USR1NOBrAcxb',
+        trade_status: 'TRADE_SUCCESS',
+      })
+    ).toBe(true)
+    expect(isEpayReturnQuery('')).toBe(false)
+    expect(isEpayReturnQuery('?tab=common', { tab: 'common' })).toBe(false)
   })
 })
 

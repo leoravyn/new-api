@@ -136,6 +136,37 @@ export function getPaymentSettlementCurrency(
   return isEpayMethodType(paymentType) ? 'CNY' : 'USD'
 }
 
+/**
+ * Detect Epay / Zpay return_url callback query parameters (e.g. pid, trade_no,
+ * out_trade_no, trade_status) so /usage-logs can forward back to /wallet.
+ */
+export function isEpayReturnQuery(
+  searchStr: string = '',
+  search?: Record<string, unknown>
+): boolean {
+  const hasParam = (key: string) =>
+    typeof search?.[key] === 'string' && search[key] !== ''
+
+  if (
+    hasParam('trade_status') ||
+    hasParam('out_trade_no') ||
+    hasParam('trade_no')
+  ) {
+    return true
+  }
+
+  if (!searchStr) {
+    return false
+  }
+
+  const params = new URLSearchParams(searchStr)
+  return Boolean(
+    params.get('trade_status') ||
+    params.get('out_trade_no') ||
+    params.get('trade_no')
+  )
+}
+
 export interface PaymentProcessors {
   regular: (topupAmount: number, paymentType: string) => Promise<boolean>
   waffo: (topupAmount: number, payMethodIndex: number) => Promise<boolean>
