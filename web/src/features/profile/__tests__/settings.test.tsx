@@ -23,6 +23,7 @@ import { api } from '@/lib/api'
 import { ROLE } from '@/lib/roles'
 
 import { updateUserSettings } from '../api'
+import { ProfileHeader } from '../components/profile-header'
 import { NotificationTab } from '../components/tabs/notification-tab'
 import type { UserProfile } from '../types'
 
@@ -341,5 +342,21 @@ describe('notifications a user receives', () => {
     )
     await save(onUpdate)
     expect(sentBody(put)).toMatchObject({ channel_notify_enabled: true })
+  })
+})
+
+describe('ProfileHeader', () => {
+  it('does not render the User ID badge while keeping profile details intact', () => {
+    render(
+      <ProfileHeader
+        profile={{ ...profile, id: 987654, email: 'alice@example.com' }}
+        loading={false}
+      />
+    )
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText('@alice')).toBeInTheDocument()
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument()
+    expect(screen.queryByText(/User ID/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/987654/)).not.toBeInTheDocument()
   })
 })
