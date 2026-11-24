@@ -45,7 +45,7 @@ import {
 import {
   formatUsdAmount,
   getDefaultPaymentType,
-  getMatchedAmountDiscount,
+  getDiscountRateForPaymentType,
   getMinTopupAmount,
   getPaymentSettlementCurrency,
   dispatchSelectedPayment,
@@ -314,8 +314,12 @@ export function Wallet(props: WalletProps) {
 
   // Get discount rate for current topup amount
   const getDiscountRate = useCallback(() => {
-    return getMatchedAmountDiscount(topupAmount, topupInfo?.discount)
-  }, [topupInfo?.discount, topupAmount])
+    return getDiscountRateForPaymentType(
+      topupAmount,
+      topupInfo?.discount,
+      activePaymentType
+    )
+  }, [activePaymentType, topupInfo?.discount, topupAmount])
 
   const handleSubscriptionAvailabilityChange = useCallback(
     (available: boolean) => {
@@ -372,6 +376,7 @@ export function Wallet(props: WalletProps) {
                   enableWaffoPancakeTopup={
                     topupInfo?.enable_waffo_pancake_topup
                   }
+                  activePaymentType={activePaymentType}
                 />
               </div>
 

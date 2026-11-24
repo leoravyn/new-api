@@ -115,6 +115,7 @@ func TestTieredAmountDiscountAcrossGateways(t *testing.T) {
 	originalDisplayType := operation_setting.GetGeneralSetting().QuotaDisplayType
 	originalPrice := operation_setting.Price
 	originalWaffoUnitPrice := setting.WaffoUnitPrice
+	originalWaffoPancakeUnitPrice := setting.WaffoPancakeUnitPrice
 	originalStripeUnitPrice := setting.StripeUnitPrice
 	originalDiscounts := make(map[int]float64, len(operation_setting.GetPaymentSetting().AmountDiscount))
 	maps.Copy(originalDiscounts, operation_setting.GetPaymentSetting().AmountDiscount)
@@ -124,6 +125,7 @@ func TestTieredAmountDiscountAcrossGateways(t *testing.T) {
 		operation_setting.GetGeneralSetting().QuotaDisplayType = originalDisplayType
 		operation_setting.Price = originalPrice
 		setting.WaffoUnitPrice = originalWaffoUnitPrice
+		setting.WaffoPancakeUnitPrice = originalWaffoPancakeUnitPrice
 		setting.StripeUnitPrice = originalStripeUnitPrice
 		operation_setting.GetPaymentSetting().AmountDiscount = originalDiscounts
 		require.NoError(t, common.UpdateTopupGroupRatioByJSONString(originalTopupGroupRatio))
@@ -132,6 +134,7 @@ func TestTieredAmountDiscountAcrossGateways(t *testing.T) {
 	operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
 	operation_setting.Price = 1.0
 	setting.WaffoUnitPrice = 1.0
+	setting.WaffoPancakeUnitPrice = 1.0
 	setting.StripeUnitPrice = 1.0
 	operation_setting.GetPaymentSetting().AmountDiscount = map[int]float64{
 		100: 0.95,
@@ -141,11 +144,17 @@ func TestTieredAmountDiscountAcrossGateways(t *testing.T) {
 
 	require.InDelta(t, 99.75, getPayMoney(105, "default"), 1e-6)
 	require.InDelta(t, 99.75, getWaffoPayMoney(105, "default"), 1e-6)
-	require.InDelta(t, 99.75, getStripePayMoney(105, "default"), 1e-6)
+	require.InDelta(t, 99.75, getWaffoPancakePayMoney(105, "default"), 1e-6)
 	require.InDelta(t, 225.0, getPayMoney(250, "default"), 1e-6)
 	require.InDelta(t, 225.0, getWaffoPayMoney(250, "default"), 1e-6)
-	require.InDelta(t, 225.0, getStripePayMoney(250, "default"), 1e-6)
+	require.InDelta(t, 225.0, getWaffoPancakePayMoney(250, "default"), 1e-6)
 	require.InDelta(t, 99.0, getPayMoney(99, "default"), 1e-6)
+
+	// Stripe checkout keeps exact-key lookup due to fixed StripePriceId line-item quantity.
+	require.InDelta(t, 95.0, getStripePayMoney(100, "default"), 1e-6)
+	require.InDelta(t, 105.0, getStripePayMoney(105, "default"), 1e-6)
+	require.InDelta(t, 180.0, getStripePayMoney(200, "default"), 1e-6)
+	require.InDelta(t, 250.0, getStripePayMoney(250, "default"), 1e-6)
 }
 
 func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {
@@ -167,8 +176,11 @@ func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {
 	oldStripePrice := setting.StripePriceId
 	oldComplianceConfirmed := operation_setting.GetPaymentSetting().ComplianceConfirmed
 	oldComplianceVersion := operation_setting.GetPaymentSetting().ComplianceTermsVersion
+	oldPayMethods := operation_setting.PayMethods
+	oldGinMode := gin.Mode()
 
 	t.Cleanup(func() {
+		gin.SetMode(oldGinMode)
 		operation_setting.GetGeneralSetting().QuotaDisplayType = oldDisplayType
 		operation_setting.MinTopUp = oldMinTopUp
 		setting.WaffoPancakeMinTopUp = oldWaffoPancakeMin
@@ -187,6 +199,7 @@ func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {
 		setting.StripePriceId = oldStripePrice
 		operation_setting.GetPaymentSetting().ComplianceConfirmed = oldComplianceConfirmed
 		operation_setting.GetPaymentSetting().ComplianceTermsVersion = oldComplianceVersion
+		operation_setting.PayMethods = oldPayMethods
 	})
 
 	operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
@@ -194,6 +207,11 @@ func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {
 	setting.WaffoPancakeMinTopUp = 1
 	setting.WaffoMinTopUp = 1
 	setting.StripeMinTopUp = 1
+	operation_setting.PayMethods = []map[string]string{
+		{"name": "Custom", "icon": "LuCreditCard", "type": "custom1", "min_topup": "50"},
+		{"name": "Custom Decimal", "icon": "LuCreditCard", "type": "custom2", "min_topup": "50.50"},
+		{"name": "Custom Below Floor", "icon": "LuCreditCard", "type": "custom3", "min_topup": "5.50"},
+	}
 
 	operation_setting.GetPaymentSetting().ComplianceConfirmed = true
 	operation_setting.GetPaymentSetting().ComplianceTermsVersion = operation_setting.CurrentComplianceTermsVersion
@@ -293,5 +311,31 @@ func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {
 		require.Equal(t, "10", methodsByType[model.PaymentMethodWaffo]["min_topup"])
 		require.Equal(t, "10", methodsByType["stripe"]["min_topup"])
 		require.Equal(t, "50", methodsByType["custom1"]["min_topup"])
+		require.Equal(t, "50.50", methodsByType["custom2"]["min_topup"])
+		require.Equal(t, "10", methodsByType["custom3"]["min_topup"])
+
+		// Verify GetTopUpInfo does not mutate global operation_setting.PayMethods
+		require.Len(t, operation_setting.PayMethods, 3)
+		require.Equal(t, "5.50", operation_setting.PayMethods[2]["min_topup"])
+	})
+
+	t.Run("Tokens display mode scales effective minimum floor by QuotaPerUnit", func(t *testing.T) {
+		operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeTokens
+		t.Cleanup(func() {
+			operation_setting.GetGeneralSetting().QuotaDisplayType = operation_setting.QuotaDisplayTypeUSD
+		})
+
+		expectedMinTokens := int64(10 * common.QuotaPerUnit)
+		require.Equal(t, expectedMinTokens, effectiveGatewayMinTopUpAmount(setting.WaffoPancakeMinTopUp))
+
+		recorder := httptest.NewRecorder()
+		ctx, _ := gin.CreateTestContext(recorder)
+		ctx.Request = httptest.NewRequest(http.MethodPost, "/api/user/waffo-pancake/amount", strings.NewReader(`{"amount":500000}`))
+		ctx.Request.Header.Set("Content-Type", "application/json")
+
+		RequestWaffoPancakeAmount(ctx)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		require.JSONEq(t, `{"message":"error","data":"Top-up amount cannot be less than 5000000","message_key":"Top-up amount cannot be less than {{min}}","message_params":{"min":5000000}}`, recorder.Body.String())
 	})
 }

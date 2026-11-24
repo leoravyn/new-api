@@ -1,6 +1,6 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-23  
+> **最后更新**：2026-11-24  
 > **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握当前架构、分支规范、主机运维边界与发布流程）。
 
 ---
@@ -8,12 +8,12 @@
 ## 1. 线上全景与核心功能实现
 
 - **主站与 API 网关**：`https://tokex.vip`
-- **CPA 上游管理端**：`https://sub.tokex.vip`
+- **上游号池管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 后端**
   - **前端产物**：基于 New API 前端（`/home/ubuntu/tokex/web`）二次开发，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管。
   - **后端网关**：`tokex-web`（本地镜像 `tokex-web:v1.0.0-rc.51-tokex`，基于 `QuantumNous/new-api` `v1.0.0-rc.51` 构建，`127.0.0.1:3000`）。
-  - **数据库**：`tokex-db`（`mariadb:10.11`，库名 `newapi`，Docker 内网 `tokex-net:3306`）。
-  - **上游代理**：`tokex-cpa`（官方 `eceasy/cli-proxy-api:latest`，`127.0.0.1:8317` / 内网 `http://tokex-cpa:8317`）。
+  - **数据库与缓存**：`tokex-db`（`postgres:18-alpine`，承载 `newapi` 与 `sub2api` 库，Docker 内网 `tokex-net:5432`）、`tokex-redis`（`redis:8-alpine`，Docker 内网 `tokex-net:6379`）。
+  - **上游代理**：`tokex-pool`（官方 `weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
 ### 当前核心功能实现
 1. **品牌视觉与双语**：纯黑单色深色体系（`#000000`/`#050506`/`#0a0a0c` + 1px 描边），锁定 `dark` 模式与 `zhCN`/`en` 双语；Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
@@ -34,8 +34,8 @@
 | `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 主要维护 `web/`、文档与少量 Go 充值补丁（见第 1 节） |
 | `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 Bun 运行类型检查、测试与构建 |
 | `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | `main` 合并构建后同步至此目录 |
-| `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`mariadb/`、`data/`、`logs/`、`backups/` |
-| `/opt/tokex/cpa/` | **CLIProxyAPI 部署目录** | `docker-compose.yml`、`config/config.yaml`、`auths/` |
+| `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
+| `/opt/tokex/sub2api/` | **Sub2API 数据目录** | `data/`、`postgres_data/`、`redis_data/`（`.env` 软链至 `/opt/tokex/.env`） |
 | `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf` |
 
 - **Git 分支**（位于 `/home/ubuntu/tokex/`）：
@@ -52,11 +52,12 @@
 
 | 组件 | 配置文件 | 关键生效参数 | 说明 |
 |---|---|---|---|
-| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 600s;` | 吸收慢速大请求至磁盘缓冲，保持 SSE 零缓冲 |
+| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 600s;` / `limit_conn api_key_conn 3;`（`limit_conn_status 429`） | 吸收慢速大请求至磁盘缓冲，保持 SSE 零缓冲；`/v1/` 按 `Authorization`/`x-api-key` 限制单 Key 并发 |
 | **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m` / `GOMEMLIMIT=700MiB` / `GOGC=75` / `MAX_REQUEST_BODY_MB=40` / `MAX_FILE_DOWNLOAD_MB=32` / `STREAM_SCANNER_MAX_BUFFER_MB=32` / `DEBUG=false` | 日志截断保留 `LocalLogContentLimit=2048`；`json-file` 限 `20m x 3` |
 | **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true` / `threshold_mb=4` / `max_size_mb=256` | `>=4MB` 请求体暂存临时文件并在请求结束后清理 |
-| **tokex-cpa** | `/opt/tokex/cpa/docker-compose.yml` & `config/config.yaml` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `max-request-body-bytes: 41943040` / `shutdown-timeout: 15` / `request-log: false` / `logging-to-file: false` | 防大图 Base64 OOM，关闭全量请求体落盘 |
-| **tokex-db** | `/opt/tokex/docker-compose.yml` & `mariadb/my.cnf` | `mem_limit: 512m` / `innodb_buffer_pool_size=256M` / `max_connections=60` | Docker 日志轮转 `10m x 3` |
+| **tokex-pool** | `/opt/tokex/docker-compose.yml` & `.env` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `RUN_MODE=simple` / `SERVER_MAX_REQUEST_BODY_SIZE=41943040` / `GATEWAY_MAX_BODY_SIZE=41943040` / `GATEWAY_REQUEST_BODY_MEMORY_BUDGET_BYTES=134217728` / `LOG_OUTPUT_TO_FILE=false` | 防大图 Base64 OOM，关闭全量日志落盘 |
+| **tokex-db** | `/opt/tokex/docker-compose.yml` | `mem_limit: 320m` / `shared_buffers=96MB` / `max_connections=100` / `effective_cache_size=192MB` | Docker 日志轮转 `10m x 3` |
+| **tokex-redis** | `/opt/tokex/docker-compose.yml` | `mem_limit: 96m` / `--maxmemory 64mb` / `--appendonly yes` | Docker 日志轮转 `10m x 3` |
 
 > 历史配置文件与数据库变更前备份保存在 `/opt/tokex/backups/`。
 
@@ -84,15 +85,15 @@
 
 ### Nginx 动静分流
 - **静态 SPA**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）及所有前端路由（`/`, `/pricing`, `/rankings`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
-- **后端反代**：`location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
+- **后端反代**：`location ^~ /v1/`（通过 `map` 提取 `$http_authorization`、为空时回退 `$http_x_api_key` 作为 `limit_conn_zone` 键，单 Key 上限 `3` 并发、超限返回 `429`）与 `location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
 ### 线上计费、分组与渠道现状（`newapi` 库）
 - **计费与支付口径**：`QuotaDisplayType=USD`、`USDExchangeRate=1`、`MinTopUp=5`、`Price=7`（Epay/Zpay CNY 汇率）；启用 `Waffo Pancake`（`USD` 结算，`min_topup=10`，`icon` 留空使用内置 W 图标）与 `Epay / Zpay`（`Alipay`，`CNY` 结算，`min_topup=5`）。
 - **现行分组**：`Codex Pro`（`0.36x`）、`Claude Max`（`0.46x`）、`Official`（`1.2x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
 - **启用渠道**（`channels` 表）：
-  - `id=3`：`Codex-Pool`（`status=1`, `group=Codex Pro`, `http://tokex-cpa:8317`, `gpt-6.1-sol` / `gpt-6-astra` / `gpt-6.2-sol` / `gpt-6.2-astra`）
+  - `id=3`：`Codex-Pool`（`status=1`, `group=Codex Pro`, `http://tokex-pool:8080`, `gpt-6.1-sol` / `gpt-6-astra` / `gpt-6.2-sol` / `gpt-6.2-astra`）
   - `id=5`：`CCone`（`status=1`, `group=Claude Max`, `https://api.ccone.cc`, `claude-fable-5.2` / `claude-opus-5.5` / `claude-sonnet-5.5`）
-- **重要提示**：直接修改库内 `options` 后需 `docker restart tokex-web` 重载；连接凭据见 `/opt/tokex/docker-compose.yml`。
+- **重要提示**：直接修改库内 `options` 后需 `docker restart tokex-web` 重载；连接凭据见 `/opt/tokex/docker-compose.yml` 与 `/opt/tokex/.env`。
 
 ---
 

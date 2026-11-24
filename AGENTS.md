@@ -190,3 +190,23 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - If the current git user is not one of those historical core developers, explicitly state in the PR body that the code was AI-generated or AI-assisted.
 - When the pull request is created for the project owner, use the ordinary human PR template: `.github/PULL_REQUEST_TEMPLATE.md` for Chinese requests or `.github/PULL_REQUEST_TEMPLATE/en.md` for English requests. Project-owner pull requests MUST NOT use `.agents/github/PR.md` unless the owner explicitly asks for it.
 - For all other agent-created pull requests, fill `.agents/github/PR.md` as the entire PR body. Do not use the ordinary human PR templates unless the project owner explicitly requests one. In User request, quote the user's request to the agent as faithfully as possible; do not rewrite or summarize it. Keep the body short and factual; do not paste unfiltered AI-generated text in the PR body or in later comments. Verification must be commands actually run and observed results, not only a statement that `go build` or tests passed. If any required condition is not met, tell the user and do not open the PR.
+
+## Writing artifacts
+
+An artifact is anything you produce for people other than the person you're working with: an app's interface and its text, user docs, prompts, skills, config. Its reader wasn't in your conversation, so write only what that reader needs.
+
+- Write every artifact for its own reader, not for the person who asked for it. Leave out:
+  - decisions and the reasons for them;
+  - conversation history, and options that were rejected or removed;
+  - implementation details the reader doesn't need;
+  - evidence that a requirement was met.
+
+  For example, no "data is preserved when you delete an item" note because that was a design goal, and no counter added only to show that a feature works.
+- When something is removed, remove every trace of it, including any instruction that forbids it. For example, after dropping an export format, no "don't use the old export format" line remains in a prompt or doc.
+- In prompts, skills and other instructions, write a rule only for behavior its reader would actually show. When a rule is too broad, narrow it instead of adding an exception: "ask before renaming user-visible commands", not "ask before renaming anything" plus "except internal names".
+- In an interface, every element and string must help the end user act. Don't repeat what's already shown, such as a "Healthy" label beside a green status dot, and make the interface clear enough to need no instructions or hints.
+- Use the end user's words, not the names you used while building.
+- When a design changes, delete whatever in the affected area no longer serves the end user, whoever wrote it.
+- Show new interface elements and new user-facing text (labels, help text, notices) as a prototype, and get approval before merging them. Error messages and log lines don't need this.
+- Before reporting interface work, list each visible element and string in the changed area, with one line on why the end user needs it.
+
