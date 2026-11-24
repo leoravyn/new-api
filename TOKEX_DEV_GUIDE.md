@@ -11,7 +11,7 @@
 - **上游号池管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 后端**
   - **前端产物**：基于 New API 前端（`/home/ubuntu/tokex/web`）二次开发，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管。
-  - **后端网关**：`tokex-web`（本地镜像 `tokex-web:v1.0.0-rc.51-tokex`，基于 `QuantumNous/new-api` `v1.0.0-rc.51` 构建，`127.0.0.1:3000`）。
+  - **后端网关**：`tokex-web`（镜像 `tokex-web:v1.0.0-rc.51-tokex`，由 GitHub Actions 构建 `ghcr.io/leoravyn/tokex-web:latest` 后拉取打标或本地兜底构建，基于 `QuantumNous/new-api` `v1.0.0-rc.51` 并合入 TOKEX 补丁，`127.0.0.1:3000`）。
   - **数据库与缓存**：`tokex-db`（`postgres:18-alpine`，承载 `newapi` 与 `sub2api` 库，Docker 内网 `tokex-net:5432`）、`tokex-redis`（`redis:8-alpine`，Docker 内网 `tokex-net:6379`）。
   - **上游代理**：`tokex-pool`（官方 `weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
@@ -23,7 +23,7 @@
 5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
    - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`1.0` USD 结算，内置 W 图标需在 `PayMethods` 中将 `icon` 留空）与 **Epay / Zpay**（`https://zpayz.cn`，涵盖 `alipay`、`wxpay` 等非 Waffo/Stripe 渠道，按 `Price=7` 折算 `CNY` 结算）共存时，前端按 `getPaymentSettlementCurrency` 在充值页、确认弹窗与账单历史中自动区分展示 `USD` 与 `CNY`（默认预览优先对齐 Waffo Pancake 的 `USD` 展示）。
    - Epay 支付完成回跳 `/usage-logs` 时，前端路由 `src/routes/_authenticated/usage-logs/index.tsx` 通过 `isEpayReturnQuery` 识别回调参数（`trade_status` / `out_trade_no` / `trade_no`）并直接重定向回 `/wallet`；常规访问 `/usage-logs` 仍跳转 `/usage-logs/common`。
-   - 后端相对 `v1.0.0-rc.51` 仅新增 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配）与全局 `MinTopUp` 下限校验（已提交上游 PR #8399 / #8400，待官方合入发版后可切回官方镜像）。
+   - 后端基于已合入的 `v1.0.0-rc.51`（`c9c6da2`）仅保留 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配；Stripe 保留精确键匹配）与全局 `MinTopUp` 下限校验（对应提交至上游的 PR #8437 / #8438，待官方合入发版后可切回官方镜像）。
 
 ---
 
@@ -33,16 +33,18 @@
 |---|---|---|
 | `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 主要维护 `web/`、文档与少量 Go 充值补丁（见第 1 节） |
 | `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 Bun 运行类型检查、测试与构建 |
-| `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | `main` 合并构建后同步至此目录 |
+| `/home/ubuntu/tokex/.github/workflows/tokex-build.yml` | **TOKEX CI/CD 构建工作流** | `main` 推送自动构建 `web-dist` 与 ARM64 镜像 |
+| `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | 优先从 Actions `web-dist` 产物同步至此目录 |
 | `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
 | `/opt/tokex/sub2api/` | **Sub2API 数据目录** | `data/`、`postgres_data/`、`redis_data/`（`.env` 软链至 `/opt/tokex/.env`） |
 | `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf` |
 
-- **Git 分支**（位于 `/home/ubuntu/tokex/`）：
-  - `upstream-base`：`QuantumNous/new-api` 只读对照基线（`48a6c87`）。
-  - **`main`**：生产发布分支。
+- **Git 分支与远程**（位于 `/home/ubuntu/tokex/`）：
+  - `upstream-base`：`QuantumNous/new-api` 初始只读对照基线（`48a6c87` / `v1.0.0-rc.49`；当前 `dev`/`main` 已合并 `v1.0.0-rc.51` `c9c6da2`）。
+  - **`main`**：生产发布分支；推送到 `origin/main` 会触发 `.github/workflows/tokex-build.yml`。
   - **`dev`**：默认开发分支，日常改动在此提交验收后再 `--no-ff` 合并到 `main`。
-  - 远程 `upstream` 指向官方 GitHub 主仓（`Calcium-Ion/new-api` -> `QuantumNous/new-api`），**勿直接 `git push`**；升级官方版本时先拉取 `upstream`，确认 PR #8399/#8400 是否已合入后再决定直接切换官方镜像或合并后重编本地镜像。
+  - 远程 `origin` 指向 TOKEX Fork 仓库（`https://github.com/leoravyn/new-api.git`），日常 `dev` / `main` 均推送至此仓库。
+  - 远程 `upstream` 指向官方 GitHub 主仓（`Calcium-Ion/new-api` -> `QuantumNous/new-api`），**勿直接 `git push`**；升级官方版本时先拉取 `upstream`，确认 PR #8437 / #8438 是否已合入后再决定直接切换官方镜像或合并后重编镜像。
 
 ---
 
@@ -99,29 +101,79 @@
 
 ## 6. 开发、验证与发布标准流程
 
-> **2GB ARM64 构建约束**：
-> 1. **`oxlint` 在 ARM64 存在原生 panic，禁止运行 `oxlint`**，统一使用 `bun check -b` 做类型校验。
-> 2. 内存紧张，**全量构建前先停止临时 `rsbuild dev` 进程**，并限制 `NODE_OPTIONS="--max-old-space-size=1536"`；如重编 Go 后端镜像，应使用 `-p 1` 与 `GOMEMLIMIT=700MiB`，并在完成后清理临时 Docker 构建缓存与缓存卷（避免占用 `/` 分区）。
+### 主流程：GitHub Actions 云端构建 + 服务端拉取同步（推荐）
+
+由于生产主机仅 **2GB 内存**，日常发布优先走云端构建流水线（`.github/workflows/tokex-build.yml`）：
+- **本地编辑并在 `dev` 验证后合并推送 `origin`**（`leoravyn/new-api`）
+- **GitHub Actions 自动并发构建**：
+  1. `build-web`（`ubuntu-latest`）：使用 Bun 执行 `bun check -b` 与 `bun run build`，上传 `web-dist` Artifact（供 Nginx 快速静态同步）。
+  2. `build-docker`（`ubuntu-24.04-arm`，原生 ARM64）：使用 `Dockerfile` + `docker/build-push-action`（含 GHA 缓存）构建 `linux/arm64` 镜像，并通过 `GITHUB_TOKEN` 推送至 `ghcr.io/leoravyn/tokex-web:latest` 与 `ghcr.io/leoravyn/tokex-web:<short-sha>`。
+- **服务端下载同步并重启容器**：拉取 GHCR 镜像打标重启 `tokex-web`，下载 `web-dist` 同步到 `/var/www/tokex/dist` 并重载 Nginx。
 
 ```bash
-# 1. 类型校验、单元测试与生产构建（在 dev 分支）
+# 1. 本地（dev 分支）轻量校验、合并至 main 并推送 origin
+export PATH="$HOME/.bun/bin:$PATH"
+cd /home/ubuntu/tokex/web
+bun check -b
+# 按需运行相关单测：bun --bun x vitest run src/features/wallet/__tests__/copy.test.tsx
+
+cd /home/ubuntu/tokex
+git checkout main && git merge dev --no-ff
+git push origin dev && git push origin main
+git checkout dev
+
+# 2. 查看 GitHub Actions 构建状态（push main 自动触发）
+gh run list --workflow=tokex-build.yml --limit 5
+# 如需等待最近一次运行完成：gh run watch
+
+# 3. 同步前端 web-dist 至 /var/www/tokex/dist 并重载 Nginx
+RUN_ID=$(gh run list --workflow=tokex-build.yml --branch main --status success --limit 1 --json databaseId -q '.[0].databaseId')
+rm -rf /tmp/tokex-web-dist && gh run download "$RUN_ID" -n web-dist -D /tmp/tokex-web-dist
+sudo rm -rf /var/www/tokex/dist && sudo mkdir -p /var/www/tokex/dist
+sudo cp -r /tmp/tokex-web-dist/* /var/www/tokex/dist/
+sudo chmod -R a+rX /var/www/tokex/dist
+sudo nginx -t && sudo systemctl reload nginx
+rm -rf /tmp/tokex-web-dist
+
+# 4. 拉取最新 ARM64 镜像、打标并重启 tokex-web（若仅改前端可跳过）
+# 若 ghcr.io/leoravyn/tokex-web 为私有包，先执行：gh auth token | docker login ghcr.io -u leoravyn --password-stdin
+docker pull ghcr.io/leoravyn/tokex-web:latest
+docker tag ghcr.io/leoravyn/tokex-web:latest tokex-web:v1.0.0-rc.51-tokex
+cd /opt/tokex && docker compose up -d --force-recreate web
+
+# 5. 线上基础冒烟
+curl -sS -o /dev/null -w "root:%{http_code}\n" https://tokex.vip/
+curl -sS -o /dev/null -w "api_status:%{http_code}\n" https://tokex.vip/api/status
+curl -sS -o /dev/null -w "pricing:%{http_code}\n" https://tokex.vip/pricing
+```
+
+### 兜底方案：本地 2GB ARM64 离线构建（Fallback）
+
+仅在 GitHub Actions / GHCR 不可用时使用本地构建：
+
+> **2GB ARM64 构建约束**：
+> 1. **`oxlint` 在 ARM64 存在原生 panic，禁止运行 `oxlint`**，统一使用 `bun check -b` 做类型校验。
+> 2. 内存紧张，**全量构建前先停止临时 `rsbuild dev` 进程**，并限制 `NODE_OPTIONS="--max-old-space-size=1536"`；如本地重编 Go 后端镜像，应先确保 `VERSION` 已写入版本号，并使用 `GOMEMLIMIT=700MiB`（或先以 `golang:1.26.10-alpine` 运行 `go test -p 1`），完成后及时 `docker builder prune -f` 清理临时构建缓存（避免占用 `/` 分区）。
+
+```bash
+# 1. 本地前端校验、单测与生产构建（在 dev 分支）
 export PATH="$HOME/.bun/bin:$PATH"
 cd /home/ubuntu/tokex/web
 bun check -b
 bun --bun x vitest run src/features/pricing/__tests__/group-ratio-display.test.tsx
 NODE_OPTIONS="--max-old-space-size=1536" bun --bun x rsbuild build
 
-# 2. 合并至 main 并发布上线
+# 2. 合并至 main 并发布前端静态产物
 cd /home/ubuntu/tokex
 git checkout main && git merge dev --no-ff
 sudo rm -rf /var/www/tokex/dist && sudo mkdir -p /var/www/tokex/dist
 sudo cp -r /home/ubuntu/tokex/web/dist/* /var/www/tokex/dist/
 sudo chmod -R a+rX /var/www/tokex/dist
 sudo nginx -t && sudo systemctl reload nginx
-git checkout dev
 
-# 3. 线上基础冒烟
-curl -sS -o /dev/null -w "root:%{http_code}\n" https://tokex.vip/
-curl -sS -o /dev/null -w "api_status:%{http_code}\n" https://tokex.vip/api/status
-curl -sS -o /dev/null -w "pricing:%{http_code}\n" https://tokex.vip/pricing
+# 3. （仅后端有改动时）本地构建 tokex-web 镜像并重启
+docker build -t tokex-web:v1.0.0-rc.51-tokex /home/ubuntu/tokex
+cd /opt/tokex && docker compose up -d --force-recreate web
+docker builder prune -f
+cd /home/ubuntu/tokex && git checkout dev
 ```
