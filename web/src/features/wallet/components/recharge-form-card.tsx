@@ -16,7 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Gift, ExternalLink, Loader2, Receipt, WalletCards } from 'lucide-react'
+import {
+  Gift,
+  ExternalLink,
+  Loader2,
+  Receipt,
+  Sparkles,
+  WalletCards,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 
@@ -42,6 +49,7 @@ import {
   formatCnyAmount,
   formatSettlementAmount,
   formatUsdAmount,
+  getActiveFirstTopupDiscount,
   getDefaultPaymentType,
   getDiscountLabel,
   getDiscountRateForPaymentType,
@@ -202,13 +210,32 @@ export function RechargeFormCard({
   const isStripeSelected =
     isStripeOnly || isStripePayment(resolvedPaymentType)
   const isBelowMinTopup = topupAmount < minTopup
-  const customDiscount = isStripeSelected
-    ? getDiscountRateForPaymentType(
-        topupAmount,
-        topupInfo?.discount,
-        PAYMENT_TYPES.STRIPE
-      )
-    : getMatchedAmountDiscount(topupAmount, topupInfo?.discount)
+  const firstTopupOverride = {
+    eligible: topupInfo?.first_topup_discount_eligible,
+    discount: topupInfo?.first_topup_discount,
+  }
+  const activeFirstTopupDiscount =
+    getActiveFirstTopupDiscount(firstTopupOverride)
+  const firstTopupPercentOff =
+    activeFirstTopupDiscount !== null
+      ? Math.round((1 - activeFirstTopupDiscount) * 1000) / 10
+      : 0
+  const firstTopupZhZhe =
+    activeFirstTopupDiscount !== null
+      ? String(Math.round(activeFirstTopupDiscount * 100) / 10)
+      : ''
+  const customDiscount =
+    activeFirstTopupDiscount !== null
+      ? topupAmount > 0
+        ? activeFirstTopupDiscount
+        : 1.0
+      : isStripeSelected
+        ? getDiscountRateForPaymentType(
+            topupAmount,
+            topupInfo?.discount,
+            PAYMENT_TYPES.STRIPE
+          )
+        : getMatchedAmountDiscount(topupAmount, topupInfo?.discount)
   const customDiscountPricing = calculatePresetPricing(
     topupAmount,
     effectivePriceRatio,
@@ -295,6 +322,38 @@ export function RechargeFormCard({
         <div className='space-y-4 sm:space-y-6'>
           {hasConfigurableTopup && (
             <>
+              {activeFirstTopupDiscount !== null && (
+                <div
+                  data-testid='first-topup-discount-banner'
+                  className='flex items-start gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3.5 py-2.5 text-emerald-300'
+                >
+                  <Sparkles className='mt-0.5 h-4 w-4 shrink-0 text-emerald-400' />
+                  <div className='min-w-0 space-y-0.5'>
+                    <div className='text-xs font-semibold text-emerald-300 sm:text-sm'>
+                      {isZh
+                        ? t('Invited First Top-Up {{zhe}}折 Active', {
+                            zhe: firstTopupZhZhe,
+                            defaultValue: `受邀首充 ${firstTopupZhZhe} 折特权生效中`,
+                          })
+                        : t('Invited First Top-Up {{percent}}% Off Active', {
+                            percent: firstTopupPercentOff,
+                            defaultValue: `Invited First Top-Up ${firstTopupPercentOff}% Off Active`,
+                          })}
+                    </div>
+                    <p className='text-[11px] leading-relaxed text-emerald-200/75 sm:text-xs'>
+                      {t(
+                        'Applied automatically to your first top-up. Overrides standard tiered discounts.',
+                        {
+                          defaultValue: isZh
+                            ? '本次首次充值自动生效，优先覆盖常规阶梯折扣（不叠加）。'
+                            : 'Applied automatically to your first top-up. Overrides standard tiered discounts.',
+                        }
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {presetAmounts.length > 0 && (
                 <div className='space-y-2.5 sm:space-y-3'>
                   <Label className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
@@ -305,7 +364,9 @@ export function RechargeFormCard({
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4'>
                     {presetAmounts.map((preset) => {
                       let discount = 1.0
-                      if (isStripeSelected) {
+                      if (activeFirstTopupDiscount !== null) {
+                        discount = activeFirstTopupDiscount
+                      } else if (isStripeSelected) {
                         discount = getDiscountRateForPaymentType(
                           preset.value,
                           topupInfo?.discount,

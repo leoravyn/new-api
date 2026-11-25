@@ -1,6 +1,8 @@
 package operation_setting
 
 import (
+	"math"
+	"strconv"
 	"strings"
 
 	"github.com/Calcium-Ion/go-epay/epay"
@@ -113,6 +115,33 @@ func ValidateEpaySignOption(key, value string) error {
 	if rsaActive || (key == EpayPlatformPublicKeyOptionKey && strings.TrimSpace(value) != "") {
 		if _, err := epay.ParseRSAPublicKey(publicKey); err != nil {
 			return common.NewMessage("The Epay platform public key is missing or invalid")
+		}
+	}
+	return nil
+}
+
+// ValidateAffCommissionOption validates referral commission and invite first-topup discount options.
+func ValidateAffCommissionOption(key, value string) error {
+	trimmed := strings.TrimSpace(value)
+	switch key {
+	case "AffCommissionEnabled":
+		if trimmed != "true" && trimmed != "false" {
+			return common.NewMessage("AffCommissionEnabled must be true or false")
+		}
+	case "AffCommissionRate":
+		v, err := strconv.ParseFloat(trimmed, 64)
+		if err != nil || math.IsNaN(v) || math.IsInf(v, 0) || v < 0 || v > 1 {
+			return common.NewMessage("AffCommissionRate must be a finite number between 0 and 1")
+		}
+	case "AffCommissionCooldownDays":
+		v, err := strconv.Atoi(trimmed)
+		if err != nil || v < 0 || v > 365 {
+			return common.NewMessage("AffCommissionCooldownDays must be an integer between 0 and 365")
+		}
+	case "InviteFirstTopUpDiscount":
+		v, err := strconv.ParseFloat(trimmed, 64)
+		if err != nil || math.IsNaN(v) || math.IsInf(v, 0) || v <= 0 || v > 1 {
+			return common.NewMessage("InviteFirstTopUpDiscount must be a finite number greater than 0 and at most 1")
 		}
 	}
 	return nil

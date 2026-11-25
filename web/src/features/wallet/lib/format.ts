@@ -181,17 +181,50 @@ export function getMatchedAmountDiscount(
   return bestRate
 }
 
+export interface FirstTopupDiscountOverride {
+  eligible?: boolean
+  discount?: number
+}
+
 /**
- * Resolve discount rate by payment method: Stripe quotes still use exact-key
- * discount lookup, while other gateways use tiered threshold matching.
+ * Return the active invited first top-up discount multiplier (0 < rate < 1),
+ * or null if not eligible / disabled.
+ */
+export function getActiveFirstTopupDiscount(
+  override?: FirstTopupDiscountOverride | null
+): number | null {
+  if (!override?.eligible) {
+    return null
+  }
+  const rate = Number(override.discount)
+  if (!Number.isFinite(rate) || rate <= 0 || rate >= DEFAULT_DISCOUNT_RATE) {
+    return null
+  }
+  return rate
+}
+
+/**
+ * Resolve discount rate by payment method: when invited first top-up discount
+ * is active, it strictly overrides all tiered/gateway discounts; otherwise
+ * Stripe quotes use exact-key lookup and other gateways use tiered thresholds.
  */
 export function getDiscountRateForPaymentType(
   amount: number,
   discounts?: Record<number, number> | null,
-  paymentType?: string
+  paymentType?: string,
+  firstTopupOverride?: FirstTopupDiscountOverride | null
 ): number {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return DEFAULT_DISCOUNT_RATE
+  }
+
+  const overrideRate = getActiveFirstTopupDiscount(firstTopupOverride)
+  if (overrideRate !== null) {
+    return overrideRate
+  }
+
   if (paymentType === PAYMENT_TYPES.STRIPE) {
-    if (!Number.isFinite(amount) || amount <= 0 || !discounts) {
+    if (!discounts) {
       return DEFAULT_DISCOUNT_RATE
     }
     const exactRate = Number(discounts[amount])

@@ -60,6 +60,7 @@ interface PaymentConfirmDialogProps {
   calculating: boolean
   processing: boolean
   discountRate?: number
+  isFirstTopupDiscount?: boolean
 }
 
 export function PaymentConfirmDialog({
@@ -72,6 +73,7 @@ export function PaymentConfirmDialog({
   calculating,
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
+  isFirstTopupDiscount = false,
 }: PaymentConfirmDialogProps) {
   const { t, i18n } = useTranslation()
   const isZh =
@@ -147,8 +149,15 @@ export function PaymentConfirmDialog({
           {hasDiscount && !calculating && (
             <div className='rounded-xl border border-white/[0.07] bg-white/[0.025] p-3'>
               <div className='flex items-center justify-between gap-2 text-sm'>
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-wrap items-center gap-2'>
                   <span className='text-muted-foreground'>{t('You save')}</span>
+                  {isFirstTopupDiscount && (
+                    <span className='rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
+                      {t('First Top-Up', {
+                        defaultValue: isZh ? '首充特权' : 'First Top-Up',
+                      })}
+                    </span>
+                  )}
                   <span className='rounded-md border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400'>
                     {getDiscountLabel(discountRate, t)}
                   </span>

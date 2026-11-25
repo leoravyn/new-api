@@ -32,7 +32,9 @@ import {
   formatCnyAmount,
   formatSettlementAmount,
   formatUsdAmount,
+  getActiveFirstTopupDiscount,
   getDiscountLabel,
+  getDiscountRateForPaymentType,
   getMatchedAmountDiscount,
 } from '@/features/wallet/lib/format'
 import {
@@ -701,5 +703,173 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     expect(dialog).toHaveTextContent(
       'Orders are settled in CNY and credited to your USD wallet balance upon payment.'
     )
+  })
+
+  it('overrides tiered discounts everywhere and shows emerald banner when first_topup_discount_eligible is true', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    // Tiered discounts include 5% off at 100 and 15% off at 500; first-topup 0.9 (10% off) must strictly override ALL of them.
+    const discountMap: Record<number, number> = { 100: 0.95, 500: 0.85 }
+    const firstTopupOverride = { eligible: true, discount: 0.9 }
+
+    expect(getActiveFirstTopupDiscount(firstTopupOverride)).toBe(0.9)
+    expect(
+      getDiscountRateForPaymentType(10, discountMap, 'waffo_pancake', firstTopupOverride)
+    ).toBe(0.9)
+    expect(
+      getDiscountRateForPaymentType(500, discountMap, 'waffo_pancake', firstTopupOverride)
+    ).toBe(0.9)
+    expect(
+      getDiscountRateForPaymentType(500, discountMap, 'stripe', firstTopupOverride)
+    ).toBe(0.9)
+    expect(
+      mergePresetAmounts([10, 100, 500], discountMap, firstTopupOverride)
+    ).toEqual([
+      { value: 10, discount: 0.9 },
+      { value: 100, discount: 0.9 },
+      { value: 500, discount: 0.9 },
+    ])
+
+    vi.spyOn(api, 'get').mockImplementation(async (url: string) => {
+      if (url === '/api/user/self') {
+        return {
+          data: {
+            success: true,
+            data: {
+              id: 2,
+              username: 'invited',
+              quota: 0,
+              used_quota: 0,
+              request_count: 0,
+              aff_quota: 0,
+              aff_history_quota: 0,
+              aff_count: 0,
+              group: 'Official',
+            },
+          },
+        }
+      }
+      if (url === '/api/user/topup/info') {
+        return {
+          data: {
+            success: true,
+            data: {
+              enable_online_topup: true,
+              enable_stripe_topup: false,
+              enable_waffo_topup: false,
+              enable_waffo_pancake_topup: true,
+              enable_redemption: true,
+              payment_compliance_confirmed: true,
+              first_topup_discount_eligible: true,
+              first_topup_discount: 0.9,
+              pay_methods: [
+                { name: 'Alipay', type: 'alipay', min_topup: 5 },
+                {
+                  name: 'Waffo Pancake',
+                  type: PAYMENT_TYPES.WAFFO_PANCAKE,
+                  min_topup: 10,
+                },
+              ],
+              min_topup: 5,
+              stripe_min_topup: 5,
+              waffo_pancake_min_topup: 10,
+              amount_options: [10, 100, 500],
+              discount: discountMap,
+            },
+          },
+        }
+      }
+      if (url === '/api/user/aff') {
+        return { data: { success: true, data: 'INV99' } }
+      }
+      if (url === '/api/subscription/plans') {
+        return { data: { success: true, message: 'success', data: [] } }
+      }
+      if (url === '/api/subscription/self') {
+        return {
+          data: {
+            success: true,
+            message: 'success',
+            data: {
+              billing_preference: 'subscription_first',
+              subscriptions: [],
+              all_subscriptions: [],
+            },
+          },
+        }
+      }
+      return { data: { success: true, data: null } }
+    })
+
+    vi.spyOn(api, 'post').mockImplementation(
+      async (url: string, body?: unknown) => {
+        const amount = Number((body as { amount?: number })?.amount ?? 0)
+        if (url === '/api/user/waffo-pancake/amount') {
+          return {
+            data: { message: 'success', data: (amount * 0.9).toFixed(2) },
+          }
+        }
+        if (url === '/api/user/amount') {
+          return {
+            data: { message: 'success', data: (amount * 6 * 0.9).toFixed(2) },
+          }
+        }
+        return { data: { message: 'error', data: 'unexpected' } }
+      }
+    )
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <Wallet />
+        </I18nextProvider>
+      </QueryClientProvider>
+    )
+
+    // Emerald banner visible in English
+    const banner = await screen.findByTestId('first-topup-discount-banner')
+    expect(banner).toHaveTextContent('Invited First Top-Up 10% Off Active')
+
+    // All presets use 10% OFF (overriding both 0% at $10 and 15% at $500)
+    expect(screen.getByRole('button', { name: /^\$10 / })).toHaveTextContent(
+      '10% OFFPay $9.00 • Save $1.00'
+    )
+    const fiveHundredBtn = screen.getByRole('button', { name: /^\$500 / })
+    expect(fiveHundredBtn).toHaveTextContent('10% OFFPay $450.00 • Save $50.00')
+
+    // Click $500 preset -> custom discount badge & Epay CNY estimate both use 0.9 (not 0.85)
+    await act(async () => {
+      fireEvent.click(fiveHundredBtn)
+    })
+    const customDiscount = screen.getByTestId('custom-amount-discount')
+    expect(customDiscount).toHaveTextContent('10% OFF')
+    expect(customDiscount).toHaveTextContent('Save $50.00')
+    expect(screen.getByRole('button', { name: /^Alipay$/ })).toHaveTextContent(
+      'CNY · ≈ ¥2,700.00'
+    )
+
+    // Simplified AffiliateRewardsCard links to /referrals and hides manual transfer when aff_quota == 0
+    expect(screen.getByRole('link', { name: /View Referrals/ })).toHaveAttribute(
+      'href',
+      '/referrals'
+    )
+    expect(
+      screen.queryByRole('button', { name: 'Transfer to Balance' })
+    ).not.toBeInTheDocument()
+
+    // Confirm dialog shows First Top-Up 10% OFF ($450 pay, $50 saved)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^Waffo Pancake$/ }))
+    })
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('First Top-Up')
+    expect(dialog).toHaveTextContent('10% OFF')
+    expect(dialog).toHaveTextContent('$450.00 USD')
+    expect(dialog).toHaveTextContent('$50.00 USD')
+
+    // Switch to Chinese -> banner shows 受邀首充 9 折特权生效中
+    await act(() => i18n.changeLanguage('zh'))
+    expect(banner).toHaveTextContent('受邀首充 9 折特权生效中')
   })
 })

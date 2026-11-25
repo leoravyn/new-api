@@ -116,6 +116,15 @@ func GetTopUpInfo(c *gin.Context) {
 		}
 	}
 
+	userId := c.GetInt("id")
+	firstTopUpEligible, firstTopUpDiscount, err := model.IsEligibleForInviteFirstTopUpDiscount(userId)
+	if err != nil {
+		firstTopUpEligible = false
+	}
+	if !firstTopUpEligible {
+		firstTopUpDiscount = common.InviteFirstTopUpDiscount
+	}
+
 	data := gin.H{
 		"enable_online_topup":              isEpayTopUpEnabled(),
 		"enable_stripe_topup":              isStripeTopUpEnabled(),
@@ -131,15 +140,17 @@ func GetTopUpInfo(c *gin.Context) {
 			}
 			return nil
 		}(),
-		"creem_products":          setting.CreemProducts,
-		"pay_methods":             payMethods,
-		"min_topup":               minTopUp,
-		"stripe_min_topup":        stripeMinTopUp,
-		"waffo_min_topup":         waffoMinTopUp,
-		"waffo_pancake_min_topup": waffoPancakeMinTopUp,
-		"amount_options":          operation_setting.GetPaymentSetting().AmountOptions,
-		"discount":                operation_setting.GetPaymentSetting().AmountDiscount,
-		"topup_link":              common.TopUpLink,
+		"creem_products":                setting.CreemProducts,
+		"pay_methods":                   payMethods,
+		"min_topup":                     minTopUp,
+		"stripe_min_topup":              stripeMinTopUp,
+		"waffo_min_topup":               waffoMinTopUp,
+		"waffo_pancake_min_topup":       waffoPancakeMinTopUp,
+		"amount_options":                operation_setting.GetPaymentSetting().AmountOptions,
+		"discount":                      operation_setting.GetPaymentSetting().AmountDiscount,
+		"first_topup_discount_eligible": firstTopUpEligible,
+		"first_topup_discount":          firstTopUpDiscount,
+		"topup_link":                    common.TopUpLink,
 	}
 	common.ApiSuccess(c, data)
 }
@@ -175,7 +186,20 @@ func GetEpayClient() *epay.Client {
 	return withUrl
 }
 
-func getPayMoney(amount int64, group string) float64 {
+func resolveTopUpDiscount(userId int, amount int64, exactMatch bool) float64 {
+	if eligible, firstDiscount, err := model.IsEligibleForInviteFirstTopUpDiscount(userId); err == nil && eligible {
+		return firstDiscount
+	}
+	if exactMatch {
+		if ds, ok := operation_setting.GetPaymentSetting().AmountDiscount[int(amount)]; ok && ds > 0 {
+			return ds
+		}
+		return 1.0
+	}
+	return operation_setting.GetPaymentSetting().MatchAmountDiscount(amount)
+}
+
+func getPayMoney(userId int, amount int64, group string) float64 {
 	dAmount := decimal.NewFromInt(amount)
 	// 充值金额以“展示类型”为准：
 	// - USD/CNY: 前端传 amount 为金额单位；TOKENS: 前端传 tokens，需要换成 USD 金额
@@ -191,7 +215,7 @@ func getPayMoney(amount int64, group string) float64 {
 
 	dTopupGroupRatio := decimal.NewFromFloat(topupGroupRatio)
 	dPrice := decimal.NewFromFloat(operation_setting.Price)
-	discount := operation_setting.GetPaymentSetting().MatchAmountDiscount(amount)
+	discount := resolveTopUpDiscount(userId, amount, false)
 	dDiscount := decimal.NewFromFloat(discount)
 
 	payMoney := dAmount.Mul(dPrice).Mul(dTopupGroupRatio).Mul(dDiscount)
@@ -340,7 +364,7 @@ func RequestEpay(c *gin.Context) {
 		paymentError(c, common.NewMessage("Failed to get the user group"))
 		return
 	}
-	payMoney := getPayMoney(req.Amount, group)
+	payMoney := getPayMoney(id, req.Amount, group)
 	if payMoney < 0.01 {
 		paymentError(c, common.NewMessage("Payment amount is too low"))
 		return
@@ -556,7 +580,7 @@ func RequestAmount(c *gin.Context) {
 		paymentError(c, common.NewMessage("Failed to get the user group"))
 		return
 	}
-	payMoney := getPayMoney(req.Amount, group)
+	payMoney := getPayMoney(id, req.Amount, group)
 	if payMoney <= 0.01 {
 		paymentError(c, common.NewMessage("Payment amount is too low"))
 		return

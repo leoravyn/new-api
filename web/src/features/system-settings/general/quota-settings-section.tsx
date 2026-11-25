@@ -55,6 +55,41 @@ const quotaSchema = z.object({
   QuotaForNewUser: z.coerce.number().min(0),
   QuotaForInviter: z.coerce.number().min(0),
   QuotaForInvitee: z.coerce.number().min(0),
+  AffCommissionEnabled: z.boolean(),
+  AffCommissionRate: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce
+      .number({ error: () => i18next.t('Please enter a valid number') })
+      .min(0, {
+        error: () => i18next.t('Must be between 0 and 1'),
+      })
+      .max(1, {
+        error: () => i18next.t('Must be between 0 and 1'),
+      })
+  ),
+  AffCommissionCooldownDays: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce
+      .number({ error: () => i18next.t('Please enter a valid number') })
+      .int({ error: () => i18next.t('Must be a whole number') })
+      .min(0, {
+        error: () => i18next.t('Must be between 0 and 365'),
+      })
+      .max(365, {
+        error: () => i18next.t('Must be between 0 and 365'),
+      })
+  ),
+  InviteFirstTopUpDiscount: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce
+      .number({ error: () => i18next.t('Please enter a valid number') })
+      .gt(0, {
+        error: () => i18next.t('Must be greater than 0 and at most 1'),
+      })
+      .lte(1, {
+        error: () => i18next.t('Must be greater than 0 and at most 1'),
+      })
+  ),
   TopUpLink: z.string(),
   quota_setting: z.object({
     enable_free_model_pre_consume: z.boolean(),
@@ -273,6 +308,121 @@ export function QuotaSettingsSection({
                     {t('Quota given to invited users ({{formattedQuota}})', {
                       formattedQuota: formatQuotaInputValue(field.value),
                     })}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <SettingsFormGridItem span='full'>
+              <FormField
+                control={form.control}
+                name='AffCommissionEnabled'
+                render={({ field }) => (
+                  <SettingsSwitchItem>
+                    <SettingsSwitchContent>
+                      <FormLabel>
+                        {t('Enable Referral Top-Up Commission')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t(
+                          'When enabled, inviters earn a commission on completed paid top-ups by their invited users, automatically credited to balance after the cooldown.'
+                        )}
+                      </FormDescription>
+                    </SettingsSwitchContent>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={updateOption.isPending}
+                      />
+                    </FormControl>
+                  </SettingsSwitchItem>
+                )}
+              />
+            </SettingsFormGridItem>
+
+            <FormField
+              control={form.control}
+              name='AffCommissionRate'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Referral Commission Rate')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0}
+                      max={1}
+                      step='any'
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      'Commission share of actual paid USD credited to the inviter (0 to 1, e.g. 0.05 = 5%).'
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='AffCommissionCooldownDays'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Commission Cooldown Days')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0}
+                      max={365}
+                      step={1}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      'Days to wait before pending referral commissions are automatically settled into wallet balance (0-365).'
+                    )}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='InviteFirstTopUpDiscount'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Invited First Top-Up Discount')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0.01}
+                      max={1}
+                      step='any'
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t(
+                      "Discount multiplier for an invited user's first paid top-up (e.g. 0.9 = 10% off; set to 1 to disable). Overrides tiered discounts."
+                    )}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -16,22 +16,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Share2 } from 'lucide-react'
+import { useRouter } from '@tanstack/react-router'
+import { ArrowRight, Gift } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CopyButton } from '@/components/copy-button'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { IconBadge } from '@/components/ui/icon-badge'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatQuota } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 import type { UserWalletData } from '../types'
 
 interface AffiliateRewardsCardProps {
   user: UserWalletData | null
-  affiliateLink: string
+  affiliateLink?: string
   onTransfer: () => void
   complianceConfirmed?: boolean
   loading?: boolean
@@ -39,97 +40,98 @@ interface AffiliateRewardsCardProps {
 
 export function AffiliateRewardsCard({
   user,
-  affiliateLink,
   onTransfer,
   complianceConfirmed = true,
   loading,
 }: AffiliateRewardsCardProps) {
   const { t } = useTranslation()
+  const router = useRouter({ warn: false })
+
   if (loading) {
     return (
       <Card data-card-hover='false' className='py-0'>
-        <CardContent className='grid gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(220px,1fr)_minmax(220px,0.72fr)_minmax(320px,1.15fr)] lg:items-center'>
-          <div>
-            <Skeleton className='h-5 w-32' />
-            <Skeleton className='mt-2 h-4 w-48' />
+        <CardContent className='flex items-center justify-between gap-4 p-3.5 sm:p-4'>
+          <div className='space-y-1.5'>
+            <Skeleton className='h-4 w-36' />
+            <Skeleton className='h-3.5 w-64 max-w-full' />
           </div>
-          <Skeleton className='h-14 rounded-lg' />
-          <Skeleton className='h-10 rounded-lg' />
+          <Skeleton className='h-9 w-28 rounded-lg' />
         </CardContent>
       </Card>
     )
   }
 
-  const hasRewards = (user?.aff_quota ?? 0) > 0
+  const hasLegacyRewards = (user?.aff_quota ?? 0) > 0
+
+  const handleNavigate = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      !router ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.shiftKey
+    ) {
+      return
+    }
+    event.preventDefault()
+    void router.navigate({ to: '/referrals' })
+  }
 
   return (
     <Card data-card-hover='false' className='py-0'>
-      <CardContent className='grid gap-3 p-3.5 sm:gap-4 sm:p-5 lg:grid-cols-[minmax(200px,1fr)_minmax(180px,0.65fr)_minmax(280px,1fr)] lg:items-center'>
-        <div className='flex min-w-0 items-center gap-2.5'>
+      <CardContent className='flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4'>
+        <div className='flex min-w-0 items-center gap-3'>
           <IconBadge tone='chart-3'>
-            <Share2 />
+            <Gift />
           </IconBadge>
           <div className='min-w-0'>
-            <h3 className='truncate text-sm font-semibold'>
-              {t('Referral Program')}
-            </h3>
-            <p className='text-muted-foreground line-clamp-1 text-xs'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <h3 className='truncate text-sm font-semibold'>
+                {t('Referral Program')}
+              </h3>
+              {hasLegacyRewards && (
+                <span className='rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[11px] font-medium text-amber-300 tabular-nums'>
+                  {t('Legacy balance: {{amount}}', {
+                    amount: formatQuota(user?.aff_quota ?? 0),
+                  })}
+                </span>
+              )}
+            </div>
+            <p className='text-muted-foreground truncate text-xs'>
               {t(
-                'Earn rewards when users join through your referral link. Transfer accumulated rewards to your balance anytime.'
+                'Invite friends for a first top-up discount and earn commissions auto-credited to your balance.'
               )}
             </p>
           </div>
         </div>
 
-        <div className='grid grid-cols-3 gap-1.5 text-center'>
-          {[
-            [t('Pending'), formatQuota(user?.aff_quota ?? 0)],
-            [t('Total Earned'), formatQuota(user?.aff_history_quota ?? 0)],
-            [t('Invites'), String(user?.aff_count ?? 0)],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <div className='text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase'>
-                {label}
-              </div>
-              <div className='mt-0.5 truncate text-sm font-semibold tabular-nums'>
-                {value}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <Input
-            value={affiliateLink}
-            readOnly
-            className='h-9 min-w-0 flex-1 border-white/[0.08] bg-[#050506]/80 font-mono text-xs'
-          />
-          <CopyButton
-            value={affiliateLink}
-            variant='outline'
-            className='size-9 shrink-0 border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08]'
-            iconClassName='size-4'
-            tooltip={t('Copy referral link')}
-            aria-label={t('Copy referral link')}
-          />
-          {hasRewards && (
+        <div className='flex shrink-0 items-center gap-2'>
+          {hasLegacyRewards && (
             <Button
+              type='button'
+              variant='outline'
+              size='sm'
               onClick={onTransfer}
               disabled={!complianceConfirmed}
-              className='h-9 shrink-0 px-3'
-              size='sm'
+              className='h-9 border-white/[0.1] bg-white/[0.03] px-3 hover:bg-white/[0.08]'
             >
               {t('Transfer to Balance')}
             </Button>
           )}
-        </div>
-        {!complianceConfirmed ? (
-          <p className='text-muted-foreground text-xs lg:col-span-3'>
-            {t(
-              'Referral reward transfer is disabled until the administrator confirms compliance terms.'
+          <a
+            href='/referrals'
+            onClick={handleNavigate}
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'h-9 border-white/[0.12] bg-white/[0.04] px-3.5 text-zinc-100 hover:border-white/[0.2] hover:bg-white/[0.08]'
             )}
-          </p>
-        ) : null}
+          >
+            {t('View Referrals')}
+            <ArrowRight className='size-3.5' />
+          </a>
+        </div>
       </CardContent>
     </Card>
   )

@@ -44,6 +44,10 @@ function Fixture() {
             QuotaForNewUser: 0,
             QuotaForInviter: 0,
             QuotaForInvitee: 0,
+            AffCommissionEnabled: true,
+            AffCommissionRate: 0.05,
+            AffCommissionCooldownDays: 7,
+            InviteFirstTopUpDiscount: 0.9,
             TopUpLink: '',
             quota_setting: {
               enable_free_model_pre_consume: true,
@@ -145,3 +149,45 @@ test.each(['', '-1'])(
     expect(api.put).not.toHaveBeenCalled()
   }
 )
+
+test('saves referral commission settings with exact option keys', async () => {
+  const user = userEvent.setup()
+  await renderSettings()
+
+  const rateInput = screen.getByRole('spinbutton', {
+    name: 'Referral Commission Rate',
+  })
+  const cooldownInput = screen.getByRole('spinbutton', {
+    name: 'Commission Cooldown Days',
+  })
+  const discountInput = screen.getByRole('spinbutton', {
+    name: 'Invited First Top-Up Discount',
+  })
+
+  expect(rateInput).toHaveValue(0.05)
+  expect(cooldownInput).toHaveValue(7)
+  expect(discountInput).toHaveValue(0.9)
+
+  await user.clear(rateInput)
+  await user.type(rateInput, '0.08')
+  await user.clear(cooldownInput)
+  await user.type(cooldownInput, '14')
+  await user.clear(discountInput)
+  await user.type(discountInput, '0.85')
+  await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+
+  await waitFor(() => {
+    expect(api.put).toHaveBeenCalledWith('/api/option/', {
+      key: 'AffCommissionRate',
+      value: 0.08,
+    })
+    expect(api.put).toHaveBeenCalledWith('/api/option/', {
+      key: 'AffCommissionCooldownDays',
+      value: 14,
+    })
+    expect(api.put).toHaveBeenCalledWith('/api/option/', {
+      key: 'InviteFirstTopUpDiscount',
+      value: 0.85,
+    })
+  })
+})
