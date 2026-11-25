@@ -25,8 +25,14 @@ import {
   DEFAULT_MIN_TOPUP,
 } from '../constants'
 import type { PaymentMethod, PresetAmount, TopupInfo } from '../types'
-import type { SettlementCurrency } from './format'
-import { getMatchedAmountDiscount } from './format'
+import type {
+  FirstTopupDiscountOverride,
+  SettlementCurrency,
+} from './format'
+import {
+  getActiveFirstTopupDiscount,
+  getMatchedAmountDiscount,
+} from './format'
 
 // ============================================================================
 // Payment Processing Functions
@@ -252,9 +258,14 @@ export function getMinTopupAmount(topupInfo: TopupInfo | null): number {
 /**
  * Generate preset amounts based on minimum topup
  */
-export function generatePresetAmounts(minAmount: number): PresetAmount[] {
+export function generatePresetAmounts(
+  minAmount: number,
+  firstTopupOverride?: FirstTopupDiscountOverride | null
+): PresetAmount[] {
+  const overrideRate = getActiveFirstTopupDiscount(firstTopupOverride)
   return DEFAULT_PRESET_MULTIPLIERS.map((multiplier) => ({
     value: minAmount * multiplier,
+    ...(overrideRate !== null ? { discount: overrideRate } : {}),
   }))
 }
 
@@ -263,14 +274,19 @@ export function generatePresetAmounts(minAmount: number): PresetAmount[] {
  */
 export function mergePresetAmounts(
   amountOptions: number[],
-  discounts: Record<number, number>
+  discounts: Record<number, number>,
+  firstTopupOverride?: FirstTopupDiscountOverride | null
 ): PresetAmount[] {
   if (!amountOptions || amountOptions.length === 0) {
     return []
   }
 
+  const overrideRate = getActiveFirstTopupDiscount(firstTopupOverride)
   return amountOptions.map((amount) => ({
     value: amount,
-    discount: getMatchedAmountDiscount(amount, discounts),
+    discount:
+      overrideRate !== null
+        ? overrideRate
+        : getMatchedAmountDiscount(amount, discounts),
   }))
 }

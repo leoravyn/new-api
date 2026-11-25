@@ -44,6 +44,7 @@ import {
 } from './hooks'
 import {
   formatUsdAmount,
+  getActiveFirstTopupDiscount,
   getDefaultPaymentType,
   getDiscountRateForPaymentType,
   getMinTopupAmount,
@@ -312,14 +313,28 @@ export function Wallet(props: WalletProps) {
     }
   }
 
+  const firstTopupOverride = useMemo(
+    () => ({
+      eligible: topupInfo?.first_topup_discount_eligible,
+      discount: topupInfo?.first_topup_discount,
+    }),
+    [
+      topupInfo?.first_topup_discount_eligible,
+      topupInfo?.first_topup_discount,
+    ]
+  )
+  const isFirstTopupDiscount =
+    getActiveFirstTopupDiscount(firstTopupOverride) !== null
+
   // Get discount rate for current topup amount
   const getDiscountRate = useCallback(() => {
     return getDiscountRateForPaymentType(
       topupAmount,
       topupInfo?.discount,
-      activePaymentType
+      activePaymentType,
+      firstTopupOverride
     )
-  }, [activePaymentType, topupInfo?.discount, topupAmount])
+  }, [activePaymentType, firstTopupOverride, topupInfo?.discount, topupAmount])
 
   const handleSubscriptionAvailabilityChange = useCallback(
     (available: boolean) => {
@@ -411,6 +426,7 @@ export function Wallet(props: WalletProps) {
         calculating={calculating}
         processing={processing || waffoProcessing || pancakeProcessing}
         discountRate={getDiscountRate()}
+        isFirstTopupDiscount={isFirstTopupDiscount}
       />
 
       <TransferDialog

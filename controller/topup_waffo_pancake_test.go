@@ -105,7 +105,7 @@ func TestGetWaffoPancakePayMoney(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			operation_setting.GetGeneralSetting().QuotaDisplayType = tc.quotaDisplayType
-			actual := getWaffoPancakePayMoney(tc.amount, tc.group)
+			actual := getWaffoPancakePayMoney(0, tc.amount, tc.group)
 			require.InDelta(t, tc.expected, actual, 0.000001)
 		})
 	}
@@ -142,19 +142,19 @@ func TestTieredAmountDiscountAcrossGateways(t *testing.T) {
 	}
 	require.NoError(t, common.UpdateTopupGroupRatioByJSONString(`{"default":1}`))
 
-	require.InDelta(t, 99.75, getPayMoney(105, "default"), 1e-6)
-	require.InDelta(t, 99.75, getWaffoPayMoney(105, "default"), 1e-6)
-	require.InDelta(t, 99.75, getWaffoPancakePayMoney(105, "default"), 1e-6)
-	require.InDelta(t, 225.0, getPayMoney(250, "default"), 1e-6)
-	require.InDelta(t, 225.0, getWaffoPayMoney(250, "default"), 1e-6)
-	require.InDelta(t, 225.0, getWaffoPancakePayMoney(250, "default"), 1e-6)
-	require.InDelta(t, 99.0, getPayMoney(99, "default"), 1e-6)
+	require.InDelta(t, 99.75, getPayMoney(0, 105, "default"), 1e-6)
+	require.InDelta(t, 99.75, getWaffoPayMoney(0, 105, "default"), 1e-6)
+	require.InDelta(t, 99.75, getWaffoPancakePayMoney(0, 105, "default"), 1e-6)
+	require.InDelta(t, 225.0, getPayMoney(0, 250, "default"), 1e-6)
+	require.InDelta(t, 225.0, getWaffoPayMoney(0, 250, "default"), 1e-6)
+	require.InDelta(t, 225.0, getWaffoPancakePayMoney(0, 250, "default"), 1e-6)
+	require.InDelta(t, 99.0, getPayMoney(0, 99, "default"), 1e-6)
 
 	// Stripe checkout keeps exact-key lookup due to fixed StripePriceId line-item quantity.
-	require.InDelta(t, 95.0, getStripePayMoney(100, "default"), 1e-6)
-	require.InDelta(t, 105.0, getStripePayMoney(105, "default"), 1e-6)
-	require.InDelta(t, 180.0, getStripePayMoney(200, "default"), 1e-6)
-	require.InDelta(t, 250.0, getStripePayMoney(250, "default"), 1e-6)
+	require.InDelta(t, 95.0, getStripePayMoney(0, 100, "default"), 1e-6)
+	require.InDelta(t, 105.0, getStripePayMoney(0, 105, "default"), 1e-6)
+	require.InDelta(t, 180.0, getStripePayMoney(0, 200, "default"), 1e-6)
+	require.InDelta(t, 250.0, getStripePayMoney(0, 250, "default"), 1e-6)
 }
 
 func TestGlobalMinTopUpEnforcedOnWaffoPancakeAndTopUpInfo(t *testing.T) {

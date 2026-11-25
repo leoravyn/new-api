@@ -181,6 +181,9 @@ export function useTopupInfo() {
         return
       }
 
+      const parsedFirstTopupDiscount = Number(
+        response.data.first_topup_discount
+      )
       const processedData: TopupInfo = {
         ...response.data,
         pay_methods: parsePaymentMethods(
@@ -193,19 +196,36 @@ export function useTopupInfo() {
         waffo_pay_methods: parseWaffoPayMethods(
           response.data.waffo_pay_methods
         ),
+        first_topup_discount_eligible: Boolean(
+          response.data.first_topup_discount_eligible
+        ),
+        first_topup_discount:
+          Number.isFinite(parsedFirstTopupDiscount) &&
+          parsedFirstTopupDiscount > 0
+            ? parsedFirstTopupDiscount
+            : undefined,
       }
 
       setTopupInfo(processedData)
 
+      const firstTopupOverride = {
+        eligible: processedData.first_topup_discount_eligible,
+        discount: processedData.first_topup_discount,
+      }
+
       if (processedData.amount_options.length > 0) {
         const customPresets = mergePresetAmounts(
           processedData.amount_options,
-          processedData.discount || {}
+          processedData.discount || {},
+          firstTopupOverride
         )
         setPresetAmounts(customPresets)
       } else {
         const minTopup = getMinTopupAmount(processedData)
-        const defaultPresets = generatePresetAmounts(minTopup)
+        const defaultPresets = generatePresetAmounts(
+          minTopup,
+          firstTopupOverride
+        )
         setPresetAmounts(defaultPresets)
       }
     } catch (err) {

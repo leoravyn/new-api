@@ -156,6 +156,10 @@ export interface TopupInfo {
   payment_compliance_confirmed?: boolean
   /** Current compliance terms version */
   payment_compliance_terms_version?: string
+  /** Whether the user is eligible for invited first top-up discount */
+  first_topup_discount_eligible?: boolean
+  /** Invited first top-up discount multiplier (e.g. 0.9 for 10% off) */
+  first_topup_discount?: number
 }
 
 /**

@@ -2,6 +2,7 @@ package model
 
 import (
 	"maps"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -146,6 +147,10 @@ func InitOptionMap() {
 	common.OptionMap["QuotaForNewUser"] = strconv.Itoa(common.QuotaForNewUser)
 	common.OptionMap["QuotaForInviter"] = strconv.Itoa(common.QuotaForInviter)
 	common.OptionMap["QuotaForInvitee"] = strconv.Itoa(common.QuotaForInvitee)
+	common.OptionMap["AffCommissionEnabled"] = strconv.FormatBool(common.AffCommissionEnabled)
+	common.OptionMap["AffCommissionRate"] = strconv.FormatFloat(common.AffCommissionRate, 'f', -1, 64)
+	common.OptionMap["AffCommissionCooldownDays"] = strconv.Itoa(common.AffCommissionCooldownDays)
+	common.OptionMap["InviteFirstTopUpDiscount"] = strconv.FormatFloat(common.InviteFirstTopUpDiscount, 'f', -1, 64)
 	common.OptionMap["QuotaRemindEnabled"] = strconv.FormatBool(common.QuotaRemindEnabled)
 	common.OptionMap["QuotaRemindThreshold"] = strconv.Itoa(common.QuotaRemindThreshold)
 	common.OptionMap["PreConsumedQuota"] = strconv.Itoa(common.PreConsumedQuota)
@@ -244,6 +249,9 @@ func validateOptionValue(key string, value string) error {
 		return err
 	}
 	if err := operation_setting.ValidateEpaySignOption(key, value); err != nil {
+		return err
+	}
+	if err := operation_setting.ValidateAffCommissionOption(key, value); err != nil {
 		return err
 	}
 	if key == "EmailProvider" || key == "ResendApiKey" || key == "ResendFrom" {
@@ -499,6 +507,8 @@ func updateOptionMap(key string, value string) (err error) {
 			setting.DefaultUseAutoGroup = boolValue
 		case "ExposeRatioEnabled":
 			ratio_setting.SetExposeRatioEnabled(boolValue)
+		case "AffCommissionEnabled":
+			common.AffCommissionEnabled = boolValue
 		}
 	}
 	if key == setting.TaskPluginDisabledFactoryKeysKey {
@@ -648,6 +658,18 @@ func updateOptionMap(key string, value string) (err error) {
 		common.QuotaForInviter, _ = strconv.Atoi(value)
 	case "QuotaForInvitee":
 		common.QuotaForInvitee, _ = strconv.Atoi(value)
+	case "AffCommissionRate":
+		if v, parseErr := strconv.ParseFloat(strings.TrimSpace(value), 64); parseErr == nil && !math.IsNaN(v) && !math.IsInf(v, 0) && v >= 0 && v <= 1 {
+			common.AffCommissionRate = v
+		}
+	case "AffCommissionCooldownDays":
+		if v, parseErr := strconv.Atoi(strings.TrimSpace(value)); parseErr == nil && v >= 0 && v <= 365 {
+			common.AffCommissionCooldownDays = v
+		}
+	case "InviteFirstTopUpDiscount":
+		if v, parseErr := strconv.ParseFloat(strings.TrimSpace(value), 64); parseErr == nil && !math.IsNaN(v) && !math.IsInf(v, 0) && v > 0 && v <= 1 {
+			common.InviteFirstTopUpDiscount = v
+		}
 	case "QuotaRemindThreshold":
 		common.QuotaRemindThreshold, _ = strconv.Atoi(value)
 	case "PreConsumedQuota":

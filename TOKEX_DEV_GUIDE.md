@@ -1,6 +1,6 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-24  
+> **最后更新**：2026-11-26  
 > **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握当前架构、分支规范、主机运维边界与发布流程）。
 
 ---
@@ -23,7 +23,11 @@
 5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
    - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`1.0` USD 结算，内置 W 图标需在 `PayMethods` 中将 `icon` 留空）与 **Epay / Zpay**（`https://zpayz.cn`，涵盖 `alipay`、`wxpay` 等非 Waffo/Stripe 渠道，按 `Price=7` 折算 `CNY` 结算）共存时，前端按 `getPaymentSettlementCurrency` 在充值页、确认弹窗与账单历史中自动区分展示 `USD` 与 `CNY`（默认预览优先对齐 Waffo Pancake 的 `USD` 展示）。
    - Epay 支付完成回跳 `/usage-logs` 时，前端路由 `src/routes/_authenticated/usage-logs/index.tsx` 通过 `isEpayReturnQuery` 识别回调参数（`trade_status` / `out_trade_no` / `trade_no`）并直接重定向回 `/wallet`；常规访问 `/usage-logs` 仍跳转 `/usage-logs/common`。
-   - 后端基于已合入的 `v1.0.0-rc.51`（`c9c6da2`）仅保留 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配；Stripe 保留精确键匹配）与全局 `MinTopUp` 下限校验（对应提交至上游的 PR #8437 / #8438，待官方合入发版后可切回官方镜像）。
+   - 后端基于已合入的 `v1.0.0-rc.51`（`c9c6da2`）保留 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配；Stripe 保留精确键匹配）、全局 `MinTopUp` 下限校验，以及邀请推广返佣与首充 9 折覆盖能力（对应 PR #8437 / #8438 及 TOKEX 推广返佣补丁）。
+6. **独立邀请推广中心（`/referrals`）、首充 9 折特权与 5% 自动入账返佣**：
+   - **受邀首充 9 折覆盖**：通过推荐链接注册（`inviter_id > 0`）且尚无已完成真实钱包充值（`top_ups.status = 'success' AND amount > 0`，订阅镜像 `amount = 0` 记录不消耗资格）的用户，在合规条款已确认且 `InviteFirstTopUpDiscount < 1` 时，`GET /api/user/topup/info` 返回 `first_topup_discount_eligible: true` 与 `first_topup_discount`（默认 `0.9`）。前后端全链路（Epay、Waffo Pancake、Waffo、Stripe 报价、钱包预设卡片、自定义金额优惠提示、Epay CNY 预估及确认弹窗）统一以首充特权折扣**直接覆盖**常规阶梯折扣（不叠加），并在钱包充值卡片顶部展示翡翠绿特权横幅。
+   - **5% 充值返佣与冷静期自动入账**：所有 6 条充值入账路径（Epay / Stripe / Admin 手动补单 / Creem / Waffo / Waffo Pancake）在同一事务内幂等写入 `aff_commissions`（`trade_no` 唯一索引）；按实付 USD（Epay 实付 CNY 按 `Price` 换算为 USD）的 `AffCommissionRate`（默认 `0.05`）计算返佣，进入 `AffCommissionCooldownDays`（默认 `7` 天）冷静期。后台主节点定时任务 `service/aff_commission_task.go` 启动及每 10 分钟扫描到期记录，自动核验订单与双方账户状态后直接计入邀请人钱包余额（`users.quota` + `users.aff_history`）并刷新缓存。
+   - **独立页面与配置入口**：控制台左侧导航 `Personal` 组新增 `/referrals`（`src/features/referrals/`），对接 `GET /api/user/referral/summary` 与 `GET /api/user/referral/commissions`，展示专属推广链接、动态规则说明、4 项核心 KPI、分页/状态筛选的返佣流水（脱敏展示被邀请人）及历史遗留余额手动划转入口（仅 `legacy_aff_quota > 0` 时展示）；`/wallet` 保持聚焦充值，底部精简为单行 `/referrals` 跳转卡片；超管可在 `/system-settings/billing/quota` 调整 `AffCommissionEnabled`、`AffCommissionRate`、`AffCommissionCooldownDays`、`InviteFirstTopUpDiscount`。
 
 ---
 
@@ -79,7 +83,7 @@
   - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`components/{terms-footer,legal-consent}.tsx`、`hooks/`）
   - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/{model-helpers,price,dynamic-price}.ts`、`components/{model-card,price-comparison,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`
   - 渠道与计费设置：`src/features/channels/`、`src/features/system-settings/integrations/`
-  - 控制台与账户：`src/features/dashboard/`、`src/features/profile/`、`src/features/security/`、`src/features/wallet/`；全部控制台路由见 `src/routes/_authenticated/`
+  - 控制台与账户：`src/features/dashboard/`、`src/features/profile/`、`src/features/security/`、`src/features/wallet/`、`src/features/referrals/`；全部控制台路由见 `src/routes/_authenticated/`
 
 ---
 
