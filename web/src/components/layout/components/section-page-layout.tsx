@@ -97,7 +97,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
               : 'min-w-0 flex-1'
           }
         >
-          <h2 className='truncate text-lg font-semibold tracking-tight text-white sm:text-xl'>
+          <h2 className='text-foreground truncate text-lg font-semibold tracking-tight sm:text-xl'>
             {title}
           </h2>
         </div>
@@ -131,7 +131,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
 
         <div
           ref={setFooterContainer}
-          className='shrink-0 border-t border-white/[0.08] bg-[#0a0a0c]/90 px-3 py-2.5 empty:hidden backdrop-blur-md sm:px-5 sm:py-3'
+          className='shrink-0 border-t border-[rgba(216,226,248,0.08)] bg-[#11141b]/90 px-3 py-2.5 backdrop-blur-md empty:hidden sm:px-5 sm:py-3'
         />
       </Main>
     </PageFooterProvider>
