@@ -212,7 +212,7 @@ export function PublicHeader(props: PublicHeaderProps) {
         className={cn(
           'sticky top-0 z-50 h-14 w-full border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
           showElevatedBar
-            ? 'border-white/[0.07] bg-[#08080a]/82 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.75)] backdrop-blur-xl'
+            ? 'border-white/[0.05] bg-[#08080a]/48 backdrop-blur-2xl backdrop-saturate-150'
             : 'border-transparent bg-transparent backdrop-blur-none',
           props.className
         )}

@@ -16,6 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { motion, useReducedMotion } from 'motion/react'
+
 import { CommandMenu } from '@/components/command-menu'
 import { AnimatedOutlet } from '@/components/page-transition'
 import { SkipToMain } from '@/components/skip-to-main'
@@ -36,32 +38,40 @@ type AuthenticatedLayoutProps = {
 export function AuthenticatedLayout(props: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   const signedIn = useAuthStore((s) => !!s.auth.user)
+  const prefersReducedMotion = useReducedMotion()
   // Unmount pages on sign-out, otherwise their queries refetch and toast "Session expired!" / "invalid access token"
   if (!signedIn) return null
 
   return (
     <LayoutProvider>
       <SearchProvider>
-        <SidebarProvider
-          defaultOpen={defaultOpen}
-          className='bg-sidebar flex-col'
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className='min-h-svh w-full'
         >
-          <SkipToMain />
-          <AppHeader />
-          <div className='bg-sidebar flex min-h-0 w-full flex-1'>
-            <AppSidebar />
-            <SidebarInset
-              className={cn(
-                '@container/content',
-                'h-[calc(100svh-var(--app-header-height,0px))]',
-                'min-h-0 min-w-0 overflow-hidden',
-                'md:peer-data-[variant=inset]:h-[calc(100svh-var(--app-header-height,0px)-(var(--spacing)*4))]'
-              )}
-            >
-              {props.children ?? <AnimatedOutlet />}
-            </SidebarInset>
-          </div>
-        </SidebarProvider>
+          <SidebarProvider
+            defaultOpen={defaultOpen}
+            className='bg-sidebar flex-col [--app-header-height:3.5rem]'
+          >
+            <SkipToMain />
+            <AppHeader />
+            <div className='bg-sidebar flex min-h-0 w-full flex-1'>
+              <AppSidebar />
+              <SidebarInset
+                className={cn(
+                  '@container/content',
+                  'h-[calc(100svh-var(--app-header-height,0px))]',
+                  'min-h-0 min-w-0 overflow-hidden',
+                  'md:peer-data-[variant=inset]:h-[calc(100svh-var(--app-header-height,0px)-(var(--spacing)*4))]'
+                )}
+              >
+                {props.children ?? <AnimatedOutlet />}
+              </SidebarInset>
+            </div>
+          </SidebarProvider>
+        </motion.div>
         <CommandMenu />
       </SearchProvider>
     </LayoutProvider>

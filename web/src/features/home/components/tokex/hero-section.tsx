@@ -472,7 +472,7 @@ export function TokexHeroSection() {
             className='lg:col-span-6'
           >
             <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#0e0e11]/92 px-3 py-1 text-xs font-medium text-[#e4e4e7] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
-              <span className='size-1.5 rounded-full bg-emerald-400' />
+              <span className='size-1.5 rounded-full bg-[#fafafa]' />
               <span>
                 {isZh
                   ? 'TOKEX · 开发者 AI 模型 API 平台'
@@ -882,7 +882,7 @@ export function TokexHeroSection() {
                                     {item.modelName}
                                   </span>
                                   {isActive && (
-                                    <span className='hidden shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400 sm:inline-flex'>
+                                    <span className='hidden shrink-0 rounded-full border border-white/20 bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium text-zinc-100 sm:inline-flex'>
                                       {isZh ? '在线' : 'Live'}
                                     </span>
                                   )}
@@ -899,8 +899,8 @@ export function TokexHeroSection() {
                                       className={cn(
                                         'shrink-0 rounded border px-1.5 py-px font-mono text-[10px] leading-tight',
                                         item.groupRatio < 1
-                                          ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-400'
-                                          : 'border-[rgba(255,255,255,0.1)] bg-[#19191e] text-[#a1a1aa]'
+                                          ? 'border-white/[0.16] bg-white/[0.08] text-[#fafafa]'
+                                          : 'border-white/[0.08] bg-[#141417] text-zinc-300'
                                       )}
                                     >
                                       {item.groupBadge}
