@@ -1,7 +1,7 @@
 # TOKEX Design System (`DESIGN.md`)
 
 > **Brand**: TOKEX (`https://tokex.vip`)  
-> **Visual Aesthetic**: **Monochrome Graphite + Brushed Platinum + Silver** — zero-hue neutral graphite surfaces (`#08080A` outer shell → `#0C0C0E` workspace → `#121214` cards → `#17171A` / `#1B1B1F` inset/secondary), tactile film-grain canvas texture (`feTurbulence`), soft neutral top studio light (`rgba(255, 255, 255, 0.04)`), brushed-platinum metallic primary CTAs (`#FAFAFA` → `#D6D6DB` with `#0A0A0B` ink), `1px` `rgba(255, 255, 255, 0.07)` neutral hairlines, desaturated sage/champagne/rose semantic states, and tabular financial typography.  
+> **Visual Aesthetic**: **Deep Obsidian + Brushed Platinum + Refined Mineral Accents** — crisp high-contrast obsidian surfaces (`#050506` outer shell → `#08080A` workspace → `#0E0E11` cards → `#141418` / `#19191E` inset/secondary), ultra-fine film-grain canvas texture (`feTurbulence`, `0.014` opacity), restrained top studio light (`rgba(255, 255, 255, 0.022)`), brushed-platinum metallic primary CTAs (`#FAFAFA` → `#D6D6DB` with `#08080A` ink), `1px` `rgba(255, 255, 255, 0.08)` neutral hairlines, clean moderate-chroma jade/amber/coral/steel-blue semantics & charts, and tabular financial typography.  
 > **Target Use**: Reference specification for TOKEX web UI, console layout shell, and **Waffo Pancake Hosted Checkout Customization** (upload directly to Waffo or map to Waffo `checkoutSettings`).
 
 ---
@@ -13,10 +13,10 @@ For direct mapping into **Waffo Dashboard → Settings → Checkout** (or AI-dri
 ### Dark Theme (Primary — Matches `https://tokex.vip` Production Theme)
 | Waffo Field | Value | Notes |
 |---|---|---|
-| `checkoutColorPrimary` | `#F4F4F5` | High-contrast platinum-white CTA button fill (paired with `#0A0A0B` button text) |
-| `checkoutColorBackground` | `#0C0C0E` | Main workspace / page canvas background (neutral graphite) |
-| `checkoutColorCard` | `#121214` | Checkout panel / order summary card background |
-| `checkoutColorText` | `#F4F4F5` | Primary platinum ink (secondary text: `#9A9AA2`) |
+| `checkoutColorPrimary` | `#FAFAFA` | High-contrast platinum-white CTA button fill (paired with `#08080A` button text) |
+| `checkoutColorBackground` | `#08080A` | Main workspace / page canvas background (deep obsidian) |
+| `checkoutColorCard` | `#0E0E11` | Checkout panel / order summary card background |
+| `checkoutColorText` | `#FAFAFA` | Primary platinum ink (secondary text: `#A1A1AA`) |
 | `checkoutBorderRadius` | `12px` | Balanced middle ground between `8px` controls (`rounded-lg`) and `16px` cards (`rounded-2xl`) |
 | `checkoutLogo` | `https://tokex.vip/logo-tokex.svg` | Horizontal vector brand mark (`226 × 64 px`) |
 
@@ -44,10 +44,10 @@ For direct mapping into **Waffo Dashboard → Settings → Checkout** (or AI-dri
   "checkoutSettings": {
     "dark": {
       "checkoutLogo": "https://tokex.vip/logo-tokex.svg",
-      "checkoutColorPrimary": "#F4F4F5",
-      "checkoutColorBackground": "#0C0C0E",
-      "checkoutColorCard": "#121214",
-      "checkoutColorText": "#F4F4F5",
+      "checkoutColorPrimary": "#FAFAFA",
+      "checkoutColorBackground": "#08080A",
+      "checkoutColorCard": "#0E0E11",
+      "checkoutColorText": "#FAFAFA",
       "checkoutBorderRadius": "12px"
     },
     "light": {
@@ -66,10 +66,10 @@ For direct mapping into **Waffo Dashboard → Settings → Checkout** (or AI-dri
 
 ## 2. Design Principles
 
-1. **Zero-Hue Monochrome Graphite Hierarchy**: Every structural surface, border, hover state, active pill, and focus ring uses pure neutral black, graphite, silver, and platinum (`#08080A` outer shell & sidebar → `#0C0C0E` workspace → `#121214` cards & popovers → `#17171A` muted inset → `#1B1B1F` secondary) separated by `1px` `rgba(255, 255, 255, 0.07)` neutral hairlines. Zero blue or indigo tint anywhere in the UI.
-2. **Tactile Materiality Without Gimmicks**: Depth comes from physical material cues — a subtle fixed monochrome SVG `feTurbulence` film-grain overlay (`opacity: 0.028`), soft neutral top studio lighting (`rgba(255, 255, 255, 0.04)`), `inset 0 1px 0 0 rgba(255, 255, 255, 0.06)` card specular rims, and brushed-platinum primary CTAs (`#FAFAFA` → `#D6D6DB`). No particles, no neon, no glow halos.
-3. **Calm Desaturated Semantics**: Status indicators communicate meaning without visual glare — muted sage (`oklch(0.74 0.055 160)`) for active/OK states, muted champagne (`oklch(0.80 0.08 80)`) for warnings, and muted rose (`oklch(0.66 0.13 22)`) for destructive alerts, backed by centralized `.dark` Tailwind v4 palette overrides (`emerald`/`green`/`lime` → sage; `blue`/`sky`/`indigo` → silver/graphite).
-4. **Seamless Public Header & Framed Console Shell**: On public pages, the top header starts fully transparent with no border over the `#0C0C0E` canvas and transitions to a translucent `backdrop-blur-xl` bar with a faint `rgba(255, 255, 255, 0.06)` hairline only after scrolling (`> 8px`). On desktop console routes (`md:`), the outer shell and sidebar share `#08080A` while the workspace sits in a framed `#0C0C0E` panel (`rounded-xl`, `1px` neutral border, top specular rim).
+1. **Crisp Deep Obsidian Surface Hierarchy**: Every structural surface, border, hover state, active pill, and focus ring uses pure neutral obsidian, silver, and platinum (`#050506` outer shell & sidebar → `#08080A` workspace → `#0E0E11` cards & popovers → `#141418` muted inset → `#19191E` secondary) separated by `1px` `rgba(255, 255, 255, 0.08)` neutral hairlines. Cards and menus stay strictly black/platinum (`rgba(255, 255, 255, 0.065)` neutral hover/accent).
+2. **Tactile Materiality Without Milky Haze**: Depth comes from subtle physical cues — an ultra-fine monochrome SVG `feTurbulence` film-grain overlay (`opacity: 0.014`), restrained top studio lighting (`rgba(255, 255, 255, 0.022)`), `inset 0 1px 0 0 rgba(255, 255, 255, 0.06)` card specular rims, and brushed-platinum primary CTAs (`#FAFAFA` → `#D6D6DB`).
+3. **Clean Alive Moderate-Chroma Semantics**: Status indicators and explicit semantic badges have crisp clarity without neon glare — refined emerald (`oklch(0.73 0.115 162)`) for active/OK states, warm amber (`oklch(0.79 0.125 78)`) for warnings, coral-red (`oklch(0.67 0.165 24)`) for destructive alerts, and cool silver-blue (`oklch(0.76 0.085 245)`) for informational badges.
+4. **Seamless Public Header & Framed Console Shell**: On public pages, the top header starts fully transparent with no border over the `#08080A` canvas and transitions to a translucent `backdrop-blur-xl` bar with a faint `rgba(255, 255, 255, 0.07)` hairline only after scrolling (`> 8px`). On desktop console routes (`md:`), the outer shell and sidebar share `#050506` while the workspace sits in a framed `#08080A` panel (`rounded-xl`, `1px` neutral border, top specular rim).
 5. **Financial Precision (`tabular-nums`)**: All USD amounts (`$10.00 USD`), discount percentages (`5% OFF`), and pricing tables use tabular numerals for strict vertical alignment.
 
 ---
@@ -79,54 +79,55 @@ For direct mapping into **Waffo Dashboard → Settings → Checkout** (or AI-dri
 ### Background & Surface Hierarchy (Dark Mode)
 | Token | Value | Usage |
 |---|---|---|
-| `--sidebar` | `#08080A` | Outer shell, console header, sidebar base |
-| `--background` | `#0C0C0E` | Main workspace canvas, public page base, framed desktop panel |
-| `--studio-light` | `radial-gradient(960px circle at 50% -14%, rgba(255, 255, 255, 0.04), transparent 62%)` | Soft top-center neutral studio light |
-| `--film-grain` | Inline SVG `feTurbulence` (`saturate=0`, `opacity: 0.028`, `fixed`) | Subtle monochrome surface grain |
-| `--card` / `--popover` | `#121214` | Primary cards, checkout containers, popovers |
-| `--glass-surface` | `rgba(18, 18, 20, 0.84)` – `rgba(18, 18, 20, 0.92)` | Translucent card fill (`blur(20px)`) |
-| `--glass-elevated` | `rgba(18, 18, 20, 0.94)` – `rgba(18, 18, 20, 0.96)` | Dialogs, sheets, dropdowns (`blur(24px)`) |
-| `--muted` | `#17171A` | Subtle inset containers, code blocks, pills |
-| `--secondary` | `#1B1B1F` | Secondary button fill, inactive badges |
-| `--surface-hover` | `rgba(27, 27, 31, 0.90)` | Interactive card hover state |
-| `--accent` / `--sidebar-accent` | `rgba(255, 255, 255, 0.06)` | Hover row highlight, active nav/menu pill |
+| `--sidebar` | `#050506` | Outer shell, console header, sidebar base |
+| `--background` | `#08080A` | Main workspace canvas, public page base, framed desktop panel |
+| `--studio-light` | `radial-gradient(960px circle at 50% -14%, rgba(255, 255, 255, 0.022), transparent 62%)` | Restrained top-center neutral studio light |
+| `--film-grain` | Inline SVG `feTurbulence` (`saturate=0`, `opacity: 0.014`, `fixed`) | Ultra-fine monochrome surface grain |
+| `--card` / `--popover` | `#0E0E11` | Primary cards, checkout containers, popovers |
+| `--glass-surface` | `rgba(14, 14, 17, 0.88)` – `rgba(14, 14, 17, 0.92)` | Translucent card fill (`blur(20px)`) |
+| `--glass-elevated` | `rgba(14, 14, 17, 0.95)` – `rgba(14, 14, 17, 0.96)` | Dialogs, sheets, dropdowns (`blur(24px)`) |
+| `--muted` | `#141418` | Subtle inset containers, code blocks, pills |
+| `--secondary` | `#19191E` | Secondary button fill, inactive badges |
+| `--surface-hover` | `rgba(25, 25, 30, 0.92)` | Interactive card hover state |
+| `--accent` / `--sidebar-accent` | `rgba(255, 255, 255, 0.065)` | Neutral hover row highlight, active nav/menu pill |
 
 ### Text & Ink Hierarchy (Dark Mode)
 | Token | Value | Usage |
 |---|---|---|
-| `--foreground` / `--primary` | `#F4F4F5` | Headings, primary copy, active values |
-| `--primary-foreground` | `#0A0A0B` | Text/icons inside brushed-platinum primary buttons |
-| `--sidebar-foreground` | `#D4D4D8` | Navigation items, secondary headings |
-| `--sidebar-primary` | `#E4E4E7` | Brushed-platinum active indicator lead |
-| `--info` | `#C9CDD4` | Neutral silver informational emphasis |
-| `--muted-foreground` | `#9A9AA2` | Descriptions, metadata, captions, placeholders |
+| `--foreground` / `--primary` | `#FAFAFA` | Headings, primary copy, active values |
+| `--primary-foreground` | `#08080A` | Text/icons inside brushed-platinum primary buttons |
+| `--sidebar-foreground` | `#E4E4E7` | Navigation items, secondary headings |
+| `--sidebar-primary` | `#FAFAFA` | Brushed-platinum active indicator lead |
+| `--info` | `oklch(0.76 0.085 245)` | Crisp cool silver-blue informational emphasis |
+| `--muted-foreground` | `#A1A1AA` | Descriptions, metadata, captions, placeholders |
 | `--text-tertiary` | `#74747C` | Sidebar group labels (`11px` small-caps), strikethrough original prices |
 
 ### Borders, Rings & Specular Depth
 | Token | Value | Usage |
 |---|---|---|
-| `--border` / `--sidebar-border` | `rgba(255, 255, 255, 0.07)` | Default `1px` card, workspace frame, and table hairline |
-| `--input` | `rgba(255, 255, 255, 0.09)` | Default `1px` form input border |
-| `--border-hover` | `rgba(255, 255, 255, 0.14)` | Interactive card / button hover border lift |
-| `--ring` / `--sidebar-ring` | `rgba(255, 255, 255, 0.32)` | Neutral keyboard focus outline (`focus-visible`) |
-| `--shadow-card` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 12px 32px -16px rgba(0, 0, 0, 0.72)` | Card elevation + top specular rim |
-| `--shadow-elevated` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 24px 64px -20px rgba(0, 0, 0, 0.88)` | Modal & checkout container elevation |
+| `--border` / `--sidebar-border` | `rgba(255, 255, 255, 0.08)` | Default `1px` card, workspace frame, and table hairline |
+| `--input` | `rgba(255, 255, 255, 0.10)` | Default `1px` form input border |
+| `--border-hover` | `rgba(255, 255, 255, 0.15)` | Interactive card / button hover border lift |
+| `--ring` / `--sidebar-ring` | `rgba(255, 255, 255, 0.34)` | Neutral keyboard focus outline (`focus-visible`) |
+| `--shadow-card` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 12px 32px -16px rgba(0, 0, 0, 0.78)` | Card elevation + top specular rim |
+| `--shadow-elevated` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 24px 64px -20px rgba(0, 0, 0, 0.90)` | Modal & checkout container elevation |
 
-### Monochrome & Muted Mineral Chart Palette (Dark Mode)
+### Platinum & Refined Mineral Chart Palette (Dark Mode)
 | Token | Value | Role |
 |---|---|---|
-| `--chart-1` / `--overview-accent-1` | `#E4E4E7` | Primary series (Brushed Platinum) |
-| `--chart-2` / `--overview-accent-2` | `#A1A1AA` | Secondary series (Anodized Silver) |
-| `--chart-3` / `--overview-accent-3` | `#C4B48E` | Tertiary series (Muted Champagne) |
-| `--chart-4` | `#8DA698` | Quaternary series (Muted Sage) |
-| `--chart-5` | `#6B6B73` | Fifth series (Deep Graphite) |
+| `--chart-1` / `--overview-accent-1` | `#F4F4F5` | Primary series (Brushed Platinum) |
+| `--chart-2` / `--overview-accent-2` | `#6F9CEB` | Secondary series (Steel Sapphire) |
+| `--chart-3` / `--overview-accent-3` | `#52B792` | Tertiary series (Refined Jade) |
+| `--chart-4` | `#D6AE63` | Quaternary series (Warm Gold) |
+| `--chart-5` | `#9B8EC4` | Fifth series (Soft Amethyst) |
 
-### Desaturated Semantic Status Colors
+### Moderate-Chroma Semantic Status Colors
 | State | CSS Token | Hex Approx. | Foreground |
 |---|---|---|---|
-| **Success** | `oklch(0.74 0.055 160)` | `#8DA698` | `#0B130F` |
-| **Warning** | `oklch(0.80 0.08 80)` | `#C9B58A` | `#17140B` |
-| **Destructive / Error** | `oklch(0.66 0.13 22)` | `#C87A74` | `#F4F4F5` |
+| **Success** | `oklch(0.73 0.115 162)` | `#48B88A` | `#06130D` |
+| **Warning** | `oklch(0.79 0.125 78)` | `#DFB054` | `#171206` |
+| **Destructive / Error** | `oklch(0.67 0.165 24)` | `#E26860` | `#FAFAFA` |
+| **Info** | `oklch(0.76 0.085 245)` | `#88B8DE` | `#080C12` |
 
 ---
 

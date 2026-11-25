@@ -64,7 +64,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot='dropdown-menu-content'
           className={cn(
-            'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100 outline-none data-closed:overflow-hidden',
+            'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(255,255,255,0.11)] bg-[#0e0e11]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100 outline-none data-closed:overflow-hidden',
             className
           )}
           {...props}
@@ -176,7 +176,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot='dropdown-menu-sub-content'
       className={cn(
-        'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 w-auto min-w-[96px] rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100',
+        'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 w-auto min-w-[96px] rounded-2xl border border-[rgba(255,255,255,0.11)] bg-[#0e0e11]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100',
         className
       )}
       align={align}
