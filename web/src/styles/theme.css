@@ -98,7 +98,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 :root {
   --radius: 1rem;
-  --app-header-height: 3.5rem;
+  --app-header-height: 3.25rem;
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* TOKEX Liquid Glass typography stack: Plus Jakarta Sans + Inter + PingFang SC */
@@ -186,56 +186,56 @@ For commercial licensing, please contact support@quantumnous.com
   /* Native controls follow the theme; Dark Reader also reads this to detect
      the built-in dark theme. */
   color-scheme: dark;
-  /* TOKEX Pure Black & Zinc Monochrome palette */
-  --background: #050506;
-  --foreground: #fafafa;
-  --card: #0a0a0c;
-  --card-foreground: #fafafa;
-  --popover: #0a0a0c;
-  --popover-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #09090b;
-  --secondary: #141417;
-  --secondary-foreground: #fafafa;
-  --muted: #121215;
-  --muted-foreground: #a1a1aa;
-  --accent: rgba(255, 255, 255, 0.08);
-  --accent-foreground: #fafafa;
+  /* TOKEX Linear-inspired Cold Charcoal + Platinum Silver + Desaturated Ice-Indigo */
+  --background: #0b0d12;
+  --foreground: #f4f6fa;
+  --card: #11141b;
+  --card-foreground: #f4f6fa;
+  --popover: #11141b;
+  --popover-foreground: #f4f6fa;
+  --primary: #f4f6fa;
+  --primary-foreground: #090b10;
+  --secondary: #191d28;
+  --secondary-foreground: #f4f6fa;
+  --muted: #161a23;
+  --muted-foreground: #94a0b8;
+  --accent: rgba(124, 146, 232, 0.1);
+  --accent-foreground: #f4f6fa;
   --destructive: oklch(0.68 0.2 24);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive-foreground: #f4f6fa;
   --success: oklch(0.72 0.16 162);
   --success-foreground: #052e16;
   --warning: oklch(0.78 0.16 75);
   --warning-foreground: #1e1b08;
-  --info: #d4d4d8;
-  --info-foreground: #09090b;
-  --neutral: #a1a1aa;
-  --neutral-foreground: #09090b;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: rgba(255, 255, 255, 0.28);
-  --chart-1: #fafafa;
-  --chart-2: #d4d4d8;
-  --chart-3: #a1a1aa;
-  --chart-4: #71717a;
-  --chart-5: #52525b;
-  --overview-accent-1: #fafafa;
-  --overview-accent-2: #a1a1aa;
-  --overview-accent-3: #52525b;
-  --sidebar: #050506;
-  --sidebar-foreground: #e4e4e7;
-  --sidebar-primary: #fafafa;
-  --sidebar-primary-foreground: #09090b;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: rgba(255, 255, 255, 0.28);
-  --skeleton-base: rgba(255, 255, 255, 0.04);
-  --skeleton-highlight: rgba(255, 255, 255, 0.1);
+  --info: #8fa4f0;
+  --info-foreground: #090b10;
+  --neutral: #94a0b8;
+  --neutral-foreground: #090b10;
+  --border: rgba(216, 226, 248, 0.08);
+  --input: rgba(216, 226, 248, 0.09);
+  --ring: rgba(124, 146, 232, 0.45);
+  --chart-1: #7c92e8;
+  --chart-2: #5fa8d3;
+  --chart-3: #9ba7c2;
+  --chart-4: #5e9e8d;
+  --chart-5: #64708a;
+  --overview-accent-1: #7c92e8;
+  --overview-accent-2: #5fa8d3;
+  --overview-accent-3: #9ba7c2;
+  --sidebar: #07080b;
+  --sidebar-foreground: #d8dee9;
+  --sidebar-primary: #7c92e8;
+  --sidebar-primary-foreground: #090b10;
+  --sidebar-accent: rgba(124, 146, 232, 0.1);
+  --sidebar-accent-foreground: #f4f6fa;
+  --sidebar-border: rgba(216, 226, 248, 0.08);
+  --sidebar-ring: rgba(124, 146, 232, 0.45);
+  --skeleton-base: rgba(216, 226, 248, 0.045);
+  --skeleton-highlight: rgba(216, 226, 248, 0.1);
   --table-row: transparent;
-  --table-header: rgba(255, 255, 255, 0.03);
-  --table-header-hover: rgba(255, 255, 255, 0.055);
-  --table-disabled: rgba(255, 255, 255, 0.025);
-  --table-disabled-hover: rgba(255, 255, 255, 0.045);
-  --table-disabled-border: rgba(255, 255, 255, 0.08);
+  --table-header: rgba(216, 226, 248, 0.03);
+  --table-header-hover: rgba(216, 226, 248, 0.055);
+  --table-disabled: rgba(216, 226, 248, 0.025);
+  --table-disabled-hover: rgba(216, 226, 248, 0.045);
+  --table-disabled-border: rgba(216, 226, 248, 0.08);
 }

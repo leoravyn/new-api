@@ -67,7 +67,7 @@ export function TitledCard({
     >
       <CardHeader
         className={cn(
-          'border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5',
+          'border-b border-[rgba(216,226,248,0.08)] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5',
           headerClassName
         )}
       >

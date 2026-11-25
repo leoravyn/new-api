@@ -196,7 +196,7 @@ export function PublicHeader(props: PublicHeaderProps) {
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 h-14 w-full border-b border-white/[0.08] bg-[#050506]/85 backdrop-blur-xl transition-colors duration-300',
+          'sticky top-0 z-50 h-14 w-full border-b border-[rgba(216,226,248,0.08)] bg-[#07080b]/85 backdrop-blur-xl transition-colors duration-200',
           props.className
         )}
       >
@@ -267,10 +267,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                     disabled={link.disabled}
                     onClick={(event) => handleNavLinkClick(event, link)}
                     className={cn(
-                      'min-w-0 truncate rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                      'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                       isActive
-                        ? 'bg-white/[0.09] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.12]'
-                        : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground',
+                        ? 'bg-[rgba(124,146,232,0.12)] text-[#f4f6fa] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.08)] ring-1 ring-[rgba(124,146,232,0.22)]'
+                        : 'text-muted-foreground hover:bg-[rgba(216,226,248,0.05)] hover:text-foreground',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
@@ -280,7 +280,7 @@ export function PublicHeader(props: PublicHeaderProps) {
               })}
 
               {(showLanguageSwitcher || showNotifications) && (
-                <div className='mx-2 h-4 w-px bg-white/[0.1]' />
+                <div className='mx-2 h-4 w-px bg-[rgba(216,226,248,0.1)]' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
@@ -299,7 +299,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
               {showAuthButtons && (
                 <>
-                  <div className='mx-1.5 h-4 w-px bg-white/[0.1]' />
+                  <div className='mx-1.5 h-4 w-px bg-[rgba(216,226,248,0.1)]' />
                   {authContent}
                 </>
               )}

@@ -746,21 +746,26 @@ For commercial licensing, please contact support@quantumnous.com
   }
 }
 
-/* ── TOKEX Obsidian Dark & Liquid Glass System ──────────────────────────── */
+/* ── TOKEX Cold Charcoal + Platinum Silver + Ice-Indigo System ──────────── */
 :root {
   --ease-liquid: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.dark body {
-  background-color: #050506;
+  background-color: #0b0d12;
   background-image:
     radial-gradient(
-      880px circle at 50% -14%,
-      rgba(255, 255, 255, 0.035),
+      920px circle at 50% -14%,
+      rgba(124, 146, 232, 0.055),
       transparent 60%
     ),
-    linear-gradient(180deg, #000000 0%, #050506 100%);
+    linear-gradient(180deg, #07080b 0%, #0b0d12 100%);
   background-attachment: fixed;
+}
+
+html.dark body:has(div[data-variant='inset']) {
+  background-color: #07080b;
+  background-image: none;
 }
 
 @keyframes tokexBeamFlow {
@@ -778,36 +783,36 @@ html.dark body {
 }
 
 .tokex-glass {
-  background: rgba(10, 10, 12, 0.78);
+  background: rgba(17, 20, 27, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(216, 226, 248, 0.08);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 0 rgba(226, 234, 255, 0.05),
     0 12px 36px -14px rgba(0, 0, 0, 0.72);
   transition:
-    background-color 0.35s var(--ease-liquid),
-    border-color 0.35s var(--ease-liquid),
-    box-shadow 0.35s var(--ease-liquid),
-    transform 0.35s var(--ease-liquid);
+    background-color 0.3s var(--ease-liquid),
+    border-color 0.3s var(--ease-liquid),
+    box-shadow 0.3s var(--ease-liquid),
+    transform 0.3s var(--ease-liquid);
 }
 
 .tokex-glass-interactive:hover {
-  background: rgba(20, 20, 23, 0.88);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(25, 29, 40, 0.88);
+  border-color: rgba(216, 226, 248, 0.16);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-    0 18px 44px -16px rgba(0, 0, 0, 0.88);
+    inset 0 1px 0 0 rgba(226, 234, 255, 0.09),
+    0 18px 44px -16px rgba(0, 0, 0, 0.84);
 }
 
 .tokex-glass-elevated {
-  background: rgba(10, 10, 12, 0.9);
+  background: rgba(17, 20, 27, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(216, 226, 248, 0.09);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
-    0 24px 64px -20px rgba(0, 0, 0, 0.9);
+    inset 0 1px 0 0 rgba(226, 234, 255, 0.06),
+    0 24px 64px -20px rgba(0, 0, 0, 0.88);
 }
 
 .dark [data-slot='card'],
@@ -820,36 +825,42 @@ html.dark body {
 }
 
 .dark [data-slot='card'] {
-  background: #0a0a0c;
-  --tw-ring-color: rgba(255, 255, 255, 0.08);
+  background: #11141b;
+  --tw-ring-color: rgba(216, 226, 248, 0.08);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 0 rgba(226, 234, 255, 0.05),
     0 12px 32px -16px rgba(0, 0, 0, 0.72);
   transition:
-    --tw-ring-color 0.35s var(--ease-liquid),
-    border-color 0.35s var(--ease-liquid),
-    background-color 0.35s var(--ease-liquid),
-    box-shadow 0.35s var(--ease-liquid);
+    --tw-ring-color 0.3s var(--ease-liquid),
+    border-color 0.3s var(--ease-liquid),
+    background-color 0.3s var(--ease-liquid),
+    box-shadow 0.3s var(--ease-liquid);
 }
 
 .dark [data-slot='card']:hover {
-  --tw-ring-color: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.16);
+  --tw-ring-color: rgba(216, 226, 248, 0.16);
+  border-color: rgba(216, 226, 248, 0.16);
 }
 
 .dark [data-slot='sidebar-inner'] {
-  background: rgba(5, 5, 6, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #07080b;
+}
+
+.dark [data-slot='sidebar-inset'] {
+  background-color: #0b0d12;
+  background-image: radial-gradient(
+    780px circle at 50% -18%,
+    rgba(124, 146, 232, 0.055),
+    transparent 60%
+  );
 }
 
 .dark [data-slot='dialog-content'],
 .dark [data-slot='popover-content'],
 .dark [data-slot='dropdown-menu-content'] {
-  background: rgba(10, 10, 12, 0.95);
-  --tw-ring-color: rgba(255, 255, 255, 0.1);
+  background: rgba(17, 20, 27, 0.96);
+  --tw-ring-color: rgba(216, 226, 248, 0.1);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 24px 56px -18px rgba(0, 0, 0, 0.9);
+    inset 0 1px 0 0 rgba(226, 234, 255, 0.06),
+    0 24px 56px -18px rgba(0, 0, 0, 0.88);
 }
