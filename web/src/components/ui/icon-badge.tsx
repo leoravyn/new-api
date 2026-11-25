@@ -22,7 +22,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 const iconBadgeVariants = cva(
-  'flex shrink-0 items-center justify-center ring-1 ring-inset ring-white/[0.08] [&>svg]:shrink-0',
+  'flex shrink-0 items-center justify-center ring-1 ring-inset ring-white/[0.08] [&>svg]:block [&>svg]:shrink-0',
   {
     variants: {
       tone: {

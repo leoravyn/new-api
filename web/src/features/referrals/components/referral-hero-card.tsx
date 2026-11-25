@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { IconBadge } from '@/components/ui/icon-badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
@@ -223,13 +224,9 @@ export function ReferralHeroCard({
 
           <div className='rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3.5'>
             <div className='flex items-center gap-2'>
-              <span className='flex size-7 items-center justify-center rounded-lg border border-amber-500/25 bg-amber-500/10 text-amber-400'>
-                {cooldownDays > 0 ? (
-                  <Clock className='size-3.5' />
-                ) : (
-                  <Wallet className='size-3.5' />
-                )}
-              </span>
+              <IconBadge tone='warning' size='sm'>
+                {cooldownDays > 0 ? <Clock /> : <Wallet />}
+              </IconBadge>
               <span className='text-foreground text-xs font-semibold'>
                 {t('Automatic Settlement')}
               </span>
