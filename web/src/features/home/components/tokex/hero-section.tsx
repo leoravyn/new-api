@@ -340,24 +340,24 @@ function FlagshipPriceRow(props: {
           : 'inline-flex gap-1 text-[11px]'
       )}
     >
-      <span className={cn('text-[#6e7a94]', isDesktop && 'text-[11px]')}>
+      <span className={cn('text-[#74747c]', isDesktop && 'text-[11px]')}>
         {isZh ? item.labelZh : item.labelEn}
       </span>
       {item.original && (
         <span
           className={cn(
-            'text-[#6e7a94] line-through decoration-[#6e7a94]/70',
+            'text-[#74747c] line-through decoration-[#74747c]/70',
             isDesktop && 'text-[11px]'
           )}
         >
           {item.original}
         </span>
       )}
-      <span className='font-semibold text-[#f4f6fa]'>
+      <span className='font-semibold text-[#f4f4f5]'>
         {item.current}
         <span
           className={cn(
-            'font-normal text-[#6e7a94]',
+            'font-normal text-[#74747c]',
             isDesktop && 'text-[10px]'
           )}
         >
@@ -450,16 +450,16 @@ export function TokexHeroSection() {
   const activeRoute = routeGeometry.routes[safeActiveIndex]
 
   return (
-    <div className='relative flex min-h-[calc(100vh-4rem)] flex-col justify-center overflow-hidden'>
-      {/* Subtle cold-indigo ambient studio light */}
+    <div className='relative flex min-h-[calc(100vh-3.5rem)] flex-col justify-center overflow-x-clip'>
+      {/* Soft neutral studio light (blends seamlessly with PublicHeader canvas) */}
       <div
         aria-hidden='true'
-        className='pointer-events-none absolute top-0 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-[#7c92e8]/[0.07] blur-[140px]'
+        className='pointer-events-none absolute top-12 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-white/[0.035] blur-[140px]'
       />
-      {/* Ultra-subtle static CSS architectural dot grid (Hero only) */}
+      {/* Ultra-subtle static CSS architectural dot grid (smoothly masked at top so zero header seam) */}
       <div
         aria-hidden='true'
-        className='pointer-events-none absolute inset-0 -z-10 opacity-45 [background-image:radial-gradient(rgba(216,226,248,0.14)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(64%_54%_at_50%_26%,#000_25%,transparent_100%)]'
+        className='pointer-events-none absolute inset-0 -z-10 opacity-40 [background-image:radial-gradient(rgba(255,255,255,0.13)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(60%_48%_at_50%_44%,#000_18%,transparent_96%)]'
       />
 
       <section className='mx-auto w-full max-w-6xl px-6 py-12 sm:py-16 lg:py-20'>
@@ -471,8 +471,8 @@ export function TokexHeroSection() {
             transition={{ duration: 0.65, ease: EASE_LIQUID }}
             className='lg:col-span-6'
           >
-            <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(216,226,248,0.1)] bg-[#11141b]/90 px-3 py-1 text-xs font-medium text-[#d8dee9] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.05)]'>
-              <span className='size-1.5 rounded-full bg-[#7c92e8]' />
+            <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#121214]/90 px-3 py-1 text-xs font-medium text-[#d4d4d8] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
+              <span className='size-1.5 rounded-full bg-[#e4e4e7]' />
               <span>
                 {isZh
                   ? 'TOKEX · 开发者 AI 模型 API 平台'
@@ -480,25 +480,25 @@ export function TokexHeroSection() {
               </span>
             </div>
 
-            <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#f4f6fa] sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
+            <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#f4f4f5] sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
               {isZh ? (
                 <>
                   前沿 AI 模型，
-                  <span className='bg-gradient-to-r from-[#f4f6fa] via-[#d8dee9] to-[#94a0b8] bg-clip-text text-transparent'>
+                  <span className='bg-gradient-to-r from-[#f4f4f5] via-[#d4d4d8] to-[#9a9aa2] bg-clip-text text-transparent'>
                     按量计费 API
                   </span>
                 </>
               ) : (
                 <>
                   Frontier AI Models,{' '}
-                  <span className='bg-gradient-to-r from-[#f4f6fa] via-[#d8dee9] to-[#94a0b8] bg-clip-text text-transparent'>
+                  <span className='bg-gradient-to-r from-[#f4f4f5] via-[#d4d4d8] to-[#9a9aa2] bg-clip-text text-transparent'>
                     Pay-As-You-Go API
                   </span>
                 </>
               )}
             </h1>
 
-            <p className='mt-5 max-w-lg text-base leading-relaxed text-[#94a0b8] sm:text-lg'>
+            <p className='mt-5 max-w-lg text-base leading-relaxed text-[#9a9aa2] sm:text-lg'>
               {isZh
                 ? '通过标准 OpenAI 兼容协议直接调用 Claude 与 GPT 系列模型。实时分组费率、按 Token 透明计量、即充即用。'
                 : 'Access Claude and GPT models through standard OpenAI-compatible APIs on TOKEX. Transparent per-token pricing, live group rates, and pay-as-you-go credits.'}
@@ -508,21 +508,21 @@ export function TokexHeroSection() {
             <div className='mt-8 flex flex-wrap items-center gap-3'>
               <Link
                 to={isAuthenticated ? '/keys' : '/sign-in'}
-                className='inline-flex h-10 items-center gap-2 rounded-xl bg-[#f4f6fa] px-4 text-sm font-medium text-[#090b10] transition-all duration-200 hover:bg-[#e2e8f4]'
+                className='inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] px-4 text-sm font-medium text-[#0a0a0b] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_2px_0_rgba(0,0,0,0.45)] transition-all duration-200 hover:from-[#ffffff] hover:via-[#f2f2f5] hover:to-[#e0e0e5]'
               >
                 <span>{isZh ? '获取 API 密钥' : 'Get API Key'}</span>
                 <ArrowRight className='size-3.5' />
               </Link>
               <Link
                 to='/pricing'
-                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-[rgba(216,226,248,0.12)] bg-[#191d28] px-4 text-sm font-medium text-[#d8dee9] backdrop-blur-md transition-all duration-200 hover:border-[rgba(216,226,248,0.22)] hover:bg-[#1f2433] hover:text-[#f4f6fa]'
+                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-[rgba(255,255,255,0.09)] bg-[#1b1b1f] px-4 text-sm font-medium text-[#d4d4d8] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md transition-all duration-200 hover:border-[rgba(255,255,255,0.18)] hover:bg-[#222227] hover:text-[#f4f4f5]'
               >
                 <span>{isZh ? '模型定价' : 'Model Pricing'}</span>
-                <ArrowUpRight className='size-3.5 text-[#94a0b8]' />
+                <ArrowUpRight className='size-3.5 text-[#9a9aa2]' />
               </Link>
               <Link
                 to='/dashboard'
-                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-transparent px-3 text-sm font-medium text-[#94a0b8] transition-colors duration-200 hover:bg-[rgba(216,226,248,0.06)] hover:text-[#f4f6fa]'
+                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-transparent px-3 text-sm font-medium text-[#9a9aa2] transition-colors duration-200 hover:bg-white/[0.06] hover:text-[#f4f4f5]'
               >
                 <span>{isZh ? '控制台' : 'Console'}</span>
                 <ArrowRight className='size-3.5' />
@@ -530,40 +530,40 @@ export function TokexHeroSection() {
             </div>
 
             {/* Live Catalog Summary Strip (strictly factual, no fabricated stats) */}
-            <div className='mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-[rgba(216,226,248,0.08)] pt-6'>
+            <div className='mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-[rgba(255,255,255,0.07)] pt-6'>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f6fa] tabular-nums'>
+                <div className='font-mono text-lg font-semibold text-[#f4f4f5] tabular-nums'>
                   {isLoading ? (
-                    <Skeleton className='h-6 w-10 bg-[rgba(216,226,248,0.08)]' />
+                    <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : models.length > 0 ? (
                     models.length
                   ) : (
                     '—'
                   )}
                 </div>
-                <p className='mt-1 text-xs text-[#94a0b8]'>
+                <p className='mt-1 text-xs text-[#9a9aa2]'>
                   {isZh ? '在线模型' : 'Live Models'}
                 </p>
               </div>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f6fa] tabular-nums'>
+                <div className='font-mono text-lg font-semibold text-[#f4f4f5] tabular-nums'>
                   {isLoading ? (
-                    <Skeleton className='h-6 w-10 bg-[rgba(216,226,248,0.08)]' />
+                    <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : vendors.length > 0 ? (
                     vendors.length
                   ) : (
                     '—'
                   )}
                 </div>
-                <p className='mt-1 text-xs text-[#94a0b8]'>
+                <p className='mt-1 text-xs text-[#9a9aa2]'>
                   {isZh ? '模型厂商' : 'Vendors'}
                 </p>
               </div>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f6fa]'>
+                <div className='font-mono text-lg font-semibold text-[#f4f4f5]'>
                   USD
                 </div>
-                <p className='mt-1 text-xs text-[#94a0b8]'>
+                <p className='mt-1 text-xs text-[#9a9aa2]'>
                   {isZh ? '按量计费' : 'Pay-as-you-go'}
                 </p>
               </div>
@@ -586,12 +586,12 @@ export function TokexHeroSection() {
                   'sm:pl-24 md:pl-32'
               )}
             >
-              <span className='text-[11px] font-medium tracking-[0.08em] text-[#6e7a94] uppercase'>
+              <span className='text-[11px] font-medium tracking-[0.08em] text-[#74747c] uppercase'>
                 {isZh ? '实时旗舰模型报价' : 'Live Flagship Pricing'}
               </span>
               <Link
                 to='/pricing'
-                className='inline-flex items-center gap-1 text-xs text-[#94a0b8] transition-colors hover:text-[#f4f6fa]'
+                className='inline-flex items-center gap-1 text-xs text-[#9a9aa2] transition-colors hover:text-[#f4f4f5]'
               >
                 <span>{isZh ? '全部模型' : 'View All'}</span>
                 <ArrowRight className='size-3' />
@@ -617,7 +617,7 @@ export function TokexHeroSection() {
                     <path
                       key={`skeleton-path-${route.endpointY}`}
                       d={route.pathD}
-                      stroke='rgba(216,226,248,0.08)'
+                      stroke='rgba(255,255,255,0.07)'
                       strokeWidth='1.5'
                       strokeLinecap='round'
                     />
@@ -626,7 +626,7 @@ export function TokexHeroSection() {
                     cx='8'
                     cy={routeGeometry.originY}
                     r='5'
-                    fill='rgba(124,146,232,0.35)'
+                    fill='rgba(255,255,255,0.2)'
                   />
                   {routeGeometry.routes.map((route) => (
                     <circle
@@ -634,7 +634,7 @@ export function TokexHeroSection() {
                       cx='112'
                       cy={route.endpointY}
                       r='3'
-                      fill='rgba(216,226,248,0.18)'
+                      fill='rgba(255,255,255,0.18)'
                     />
                   ))}
                 </svg>
@@ -644,18 +644,18 @@ export function TokexHeroSection() {
                     <div
                       key={slot}
                       data-testid='flagship-model-skeleton'
-                      className='flex min-h-[70px] items-center justify-between gap-3 rounded-2xl border border-[rgba(216,226,248,0.08)] bg-[#11141b] px-4 py-3'
+                      className='flex min-h-[70px] items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#121214] px-4 py-3'
                     >
                       <div className='flex items-center gap-3'>
-                        <Skeleton className='size-9 rounded-xl bg-[rgba(216,226,248,0.06)]' />
+                        <Skeleton className='size-9 rounded-xl bg-[rgba(255,255,255,0.06)]' />
                         <div className='space-y-2'>
-                          <Skeleton className='h-4 w-32 bg-[rgba(216,226,248,0.08)]' />
-                          <Skeleton className='h-3 w-24 bg-[rgba(216,226,248,0.05)]' />
+                          <Skeleton className='h-4 w-32 bg-[rgba(255,255,255,0.07)]' />
+                          <Skeleton className='h-3 w-24 bg-[rgba(255,255,255,0.05)]' />
                         </div>
                       </div>
                       <div className='hidden space-y-1.5 sm:block'>
-                        <Skeleton className='ml-auto h-3.5 w-20 bg-[rgba(216,226,248,0.07)]' />
-                        <Skeleton className='ml-auto h-3.5 w-24 bg-[rgba(216,226,248,0.05)]' />
+                        <Skeleton className='ml-auto h-3.5 w-20 bg-[rgba(255,255,255,0.07)]' />
+                        <Skeleton className='ml-auto h-3.5 w-24 bg-[rgba(255,255,255,0.05)]' />
                       </div>
                     </div>
                   ))}
@@ -664,9 +664,9 @@ export function TokexHeroSection() {
             ) : error || flagshipDisplays.length === 0 ? (
               <div
                 role='status'
-                className='rounded-2xl border border-[rgba(216,226,248,0.1)] bg-[#11141b] p-6 text-left shadow-[inset_0_1px_0_0_rgba(226,234,255,0.05),0_18px_48px_-24px_rgba(0,0,0,0.88)]'
+                className='rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214] p-6 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_18px_48px_-24px_rgba(0,0,0,0.88)]'
               >
-                <p className='text-sm font-medium text-[#f4f6fa]'>
+                <p className='text-sm font-medium text-[#f4f4f5]'>
                   {error
                     ? isZh
                       ? '暂时无法获取实时模型报价'
@@ -675,7 +675,7 @@ export function TokexHeroSection() {
                       ? '当前暂无可展示模型'
                       : 'No models are currently published'}
                 </p>
-                <p className='mt-1.5 text-xs leading-relaxed text-[#94a0b8]'>
+                <p className='mt-1.5 text-xs leading-relaxed text-[#9a9aa2]'>
                   {error
                     ? isZh
                       ? '请点击重试拉取最新模型目录，或前往模型定价页面查看。'
@@ -689,7 +689,7 @@ export function TokexHeroSection() {
                     <button
                       type='button'
                       onClick={() => void refetch()}
-                      className='inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[rgba(124,146,232,0.28)] bg-[rgba(124,146,232,0.12)] px-3 text-xs font-medium text-[#f4f6fa] transition-colors hover:bg-[rgba(124,146,232,0.18)]'
+                      className='inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/[0.14] bg-white/[0.06] px-3 text-xs font-medium text-[#f4f4f5] transition-colors hover:bg-white/[0.1]'
                     >
                       <RefreshCw className='size-3' />
                       <span>{isZh ? '重试' : 'Retry'}</span>
@@ -697,10 +697,10 @@ export function TokexHeroSection() {
                   )}
                   <Link
                     to='/pricing'
-                    className='inline-flex h-8 items-center gap-1 rounded-lg border border-[rgba(216,226,248,0.12)] bg-[#191d28] px-3 text-xs font-medium text-[#d8dee9] transition-colors hover:border-[rgba(216,226,248,0.2)] hover:text-[#f4f6fa]'
+                    className='inline-flex h-8 items-center gap-1 rounded-lg border border-white/[0.12] bg-[#1b1b1f] px-3 text-xs font-medium text-[#d4d4d8] transition-colors hover:border-white/[0.2] hover:text-[#f4f4f5]'
                   >
                     <span>{isZh ? '前往模型定价' : 'Open Model Pricing'}</span>
-                    <ArrowUpRight className='size-3 text-[#94a0b8]' />
+                    <ArrowUpRight className='size-3 text-[#9a9aa2]' />
                   </Link>
                 </div>
               </div>
@@ -724,34 +724,20 @@ export function TokexHeroSection() {
                     >
                       <stop
                         offset='0%'
-                        stopColor='#f4f6fa'
-                        stopOpacity='0.92'
+                        stopColor='#fafafa'
+                        stopOpacity='0.95'
                       />
                       <stop
                         offset='55%'
-                        stopColor='#8fa4f0'
+                        stopColor='#d4d4d8'
                         stopOpacity='0.88'
                       />
                       <stop
                         offset='100%'
-                        stopColor='#7c92e8'
-                        stopOpacity='0.82'
+                        stopColor='#a1a1aa'
+                        stopOpacity='0.8'
                       />
                     </linearGradient>
-                    <filter
-                      id='tokex-route-glow'
-                      filterUnits='userSpaceOnUse'
-                      x='-20'
-                      y='-20'
-                      width='160'
-                      height={routeGeometry.svgHeight + 40}
-                    >
-                      <feGaussianBlur stdDeviation='2.5' result='blur' />
-                      <feMerge>
-                        <feMergeNode in='blur' />
-                        <feMergeNode in='SourceGraphic' />
-                      </feMerge>
-                    </filter>
                   </defs>
 
                   {/* Passive Hairline Connector Paths */}
@@ -762,7 +748,7 @@ export function TokexHeroSection() {
                       <path
                         key={`base-${item.modelName}`}
                         d={route.pathD}
-                        stroke='rgba(216,226,248,0.09)'
+                        stroke='rgba(255,255,255,0.08)'
                         strokeWidth='1.5'
                         strokeLinecap='round'
                       />
@@ -776,9 +762,8 @@ export function TokexHeroSection() {
                         key={`active-${activeItem.modelName}`}
                         d={activeRoute.pathD}
                         stroke='url(#tokex-route-grad)'
-                        strokeWidth='2'
+                        strokeWidth='1.75'
                         strokeLinecap='round'
-                        filter='url(#tokex-route-glow)'
                         initial={
                           prefersReducedMotion
                             ? { pathLength: 1, opacity: 1 }
@@ -795,11 +780,11 @@ export function TokexHeroSection() {
                   {!prefersReducedMotion && activeRoute && (
                     <path
                       d={activeRoute.pathD}
-                      stroke='#c5d2fa'
-                      strokeWidth='2'
+                      stroke='#e4e4e7'
+                      strokeWidth='1.75'
                       strokeLinecap='round'
                       className='tokex-beam-flow'
-                      opacity={0.7}
+                      opacity={0.65}
                     />
                   )}
 
@@ -807,16 +792,15 @@ export function TokexHeroSection() {
                   <circle
                     cx='8'
                     cy={routeGeometry.originY}
-                    r='5'
-                    fill='#f4f6fa'
-                    filter='url(#tokex-route-glow)'
+                    r='4.5'
+                    fill='#f4f4f5'
                   />
                   <circle
                     cx='8'
                     cy={routeGeometry.originY}
-                    r='9'
-                    stroke='rgba(124,146,232,0.38)'
-                    strokeWidth='1.5'
+                    r='8.5'
+                    stroke='rgba(255,255,255,0.2)'
+                    strokeWidth='1.25'
                   />
 
                   {/* Destination Endpoints */}
@@ -829,8 +813,8 @@ export function TokexHeroSection() {
                         key={`dot-${item.modelName}`}
                         cx='112'
                         cy={route.endpointY}
-                        r={isActive ? 4.5 : 3}
-                        fill={isActive ? '#7c92e8' : 'rgba(216,226,248,0.22)'}
+                        r={isActive ? 4 : 2.75}
+                        fill={isActive ? '#f4f4f5' : 'rgba(255,255,255,0.22)'}
                         className='transition-all duration-300'
                       />
                     )
@@ -864,28 +848,28 @@ export function TokexHeroSection() {
                           params={{ modelId: item.modelName }}
                           aria-current={isActive ? 'true' : undefined}
                           className={cn(
-                            'group relative flex min-h-[70px] items-center overflow-hidden rounded-2xl border px-4 py-3 backdrop-blur-xl transition-all duration-300 focus-visible:ring-1 focus-visible:ring-[#7c92e8]/60 focus-visible:outline-none',
+                            'group relative flex min-h-[70px] items-center overflow-hidden rounded-2xl border px-4 py-3 backdrop-blur-xl transition-all duration-300 focus-visible:ring-1 focus-visible:ring-white/35 focus-visible:outline-none',
                             isActive
-                              ? 'border-[rgba(124,146,232,0.32)] bg-[#161a23] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.07),0_18px_48px_-18px_rgba(124,146,232,0.16)]'
-                              : 'border-[rgba(216,226,248,0.08)] bg-[#11141b] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.05)] hover:border-[rgba(216,226,248,0.16)] hover:bg-[#161a23]'
+                              ? 'border-white/[0.15] bg-[#17171a] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_18px_44px_-20px_rgba(0,0,0,0.85)]'
+                              : 'border-[rgba(255,255,255,0.07)] bg-[#121214] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.14)] hover:bg-[#17171a]'
                           )}
                         >
-                          {/* Subtle ice-indigo sheen when active */}
+                          {/* Subtle brushed-silver sheen when active */}
                           <div
                             aria-hidden='true'
                             className={cn(
-                              'pointer-events-none absolute inset-0 bg-gradient-to-r from-[#7c92e8]/[0.08] via-[#7c92e8]/[0.02] to-transparent opacity-0 transition-opacity duration-500',
+                              'pointer-events-none absolute inset-0 bg-gradient-to-r from-white/[0.05] via-white/[0.015] to-transparent opacity-0 transition-opacity duration-500',
                               isActive && 'opacity-100'
                             )}
                           />
 
                           <div className='relative flex w-full min-w-0 items-center justify-between gap-3'>
                             <div className='flex min-w-0 flex-1 items-center gap-3'>
-                              <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(216,226,248,0.09)] bg-[rgba(216,226,248,0.04)] text-[#f4f6fa]'>
+                              <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] text-[#f4f4f5]'>
                                 {item.iconKey ? (
                                   getLobeIcon(item.iconKey, 20)
                                 ) : (
-                                  <span className='text-xs font-bold text-[#d8dee9]'>
+                                  <span className='text-xs font-bold text-[#d4d4d8]'>
                                     {item.modelName.charAt(0).toUpperCase() ||
                                       '?'}
                                   </span>
@@ -894,17 +878,17 @@ export function TokexHeroSection() {
 
                               <div className='min-w-0 flex-1'>
                                 <div className='flex items-center gap-2'>
-                                  <span className='truncate font-mono text-sm font-semibold text-[#f4f6fa]'>
+                                  <span className='truncate font-mono text-sm font-semibold text-[#f4f4f5]'>
                                     {item.modelName}
                                   </span>
                                   {isActive && (
-                                    <span className='hidden shrink-0 rounded-full border border-[rgba(124,146,232,0.28)] bg-[rgba(124,146,232,0.14)] px-1.5 py-0.5 text-[10px] font-medium text-[#dce4ff] sm:inline-flex'>
+                                    <span className='hidden shrink-0 rounded-full border border-white/[0.14] bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-[#e4e4e7] sm:inline-flex'>
                                       {isZh ? '在线' : 'Live'}
                                     </span>
                                   )}
                                 </div>
 
-                                <div className='mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#94a0b8]'>
+                                <div className='mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#9a9aa2]'>
                                   {item.vendorName && (
                                     <span className='truncate'>
                                       {item.vendorName}
@@ -915,8 +899,8 @@ export function TokexHeroSection() {
                                       className={cn(
                                         'shrink-0 rounded border px-1.5 py-px font-mono text-[10px] leading-tight',
                                         item.groupRatio < 1
-                                          ? 'border-[rgba(124,146,232,0.24)] bg-[rgba(124,146,232,0.12)] text-[#e2e8fa]'
-                                          : 'border-[rgba(216,226,248,0.09)] bg-[#191d28] text-[#94a0b8]'
+                                          ? 'border-white/[0.12] bg-white/[0.06] text-[#e4e4e7]'
+                                          : 'border-[rgba(255,255,255,0.09)] bg-[#1b1b1f] text-[#9a9aa2]'
                                       )}
                                     >
                                       {item.groupBadge}
@@ -938,7 +922,7 @@ export function TokexHeroSection() {
                                 isZh={isZh}
                                 layout='desktop'
                               />
-                              <ArrowUpRight className='size-3.5 shrink-0 text-[#6e7a94] transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#f4f6fa]' />
+                              <ArrowUpRight className='size-3.5 shrink-0 text-[#74747c] transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#f4f4f5]' />
                             </div>
                           </div>
                         </Link>

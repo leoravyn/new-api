@@ -78,13 +78,13 @@ function LegalLinks({ isZh }: { isZh: boolean }) {
       {LEGAL_LINKS.map((item, index) => (
         <Fragment key={item.key}>
           {index > 0 && (
-            <span aria-hidden='true' className='text-[#6e7a94]/70'>
+            <span aria-hidden='true' className='text-[#74747c]/70'>
               ·
             </span>
           )}
           <Link
             to={item.href}
-            className='text-[#94a0b8] transition-colors duration-200 hover:text-[#f4f6fa]'
+            className='text-[#9a9aa2] transition-colors duration-200 hover:text-[#f4f4f5]'
           >
             {isZh ? item.labelZh : item.labelEn}
           </Link>
@@ -112,7 +112,7 @@ export function Footer(props: FooterProps) {
   return (
     <footer
       className={cn(
-        'relative z-10 border-t border-[rgba(216,226,248,0.08)] bg-[#07080b]/90 backdrop-blur-xl',
+        'relative z-10 border-t border-[rgba(255,255,255,0.07)] bg-[#08080a]/90 backdrop-blur-xl',
         props.className
       )}
     >
@@ -138,13 +138,13 @@ export function Footer(props: FooterProps) {
                   alt={displayName}
                   className='size-6 rounded-md object-contain'
                 />
-                <span className='text-sm font-semibold tracking-tight text-[#f4f6fa]'>
+                <span className='text-sm font-semibold tracking-tight text-[#f4f4f5]'>
                   {displayName}
                 </span>
               </>
             )}
           </Link>
-          <span className='text-xs text-[#6e7a94]'>
+          <span className='text-xs text-[#74747c]'>
             &copy; {currentYear} {displayName}.{' '}
             {props.copyright ??
               (isZh ? '保留所有权利。' : 'All rights reserved.')}
@@ -162,14 +162,14 @@ export function Footer(props: FooterProps) {
             <Link
               key={item.href}
               to={item.href}
-              className='text-xs text-[#94a0b8] transition-colors duration-200 hover:text-[#f4f6fa]'
+              className='text-xs text-[#9a9aa2] transition-colors duration-200 hover:text-[#f4f4f5]'
             >
               {isZh ? item.labelZh : item.labelEn}
             </Link>
           ))}
           <a
             href={`mailto:${LEGAL_CONFIG.supportEmail}`}
-            className='text-xs text-[#94a0b8] transition-colors duration-200 hover:text-[#f4f6fa]'
+            className='text-xs text-[#9a9aa2] transition-colors duration-200 hover:text-[#f4f4f5]'
           >
             {LEGAL_CONFIG.supportEmail}
           </a>

@@ -364,6 +364,9 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     )
 
     const hundredBtn = await screen.findByRole('button', { name: /^\$100 / })
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Minimum $1')).toHaveValue(1)
+    })
     expect(hundredBtn).toHaveTextContent('5% OFFPay $95.00 • Save $5.00')
     expect(screen.getByRole('button', { name: /^\$10 / })).toHaveTextContent(
       'Pay $10.00'
@@ -674,6 +677,9 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     )
 
     const hundredBtn = await screen.findByRole('button', { name: /^\$100 / })
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Minimum $5')).toHaveValue(5)
+    })
     await act(async () => {
       fireEvent.click(hundredBtn)
     })
@@ -837,6 +843,9 @@ describe('Wallet USD flow ignores legacy status.price=6 for Waffo Pancake', () =
     )
     const fiveHundredBtn = screen.getByRole('button', { name: /^\$500 / })
     expect(fiveHundredBtn).toHaveTextContent('10% OFFPay $450.00 • Save $50.00')
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Minimum $5')).toHaveValue(5)
+    })
 
     // Click $500 preset -> custom discount badge & Epay CNY estimate both use 0.9 (not 0.85)
     await act(async () => {

@@ -119,8 +119,8 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isActive
-                  ? 'bg-[rgba(124,146,232,0.12)] text-[#f4f6fa] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.08)] ring-1 ring-[rgba(124,146,232,0.22)]'
-                  : 'text-muted-foreground hover:bg-[rgba(216,226,248,0.05)] hover:text-foreground'
+                  ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
+                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
               )}
             >
               {title}
@@ -133,8 +133,8 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isActive
-                  ? 'bg-[rgba(124,146,232,0.12)] text-[#f4f6fa] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.08)] ring-1 ring-[rgba(124,146,232,0.22)]'
-                  : 'text-muted-foreground hover:bg-[rgba(216,226,248,0.05)] hover:text-foreground'
+                  ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
+                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
               )}
             >
               {title}

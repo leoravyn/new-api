@@ -131,7 +131,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
 
         <div
           ref={setFooterContainer}
-          className='shrink-0 border-t border-[rgba(216,226,248,0.08)] bg-[#11141b]/90 px-3 py-2.5 backdrop-blur-md empty:hidden sm:px-5 sm:py-3'
+          className='shrink-0 border-t border-[rgba(255,255,255,0.07)] bg-[#121214]/90 px-3 py-2.5 backdrop-blur-md empty:hidden sm:px-5 sm:py-3'
         />
       </Main>
     </PageFooterProvider>

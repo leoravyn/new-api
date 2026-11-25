@@ -16,7 +16,7 @@
   - **上游代理**：`tokex-pool`（官方 `weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
 ### 当前核心功能实现
-1. **品牌视觉与双语**：Linear 风格冷炭灰 + 铂金银 + 低饱和冰靛青深色体系（外框/侧栏 `#07080B`、主工作区 `#0B0D12`、卡片 `#11141B`、内嵌/次级 `#161A23`/`#191D28`、铂金银主文与 CTA `#F4F6FA`/`#090B10`、`<5%` 冰靛青克制点缀 `#7C92E8` 与冷银 1px 描边 `rgba(216,226,248,0.08)`），桌面端采用 Linear 嵌入式工作区外壳，锁定 `dark` 模式与 `zhCN`/`en` 双语；完整 Token 与 Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
+1. **品牌视觉与双语**：纯无色相石墨黑 + 拉丝铂金 + 银灰深色材质体系（外框/侧栏 `#08080A`、主工作区 `#0C0C0E`、卡片 `#121214`、内嵌/次级 `#17171A`/`#1B1B1F`、拉丝铂金渐变主按钮 `#FAFAFA`→`#D6D6DB` 配 `#0A0A0B` 深色字、中性 1px 高光描边 `rgba(255,255,255,0.07)`、顶部柔和中性棚光 `rgba(255,255,255,0.04)` 与 SVG `feTurbulence` 细腻胶片颗粒层，状态色统一收敛为低饱和鼠尾草绿/香槟金/暗玫瑰红），公开页顶栏在顶部完全透明融入画布、滚动后渐变为毛玻璃细线栏，桌面端控制台采用 Linear 嵌入式工作区外壳，锁定 `dark` 模式与 `zhCN`/`en` 双语；完整 Token 与 Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
 2. **首页与模型广场**：首页右侧实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
 3. **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile、GitHub OAuth 与 Google OIDC。
 4. **Waffo MoR 合规与法务页面**：免登录公开路由 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（仅面向中国大陆以外非受限地区、`Waffo Pancake` MoR、`support@tokex.vip`、10% 清算与行政管理手续费例外条款、中国香港特别行政区法律与 HKIAC 仲裁）；全站 `PublicLayout` 页脚、认证页及钱包结账页均常驻合规入口。

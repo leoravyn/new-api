@@ -75,6 +75,7 @@ export function PublicHeader(props: PublicHeaderProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const [authPromptTarget, setAuthPromptTarget] =
     useState<AuthPromptTarget | null>(null)
   const [authPromptSecondsLeft, setAuthPromptSecondsLeft] =
@@ -123,6 +124,17 @@ export function PublicHeader(props: PublicHeaderProps) {
   )
   if (isAuthenticated) authContent = <ProfileDropdown />
   if (loading) authContent = <Skeleton className='h-8 w-20 rounded-lg' />
+
+  useEffect(() => {
+    const syncScrollState = () => {
+      setIsScrolled(window.scrollY > 8)
+    }
+    syncScrollState()
+    window.addEventListener('scroll', syncScrollState, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', syncScrollState)
+    }
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -192,11 +204,16 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
+  const showElevatedBar = isScrolled || mobileOpen
+
   return (
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 h-14 w-full border-b border-[rgba(216,226,248,0.08)] bg-[#07080b]/85 backdrop-blur-xl transition-colors duration-200',
+          'sticky top-0 z-50 h-14 w-full border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          showElevatedBar
+            ? 'border-white/[0.06] bg-[#0c0c0e]/78 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl'
+            : 'border-transparent bg-transparent backdrop-blur-none',
           props.className
         )}
       >
@@ -269,8 +286,8 @@ export function PublicHeader(props: PublicHeaderProps) {
                     className={cn(
                       'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                       isActive
-                        ? 'bg-[rgba(124,146,232,0.12)] text-[#f4f6fa] shadow-[inset_0_1px_0_0_rgba(226,234,255,0.08)] ring-1 ring-[rgba(124,146,232,0.22)]'
-                        : 'text-muted-foreground hover:bg-[rgba(216,226,248,0.05)] hover:text-foreground',
+                        ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
+                        : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
@@ -280,7 +297,7 @@ export function PublicHeader(props: PublicHeaderProps) {
               })}
 
               {(showLanguageSwitcher || showNotifications) && (
-                <div className='mx-2 h-4 w-px bg-[rgba(216,226,248,0.1)]' />
+                <div className='mx-2 h-4 w-px bg-[rgba(255,255,255,0.1)]' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
@@ -299,7 +316,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
               {showAuthButtons && (
                 <>
-                  <div className='mx-1.5 h-4 w-px bg-[rgba(216,226,248,0.1)]' />
+                  <div className='mx-1.5 h-4 w-px bg-[rgba(255,255,255,0.1)]' />
                   {authContent}
                 </>
               )}
@@ -414,7 +431,7 @@ export function PublicHeader(props: PublicHeaderProps) {
               <Link
                 to={isAuthenticated ? '/dashboard' : '/sign-in'}
                 onClick={() => setMobileOpen(false)}
-                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80'
+                className='inline-flex h-10 items-center justify-center rounded-lg border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] text-sm font-medium text-[#0a0a0b] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_2px_0_rgba(0,0,0,0.45)] transition-all hover:from-[#ffffff] hover:via-[#f2f2f5] hover:to-[#e0e0e5] active:opacity-90'
               >
                 {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
               </Link>

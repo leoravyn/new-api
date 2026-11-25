@@ -64,7 +64,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot='dropdown-menu-content'
           className={cn(
-            'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(216,226,248,0.1)] bg-[#11141b]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(226,234,255,0.06)] backdrop-blur-2xl duration-100 outline-none data-closed:overflow-hidden',
+            'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100 outline-none data-closed:overflow-hidden',
             className
           )}
           {...props}
@@ -123,7 +123,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/dropdown-menu-item focus:bg-[rgba(124,146,232,0.12)] focus:text-[#f4f6fa] not-data-[variant=destructive]:focus:**:text-[#f4f6fa] data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/15 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive relative flex cursor-default items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group/dropdown-menu-item focus:bg-white/[0.06] focus:text-[#f4f4f5] not-data-[variant=destructive]:focus:**:text-[#f4f4f5] data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/15 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive relative flex cursor-default items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       onClick={onClick || onSelect ? handleClick : undefined}
@@ -176,7 +176,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot='dropdown-menu-sub-content'
       className={cn(
-        'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 w-auto min-w-[96px] rounded-2xl border border-[rgba(216,226,248,0.1)] bg-[#11141b]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(226,234,255,0.06)] backdrop-blur-2xl duration-100',
+        'text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 w-auto min-w-[96px] rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214]/96 p-1.5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-2xl duration-100',
         className
       )}
       align={align}
@@ -268,7 +268,7 @@ function DropdownMenuSeparator({
   return (
     <MenuPrimitive.Separator
       data-slot='dropdown-menu-separator'
-      className={cn('-mx-1.5 my-1.5 h-px bg-[rgba(216,226,248,0.08)]', className)}
+      className={cn('-mx-1.5 my-1.5 h-px bg-[rgba(255,255,255,0.07)]', className)}
       {...props}
     />
   )

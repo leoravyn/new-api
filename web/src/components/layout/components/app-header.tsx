@@ -126,7 +126,7 @@ export function AppHeader({
             </div>
           )}
           {showTopNav && (showSearch || showNotifications) && (
-            <div className='mx-1.5 hidden h-4 w-px bg-[rgba(216,226,248,0.1)] lg:block' />
+            <div className='mx-1.5 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] lg:block' />
           )}
           {showSearch && (
             <Search className='w-8 flex-none [&>span]:hidden sm:[&>span]:inline' />
@@ -146,7 +146,7 @@ export function AppHeader({
           <LanguageSwitcher />
           {showProfileDropdown && (
             <>
-              <div className='mx-1 hidden h-4 w-px bg-[rgba(216,226,248,0.1)] sm:block' />
+              <div className='mx-1 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] sm:block' />
               <ProfileDropdown />
             </>
           )}
