@@ -53,7 +53,7 @@ export function AuthenticatedLayout(props: AuthenticatedLayoutProps) {
         >
           <SidebarProvider
             defaultOpen={defaultOpen}
-            className='bg-sidebar flex-col [--app-header-height:3.5rem]'
+            className='bg-sidebar flex-col'
           >
             <SkipToMain />
             <AppHeader />
