@@ -454,12 +454,12 @@ export function TokexHeroSection() {
       {/* Soft neutral studio light (blends seamlessly with PublicHeader canvas) */}
       <div
         aria-hidden='true'
-        className='pointer-events-none absolute top-12 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-white/[0.035] blur-[140px]'
+        className='pointer-events-none absolute top-12 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-white/[0.018] blur-[140px]'
       />
       {/* Ultra-subtle static CSS architectural dot grid (smoothly masked at top so zero header seam) */}
       <div
         aria-hidden='true'
-        className='pointer-events-none absolute inset-0 -z-10 opacity-40 [background-image:radial-gradient(rgba(255,255,255,0.13)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(60%_48%_at_50%_44%,#000_18%,transparent_96%)]'
+        className='pointer-events-none absolute inset-0 -z-10 opacity-35 [background-image:radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(60%_48%_at_50%_44%,#000_18%,transparent_96%)]'
       />
 
       <section className='mx-auto w-full max-w-6xl px-6 py-12 sm:py-16 lg:py-20'>
@@ -471,8 +471,8 @@ export function TokexHeroSection() {
             transition={{ duration: 0.65, ease: EASE_LIQUID }}
             className='lg:col-span-6'
           >
-            <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#121214]/90 px-3 py-1 text-xs font-medium text-[#d4d4d8] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
-              <span className='size-1.5 rounded-full bg-[#e4e4e7]' />
+            <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#0e0e11]/92 px-3 py-1 text-xs font-medium text-[#e4e4e7] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
+              <span className='size-1.5 rounded-full bg-emerald-400' />
               <span>
                 {isZh
                   ? 'TOKEX · 开发者 AI 模型 API 平台'
@@ -480,25 +480,25 @@ export function TokexHeroSection() {
               </span>
             </div>
 
-            <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#f4f4f5] sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
+            <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#fafafa] sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
               {isZh ? (
                 <>
                   前沿 AI 模型，
-                  <span className='bg-gradient-to-r from-[#f4f4f5] via-[#d4d4d8] to-[#9a9aa2] bg-clip-text text-transparent'>
+                  <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
                     按量计费 API
                   </span>
                 </>
               ) : (
                 <>
                   Frontier AI Models,{' '}
-                  <span className='bg-gradient-to-r from-[#f4f4f5] via-[#d4d4d8] to-[#9a9aa2] bg-clip-text text-transparent'>
+                  <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
                     Pay-As-You-Go API
                   </span>
                 </>
               )}
             </h1>
 
-            <p className='mt-5 max-w-lg text-base leading-relaxed text-[#9a9aa2] sm:text-lg'>
+            <p className='mt-5 max-w-lg text-base leading-relaxed text-[#a1a1aa] sm:text-lg'>
               {isZh
                 ? '通过标准 OpenAI 兼容协议直接调用 Claude 与 GPT 系列模型。实时分组费率、按 Token 透明计量、即充即用。'
                 : 'Access Claude and GPT models through standard OpenAI-compatible APIs on TOKEX. Transparent per-token pricing, live group rates, and pay-as-you-go credits.'}
@@ -508,21 +508,21 @@ export function TokexHeroSection() {
             <div className='mt-8 flex flex-wrap items-center gap-3'>
               <Link
                 to={isAuthenticated ? '/keys' : '/sign-in'}
-                className='inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] px-4 text-sm font-medium text-[#0a0a0b] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_2px_0_rgba(0,0,0,0.45)] transition-all duration-200 hover:from-[#ffffff] hover:via-[#f2f2f5] hover:to-[#e0e0e5]'
+                className='inline-flex h-10 items-center gap-2 rounded-xl border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] px-4 text-sm font-medium text-[#08080a] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_2px_0_rgba(0,0,0,0.45)] transition-all duration-200 hover:from-[#ffffff] hover:via-[#f2f2f5] hover:to-[#e0e0e5]'
               >
                 <span>{isZh ? '获取 API 密钥' : 'Get API Key'}</span>
                 <ArrowRight className='size-3.5' />
               </Link>
               <Link
                 to='/pricing'
-                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-[rgba(255,255,255,0.09)] bg-[#1b1b1f] px-4 text-sm font-medium text-[#d4d4d8] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md transition-all duration-200 hover:border-[rgba(255,255,255,0.18)] hover:bg-[#222227] hover:text-[#f4f4f5]'
+                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#19191e] px-4 text-sm font-medium text-[#e4e4e7] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md transition-all duration-200 hover:border-[rgba(255,255,255,0.18)] hover:bg-[#202026] hover:text-[#fafafa]'
               >
                 <span>{isZh ? '模型定价' : 'Model Pricing'}</span>
-                <ArrowUpRight className='size-3.5 text-[#9a9aa2]' />
+                <ArrowUpRight className='size-3.5 text-[#a1a1aa]' />
               </Link>
               <Link
                 to='/dashboard'
-                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-transparent px-3 text-sm font-medium text-[#9a9aa2] transition-colors duration-200 hover:bg-white/[0.06] hover:text-[#f4f4f5]'
+                className='inline-flex h-10 items-center gap-1.5 rounded-xl border border-transparent px-3 text-sm font-medium text-[#a1a1aa] transition-colors duration-200 hover:bg-white/[0.065] hover:text-[#fafafa]'
               >
                 <span>{isZh ? '控制台' : 'Console'}</span>
                 <ArrowRight className='size-3.5' />
@@ -530,9 +530,9 @@ export function TokexHeroSection() {
             </div>
 
             {/* Live Catalog Summary Strip (strictly factual, no fabricated stats) */}
-            <div className='mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-[rgba(255,255,255,0.07)] pt-6'>
+            <div className='mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-[rgba(255,255,255,0.08)] pt-6'>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f4f5] tabular-nums'>
+                <div className='font-mono text-lg font-semibold text-[#fafafa] tabular-nums'>
                   {isLoading ? (
                     <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : models.length > 0 ? (
@@ -541,12 +541,12 @@ export function TokexHeroSection() {
                     '—'
                   )}
                 </div>
-                <p className='mt-1 text-xs text-[#9a9aa2]'>
+                <p className='mt-1 text-xs text-[#a1a1aa]'>
                   {isZh ? '在线模型' : 'Live Models'}
                 </p>
               </div>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f4f5] tabular-nums'>
+                <div className='font-mono text-lg font-semibold text-[#fafafa] tabular-nums'>
                   {isLoading ? (
                     <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : vendors.length > 0 ? (
@@ -555,15 +555,15 @@ export function TokexHeroSection() {
                     '—'
                   )}
                 </div>
-                <p className='mt-1 text-xs text-[#9a9aa2]'>
+                <p className='mt-1 text-xs text-[#a1a1aa]'>
                   {isZh ? '模型厂商' : 'Vendors'}
                 </p>
               </div>
               <div>
-                <div className='font-mono text-lg font-semibold text-[#f4f4f5]'>
+                <div className='font-mono text-lg font-semibold text-[#fafafa]'>
                   USD
                 </div>
-                <p className='mt-1 text-xs text-[#9a9aa2]'>
+                <p className='mt-1 text-xs text-[#a1a1aa]'>
                   {isZh ? '按量计费' : 'Pay-as-you-go'}
                 </p>
               </div>
@@ -644,7 +644,7 @@ export function TokexHeroSection() {
                     <div
                       key={slot}
                       data-testid='flagship-model-skeleton'
-                      className='flex min-h-[70px] items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#121214] px-4 py-3'
+                      className='flex min-h-[70px] items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0e0e11] px-4 py-3'
                     >
                       <div className='flex items-center gap-3'>
                         <Skeleton className='size-9 rounded-xl bg-[rgba(255,255,255,0.06)]' />
@@ -664,9 +664,9 @@ export function TokexHeroSection() {
             ) : error || flagshipDisplays.length === 0 ? (
               <div
                 role='status'
-                className='rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#121214] p-6 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_18px_48px_-24px_rgba(0,0,0,0.88)]'
+                className='rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#0e0e11] p-6 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_18px_48px_-24px_rgba(0,0,0,0.9)]'
               >
-                <p className='text-sm font-medium text-[#f4f4f5]'>
+                <p className='text-sm font-medium text-[#fafafa]'>
                   {error
                     ? isZh
                       ? '暂时无法获取实时模型报价'
@@ -675,7 +675,7 @@ export function TokexHeroSection() {
                       ? '当前暂无可展示模型'
                       : 'No models are currently published'}
                 </p>
-                <p className='mt-1.5 text-xs leading-relaxed text-[#9a9aa2]'>
+                <p className='mt-1.5 text-xs leading-relaxed text-[#a1a1aa]'>
                   {error
                     ? isZh
                       ? '请点击重试拉取最新模型目录，或前往模型定价页面查看。'
@@ -689,7 +689,7 @@ export function TokexHeroSection() {
                     <button
                       type='button'
                       onClick={() => void refetch()}
-                      className='inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/[0.14] bg-white/[0.06] px-3 text-xs font-medium text-[#f4f4f5] transition-colors hover:bg-white/[0.1]'
+                      className='inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/[0.14] bg-white/[0.065] px-3 text-xs font-medium text-[#fafafa] transition-colors hover:bg-white/[0.11]'
                     >
                       <RefreshCw className='size-3' />
                       <span>{isZh ? '重试' : 'Retry'}</span>
@@ -697,10 +697,10 @@ export function TokexHeroSection() {
                   )}
                   <Link
                     to='/pricing'
-                    className='inline-flex h-8 items-center gap-1 rounded-lg border border-white/[0.12] bg-[#1b1b1f] px-3 text-xs font-medium text-[#d4d4d8] transition-colors hover:border-white/[0.2] hover:text-[#f4f4f5]'
+                    className='inline-flex h-8 items-center gap-1 rounded-lg border border-white/[0.12] bg-[#19191e] px-3 text-xs font-medium text-[#e4e4e7] transition-colors hover:border-white/[0.2] hover:text-[#fafafa]'
                   >
                     <span>{isZh ? '前往模型定价' : 'Open Model Pricing'}</span>
-                    <ArrowUpRight className='size-3 text-[#9a9aa2]' />
+                    <ArrowUpRight className='size-3 text-[#a1a1aa]' />
                   </Link>
                 </div>
               </div>
@@ -850,8 +850,8 @@ export function TokexHeroSection() {
                           className={cn(
                             'group relative flex min-h-[70px] items-center overflow-hidden rounded-2xl border px-4 py-3 backdrop-blur-xl transition-all duration-300 focus-visible:ring-1 focus-visible:ring-white/35 focus-visible:outline-none',
                             isActive
-                              ? 'border-white/[0.15] bg-[#17171a] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_18px_44px_-20px_rgba(0,0,0,0.85)]'
-                              : 'border-[rgba(255,255,255,0.07)] bg-[#121214] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.14)] hover:bg-[#17171a]'
+                              ? 'border-white/[0.16] bg-[#141418] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_18px_44px_-20px_rgba(0,0,0,0.88)]'
+                              : 'border-[rgba(255,255,255,0.08)] bg-[#0e0e11] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.15)] hover:bg-[#141418]'
                           )}
                         >
                           {/* Subtle brushed-silver sheen when active */}
@@ -865,11 +865,11 @@ export function TokexHeroSection() {
 
                           <div className='relative flex w-full min-w-0 items-center justify-between gap-3'>
                             <div className='flex min-w-0 flex-1 items-center gap-3'>
-                              <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] text-[#f4f4f5]'>
+                              <div className='flex size-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.045)] text-[#fafafa]'>
                                 {item.iconKey ? (
                                   getLobeIcon(item.iconKey, 20)
                                 ) : (
-                                  <span className='text-xs font-bold text-[#d4d4d8]'>
+                                  <span className='text-xs font-bold text-[#e4e4e7]'>
                                     {item.modelName.charAt(0).toUpperCase() ||
                                       '?'}
                                   </span>
@@ -878,17 +878,17 @@ export function TokexHeroSection() {
 
                               <div className='min-w-0 flex-1'>
                                 <div className='flex items-center gap-2'>
-                                  <span className='truncate font-mono text-sm font-semibold text-[#f4f4f5]'>
+                                  <span className='truncate font-mono text-sm font-semibold text-[#fafafa]'>
                                     {item.modelName}
                                   </span>
                                   {isActive && (
-                                    <span className='hidden shrink-0 rounded-full border border-white/[0.14] bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-[#e4e4e7] sm:inline-flex'>
+                                    <span className='hidden shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400 sm:inline-flex'>
                                       {isZh ? '在线' : 'Live'}
                                     </span>
                                   )}
                                 </div>
 
-                                <div className='mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#9a9aa2]'>
+                                <div className='mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#a1a1aa]'>
                                   {item.vendorName && (
                                     <span className='truncate'>
                                       {item.vendorName}
@@ -899,8 +899,8 @@ export function TokexHeroSection() {
                                       className={cn(
                                         'shrink-0 rounded border px-1.5 py-px font-mono text-[10px] leading-tight',
                                         item.groupRatio < 1
-                                          ? 'border-white/[0.12] bg-white/[0.06] text-[#e4e4e7]'
-                                          : 'border-[rgba(255,255,255,0.09)] bg-[#1b1b1f] text-[#9a9aa2]'
+                                          ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-400'
+                                          : 'border-[rgba(255,255,255,0.1)] bg-[#19191e] text-[#a1a1aa]'
                                       )}
                                     >
                                       {item.groupBadge}

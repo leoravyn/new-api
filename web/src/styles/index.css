@@ -746,23 +746,23 @@ For commercial licensing, please contact support@quantumnous.com
   }
 }
 
-/* ── TOKEX Monochrome Graphite + Brushed Platinum + Silver System ─────────── */
+/* ── TOKEX Deep Obsidian + Brushed Platinum + Refined Mineral Accents ──────── */
 :root {
   --ease-liquid: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.dark body {
-  background-color: #0c0c0e;
+  background-color: #08080a;
   background-image: radial-gradient(
     960px circle at 50% -14%,
-    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.022),
     transparent 62%
   );
   background-attachment: fixed;
 }
 
 html.dark body:has(div[data-variant='inset']) {
-  background-color: #08080a;
+  background-color: #050506;
   background-image: none;
 }
 
@@ -773,7 +773,7 @@ html.dark body::after {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.028;
+  opacity: 0.014;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 180px 180px;
@@ -794,13 +794,13 @@ html.dark body::after {
 }
 
 .tokex-glass {
-  background: rgba(18, 18, 20, 0.84);
+  background: rgba(14, 14, 17, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 12px 36px -14px rgba(0, 0, 0, 0.72);
+    0 12px 36px -14px rgba(0, 0, 0, 0.78);
   transition:
     background-color 0.3s var(--ease-liquid),
     border-color 0.3s var(--ease-liquid),
@@ -809,21 +809,21 @@ html.dark body::after {
 }
 
 .tokex-glass-interactive:hover {
-  background: rgba(27, 27, 31, 0.9);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(25, 25, 30, 0.92);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
-    0 18px 44px -16px rgba(0, 0, 0, 0.84);
+    0 18px 44px -16px rgba(0, 0, 0, 0.86);
 }
 
 .tokex-glass-elevated {
-  background: rgba(18, 18, 20, 0.94);
+  background: rgba(14, 14, 17, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 24px 64px -20px rgba(0, 0, 0, 0.88);
+    0 24px 64px -20px rgba(0, 0, 0, 0.9);
 }
 
 .dark [data-slot='card'],
@@ -836,11 +836,11 @@ html.dark body::after {
 }
 
 .dark [data-slot='card'] {
-  background: #121214;
-  --tw-ring-color: rgba(255, 255, 255, 0.07);
+  background: #0e0e11;
+  --tw-ring-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 12px 32px -16px rgba(0, 0, 0, 0.72);
+    0 12px 32px -16px rgba(0, 0, 0, 0.78);
   transition:
     --tw-ring-color 0.3s var(--ease-liquid),
     border-color 0.3s var(--ease-liquid),
@@ -849,19 +849,19 @@ html.dark body::after {
 }
 
 .dark [data-slot='card']:hover {
-  --tw-ring-color: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.14);
+  --tw-ring-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .dark [data-slot='sidebar-inner'] {
-  background: #08080a;
+  background: #050506;
 }
 
 .dark [data-slot='sidebar-inset'] {
-  background-color: #0c0c0e;
+  background-color: #08080a;
   background-image: radial-gradient(
     820px circle at 50% -18%,
-    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.022),
     transparent 60%
   );
 }
@@ -869,9 +869,9 @@ html.dark body::after {
 .dark [data-slot='dialog-content'],
 .dark [data-slot='popover-content'],
 .dark [data-slot='dropdown-menu-content'] {
-  background: rgba(18, 18, 20, 0.96);
-  --tw-ring-color: rgba(255, 255, 255, 0.1);
+  background: rgba(14, 14, 17, 0.96);
+  --tw-ring-color: rgba(255, 255, 255, 0.11);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 24px 56px -18px rgba(0, 0, 0, 0.88);
+    0 24px 56px -18px rgba(0, 0, 0, 0.9);
 }
