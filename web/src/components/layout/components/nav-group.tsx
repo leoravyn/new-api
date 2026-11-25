@@ -66,7 +66,7 @@ export function NavGroup({ title, items }: NavGroupProps) {
 
   return (
     <SidebarGroup className='px-1.5 py-0 group-data-[collapsible=icon]:px-0.5'>
-      <SidebarGroupLabel className='mb-1 h-7 px-2.5 text-[11px] font-medium tracking-[0.08em] text-[#6e7a94] uppercase'>
+      <SidebarGroupLabel className='mb-1 h-7 px-2.5 text-[11px] font-medium tracking-[0.08em] text-[#74747c] uppercase'>
         {title}
       </SidebarGroupLabel>
       <SidebarMenu>
