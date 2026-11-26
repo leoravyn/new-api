@@ -75,7 +75,7 @@ describe('group ratio display', () => {
     expect(formatRatioMultiplier(1.25)).toBe('1.25x')
 
     const multiGroupModel = createDynamicModel({
-      model_name: 'claude-fable-5.2',
+      model_name: 'claude-fable-5-2',
       enable_groups: ['auto', 'Official', 'Claude-Proxy', 'Official'],
       group_ratio: { Official: 1, 'Claude-Proxy': 0.5 },
     })
@@ -96,7 +96,7 @@ describe('group ratio display', () => {
     expect(screen.queryByText(/37\.5/)).toBeNull()
 
     const claudeModel = createDynamicModel({
-      model_name: 'claude-fable-5.2',
+      model_name: 'claude-fable-5-2',
       enable_groups: ['Official', 'Proxy'],
     })
     rerender(<ModelGroupRatioBadges model={claudeModel} />)
@@ -123,7 +123,7 @@ describe('group ratio display', () => {
       defaultOptions: { queries: { retry: false } },
     })
     const model = createDynamicModel({
-      model_name: 'claude-fable-5.2',
+      model_name: 'claude-fable-5-2',
       enable_groups: ['Official', 'Proxy'],
     })
 
@@ -168,7 +168,7 @@ describe('group ratio display', () => {
       createDynamicModel({ model_name: 'gpt-6-astra' }),
       createDynamicModel({
         id: 2,
-        model_name: 'anthropic/claude-fable-5.2',
+        model_name: 'anthropic/claude-fable-5-2',
         enable_groups: ['Official'],
       }),
     ]
@@ -178,8 +178,8 @@ describe('group ratio display', () => {
     // Model without slash appears once in the cell (no duplicate slug subtitle)
     expect(screen.getAllByText('gpt-6-astra')).toHaveLength(1)
     // Model with slash shows short title + full slug
-    expect(screen.getByText('claude-fable-5.2')).toBeVisible()
-    expect(screen.getByText('anthropic/claude-fable-5.2')).toBeVisible()
+    expect(screen.getByText('claude-fable-5-2')).toBeVisible()
+    expect(screen.getByText('anthropic/claude-fable-5-2')).toBeVisible()
 
     // Dedicated group ratio column without "Capabilities: Dynamic Pricing" noise
     expect(screen.getByText('Group Ratio')).toBeVisible()

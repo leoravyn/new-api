@@ -30,11 +30,11 @@ import { useAuthStore } from '@/stores/auth-store'
 import { useSystemConfigStore } from '@/stores/system-config-store'
 
 const FLAGSHIP_MODEL_PRIORITY = [
-  'claude-fable-5.2',
-  'claude-opus-5.5',
+  'claude-fable-5-2',
+  'claude-opus-5-5',
   'gpt-6-astra',
   'gpt-6.2-astra',
-  'claude-sonnet-5.5',
+  'claude-sonnet-5-5',
   'gpt-6.2-sol',
   'gpt-6.1-sol',
 ] as const

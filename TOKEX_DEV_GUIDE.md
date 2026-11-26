@@ -58,7 +58,7 @@
 
 | 组件 | 配置文件 | 关键生效参数 | 说明 |
 |---|---|---|---|
-| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 600s;` / `limit_conn api_key_conn 3;`（`limit_conn_status 429`） | 吸收慢速大请求至磁盘缓冲，保持 SSE 零缓冲；`/v1/` 按 `Authorization`/`x-api-key` 限制单 Key 并发 |
+| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 1800s;` / `so_keepalive=on` / `limit_conn api_key_conn 3;`（`limit_conn_status 429`） | 吸收慢速大请求至磁盘缓冲，保持 SSE 零缓冲；`/v1/` 按 `Authorization`/`x-api-key` 限制单 Key 并发 |
 | **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m` / `GOMEMLIMIT=700MiB` / `GOGC=75` / `MAX_REQUEST_BODY_MB=40` / `MAX_FILE_DOWNLOAD_MB=32` / `STREAM_SCANNER_MAX_BUFFER_MB=32` / `DEBUG=false` | 日志截断保留 `LocalLogContentLimit=2048`；`json-file` 限 `20m x 3` |
 | **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true` / `threshold_mb=4` / `max_size_mb=256` | `>=4MB` 请求体暂存临时文件并在请求结束后清理 |
 | **tokex-pool** | `/opt/tokex/docker-compose.yml` & `.env` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `RUN_MODE=simple` / `SERVER_MAX_REQUEST_BODY_SIZE=41943040` / `GATEWAY_MAX_BODY_SIZE=41943040` / `GATEWAY_REQUEST_BODY_MEMORY_BUDGET_BYTES=134217728` / `LOG_OUTPUT_TO_FILE=false` | 防大图 Base64 OOM，关闭全量日志落盘 |
@@ -98,7 +98,7 @@
 - **现行分组**：`Codex Pro`（`0.36x`）、`Claude Max`（`0.46x`）、`Official`（`1.2x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
 - **启用渠道**（`channels` 表）：
   - `id=3`：`Codex-Pool`（`status=1`, `group=Codex Pro`, `http://tokex-pool:8080`, `gpt-6.1-sol` / `gpt-6-astra` / `gpt-6.2-sol` / `gpt-6.2-astra`）
-  - `id=5`：`CCone`（`status=1`, `group=Claude Max`, `https://api.ccone.cc`, `claude-fable-5.2` / `claude-opus-5.5` / `claude-sonnet-5.5`）
+  - `id=5`：`DeRouter`（`status=1`, `group=Claude Max`, `https://api-direct.derouter.ai/proxy`, `claude-fable-5-2` / `claude-opus-5-5` / `claude-sonnet-5-5`）
 - **重要提示**：直接修改库内 `options` 后需 `docker restart tokex-web` 重载；连接凭据见 `/opt/tokex/docker-compose.yml` 与 `/opt/tokex/.env`。
 
 ---
