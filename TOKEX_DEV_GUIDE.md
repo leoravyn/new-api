@@ -7,7 +7,10 @@
 
 ## 1. 线上全景与核心功能实现
 
-- **主站与 API 网关**：`https://tokex.vip`
+- **三域名流量隔离与防超时架构**：
+  - **Web 控制台主站**：`https://tokex.vip`（Cloudflare Proxy / 橙云开启）— 仅承载前端控制台与 `/api` 等控制台接口；Cloudflare WAF 在边缘直接拦截 `/v1*`，避免 API 长连接命中 Cloudflare 100–125s 读取超时。
+  - **API 独立网关（防超时流式代理）**：`https://api.tokex.vip`（Custom Domain -> Cloudflare Worker `tokex-api-proxy`，已禁用默认 `*.workers.dev` 域名）— 针对流式请求，在等待上游首字期间先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 注释行保活，首字到达后通过原生 `pipeTo` 零拷贝透传响应流，从而绕过 Cloudflare 100s 读取超时并将 Worker CPU 消耗控制在 10ms 限制内。
+  - **Worker 专用隐藏源站**：`https://origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云直连主机公网 IP）— 专供 Cloudflare Worker 回源，仅监听 `443 ssl` 并使用通配符 Cloudflare Origin CA 证书（`/etc/nginx/ssl/origin-tokex/cert.pem` 与 `key.pem`），配置 `client_max_body_size 50m;`、`proxy_read_timeout 600s;`、`proxy_send_timeout 600s;`、`proxy_buffering off;`，将 `/` 全部反代至 `127.0.0.1:3000`。
 - **上游号池管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 后端**
   - **前端产物**：基于 New API 前端（`/home/ubuntu/tokex/web`）二次开发，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管。
@@ -42,7 +45,10 @@
 | `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | 优先从 Actions `web-dist` 产物同步至此目录 |
 | `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
 | `/opt/tokex/sub2api/` | **Sub2API 数据目录** | `data/`、`postgres_data/`、`redis_data/`（`.env` 软链至 `/opt/tokex/.env`） |
-| `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf` |
+| `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf`（含 `tokex.vip`、`sub.tokex.vip`、`origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` 与 `default_server` `444` 兜底块） |
+| `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 访问控制片段** | 允许 `127.0.0.1`、`::1` 与 Cloudflare IPv4/IPv6 CIDR + `deny all;` + `CF-Connecting-IP` 真实 IP 还原 |
+| `/etc/nginx/ssl/origin-tokex/` | **Cloudflare Origin CA 证书** | `cert.pem` / `key.pem`（通配符证书，用于隐藏源站与 `443` `default_server`） |
+| `/usr/local/bin/update-cf-nginx.sh` | **Cloudflare IP 同步脚本** | 拉取 Cloudflare 最新 IPv4/IPv6 CIDR，原子重写 `cloudflare-access.conf` 并校验重载 Nginx |
 
 - **Git 分支与远程**（位于 `/home/ubuntu/tokex/`）：
   - `upstream-base`：`QuantumNous/new-api` 初始只读对照基线（`48a6c87` / `v1.0.0-rc.49`；当前 `dev`/`main` 已合并 `v1.0.0-rc.51` `c9c6da2`）。
@@ -59,7 +65,7 @@
 
 | 组件 | 配置文件 | 关键生效参数 | 说明 |
 |---|---|---|---|
-| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `client_max_body_size 40m;` / `client_body_buffer_size 128k;` / `client_body_timeout 120s;` / `proxy_request_buffering on;` / `proxy_buffering off;` / `proxy_connect_timeout 30s;` / `proxy_read/send_timeout 1800s;` / `so_keepalive=on` / `limit_conn api_key_conn 3;`（`limit_conn_status 429`） | 吸收慢速大请求至磁盘缓冲，保持 SSE 零缓冲；`/v1/` 按 `Authorization`/`x-api-key` 限制单 Key 并发 |
+| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `tokex.vip`: `client_max_body_size 40m;` / `proxy_read/send_timeout 1800s;` / `limit_conn api_key_conn 3;`（`429`）；`origin-*.tokex.vip`: `client_max_body_size 50m;` / `proxy_read/send_timeout 600s;` / `proxy_buffering off;`；全局 `default_server` `so_keepalive=on` `return 444;` + `cloudflare-access.conf` | 隐藏源站承接 Worker 回源并保持 SSE 零缓冲；`tokex.vip` 承载控制台与本地回退；`default_server` 丢弃公网 IP 直连扫描 |
 | **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m` / `GOMEMLIMIT=700MiB` / `GOGC=75` / `MAX_REQUEST_BODY_MB=40` / `MAX_FILE_DOWNLOAD_MB=32` / `STREAM_SCANNER_MAX_BUFFER_MB=32` / `DEBUG=false` | 日志截断保留 `LocalLogContentLimit=2048`；`json-file` 限 `20m x 3` |
 | **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true` / `threshold_mb=4` / `max_size_mb=256` | `>=4MB` 请求体暂存临时文件并在请求结束后清理 |
 | **tokex-pool** | `/opt/tokex/docker-compose.yml` & `.env` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `RUN_MODE=simple` / `SERVER_MAX_REQUEST_BODY_SIZE=41943040` / `GATEWAY_MAX_BODY_SIZE=41943040` / `GATEWAY_REQUEST_BODY_MEMORY_BUDGET_BYTES=134217728` / `LOG_OUTPUT_TO_FILE=false` | 防大图 Base64 OOM，关闭全量日志落盘 |
@@ -90,9 +96,17 @@
 
 ## 5. 路由边界、接口与数据库现状
 
-### Nginx 动静分流
-- **静态 SPA**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）及所有前端路由（`/`, `/pricing`, `/rankings`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
-- **后端反代**：`location ^~ /v1/`（通过 `map` 提取 `$http_authorization`、为空时回退 `$http_x_api_key` 作为 `limit_conn_zone` 键，单 Key 上限 `3` 并发、超限返回 `429`）与 `location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
+### Nginx 流量隔离、访问控制与动静分流
+- **三域名职责边界**：
+  - `tokex.vip`（Cloudflare 橙云）：Web 控制台入口；Cloudflare WAF 拦截外部 `/v1*` 请求，防止 API 请求进入常规代理链路触发 100–125s 超时。
+  - `api.tokex.vip`（Cloudflare Worker `tokex-api-proxy`，`*.workers.dev` 已禁用）：对外 API 网关；流式请求先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 注释行保活，首字到达后通过 `pipeTo` 透传，避免 100s 超时且保持 CPU < 10ms。
+  - `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云）：Worker 专用隐藏源站，`443 ssl` 使用 `/etc/nginx/ssl/origin-tokex/{cert,key}.pem`（通配符 Origin CA 证书），`client_max_body_size 50m;`、`proxy_read_timeout 600s;`、`proxy_send_timeout 600s;`、`proxy_buffering off;`，将 `/` 全部反代至 `127.0.0.1:3000`。
+- **Cloudflare 仅限源站访问控制与防 IP 扫描**：
+  - `/etc/nginx/snippets/cloudflare-access.conf`：仅允许 `127.0.0.1`、`::1` 与 Cloudflare 官方 IPv4/IPv6 CIDR 访问，末尾 `deny all;`，并通过 `set_real_ip_from` + `real_ip_header CF-Connecting-IP;` 还原客户端真实 IP；已同时引入 `tokex.vip` 与 `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` server 块。
+  - `default_server` 兜底块：监听 `80` / `[::]:80` / `443 ssl` / `[::]:443 ssl`（`default_server so_keepalive=on`，`server_name _;`），使用通配符 Origin CA 证书直接 `return 444;`，阻断针对公网 IP 的直接扫描与未授权访问。
+  - `/usr/local/bin/update-cf-nginx.sh`：定期从 Cloudflare 拉取最新 IPv4/IPv6 段并原子更新 `cloudflare-access.conf`，随后执行 `nginx -t && systemctl reload nginx`。
+- **静态 SPA（`tokex.vip`）**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）及所有前端路由（`/`, `/pricing`, `/rankings`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
+- **后端反代**：`tokex.vip` 上的 `location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/`（含 `/v1/` 的 `limit_conn api_key_conn 3;` 并发限制与 `1800s` 超时兜底，但外网 `/v1*` 已由 Cloudflare WAF 拦截，实际 API 流量走 `api.tokex.vip` -> Worker -> `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`）与隐藏源站 `/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
 ### 线上计费、分组与渠道现状（`newapi` 库）
 - **计费与支付口径**：`QuotaDisplayType=USD`、`USDExchangeRate=1`、`MinTopUp=5`、`Price=7`（Epay/Zpay CNY 汇率）；启用 `Waffo Pancake`（`USD` 结算，`min_topup=10`，`icon` 留空使用内置 W 图标）与 `Epay / Zpay`（`Alipay`，`CNY` 结算，`min_topup=5`）。
