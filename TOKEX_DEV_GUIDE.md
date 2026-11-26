@@ -46,9 +46,10 @@
 | `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
 | `/opt/tokex/sub2api/` | **Sub2API 数据目录** | `data/`、`postgres_data/`、`redis_data/`（`.env` 软链至 `/opt/tokex/.env`） |
 | `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf`（含 `tokex.vip`、`sub.tokex.vip`、`origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` 与 `default_server` `444` 兜底块） |
-| `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 访问控制片段** | 允许 `127.0.0.1`、`::1` 与 Cloudflare IPv4/IPv6 CIDR + `deny all;` + `CF-Connecting-IP` 真实 IP 还原 |
+| `/etc/nginx/conf.d/cloudflare-geo.conf` | **Cloudflare 源站 IP 白名单映射** | `geo $realip_remote_addr $cf_allowed` 校验真实 TCP 对端 IP（`127.0.0.1`、`::1` 与 Cloudflare IPv4/IPv6 CIDR 置 `1`，其余 `0`），在 `realip` 改写 `$remote_addr` 前生效 |
+| `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 访问控制与真实 IP 片段** | `if ($cf_allowed = 0) { return 403; }` + `set_real_ip_from` + `real_ip_header CF-Connecting-IP;`（避免 `allow`/`deny` 与 `realip` 冲突） |
 | `/etc/nginx/ssl/origin-tokex/` | **Cloudflare Origin CA 证书** | `cert.pem` / `key.pem`（通配符证书，用于隐藏源站与 `443` `default_server`） |
-| `/usr/local/bin/update-cf-nginx.sh` | **Cloudflare IP 同步脚本** | 拉取 Cloudflare 最新 IPv4/IPv6 CIDR，原子重写 `cloudflare-access.conf` 并校验重载 Nginx |
+| `/usr/local/bin/update-cf-nginx.sh` | **Cloudflare IP 同步脚本** | 拉取 Cloudflare 最新 IPv4/IPv6 CIDR，原子重写 `cloudflare-geo.conf` 与 `cloudflare-access.conf` 并校验重载 Nginx |
 
 - **Git 分支与远程**（位于 `/home/ubuntu/tokex/`）：
   - `upstream-base`：`QuantumNous/new-api` 初始只读对照基线（`48a6c87` / `v1.0.0-rc.49`；当前 `dev`/`main` 已合并 `v1.0.0-rc.51` `c9c6da2`）。
@@ -102,9 +103,10 @@
   - `api.tokex.vip`（Cloudflare Worker `tokex-api-proxy`，`*.workers.dev` 已禁用）：对外 API 网关；流式请求先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 注释行保活，首字到达后通过 `pipeTo` 透传，避免 100s 超时且保持 CPU < 10ms。
   - `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云）：Worker 专用隐藏源站，`443 ssl` 使用 `/etc/nginx/ssl/origin-tokex/{cert,key}.pem`（通配符 Origin CA 证书），`client_max_body_size 50m;`、`proxy_read_timeout 600s;`、`proxy_send_timeout 600s;`、`proxy_buffering off;`，将 `/` 全部反代至 `127.0.0.1:3000`。
 - **Cloudflare 仅限源站访问控制与防 IP 扫描**：
-  - `/etc/nginx/snippets/cloudflare-access.conf`：仅允许 `127.0.0.1`、`::1` 与 Cloudflare 官方 IPv4/IPv6 CIDR 访问，末尾 `deny all;`，并通过 `set_real_ip_from` + `real_ip_header CF-Connecting-IP;` 还原客户端真实 IP；已同时引入 `tokex.vip` 与 `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` server 块。
+  - `/etc/nginx/conf.d/cloudflare-geo.conf`：在 `http` 上下文通过 `geo $realip_remote_addr $cf_allowed` 校验 `realip` 改写 `$remote_addr` 之前的真实 TCP 对端 IP（仅 `127.0.0.1`、`::1` 与 Cloudflare 官方 IPv4/IPv6 CIDR 为 `1`，其余为 `0`）。
+  - `/etc/nginx/snippets/cloudflare-access.conf`：通过 `if ($cf_allowed = 0) { return 403; }` 拦截非 Cloudflare 直连请求，并结合 `set_real_ip_from` + `real_ip_header CF-Connecting-IP;` 还原客户端真实 IP（避免 `allow`/`deny` 在 `realip` 改写 `$remote_addr` 后误拦）；已同时引入 `tokex.vip` 与 `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` server 块。
   - `default_server` 兜底块：监听 `80` / `[::]:80` / `443 ssl` / `[::]:443 ssl`（`default_server so_keepalive=on`，`server_name _;`），使用通配符 Origin CA 证书直接 `return 444;`，阻断针对公网 IP 的直接扫描与未授权访问。
-  - `/usr/local/bin/update-cf-nginx.sh`：定期从 Cloudflare 拉取最新 IPv4/IPv6 段并原子更新 `cloudflare-access.conf`，随后执行 `nginx -t && systemctl reload nginx`。
+  - `/usr/local/bin/update-cf-nginx.sh`：定期从 Cloudflare 拉取最新 IPv4/IPv6 段并原子更新 `cloudflare-geo.conf` 与 `cloudflare-access.conf`，随后执行 `nginx -t && systemctl reload nginx`。
 - **静态 SPA（`tokex.vip`）**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）及所有前端路由（`/`, `/pricing`, `/rankings`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
 - **后端反代**：`tokex.vip` 上的 `location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/`（含 `/v1/` 的 `limit_conn api_key_conn 3;` 并发限制与 `1800s` 超时兜底，但外网 `/v1*` 已由 Cloudflare WAF 拦截，实际 API 流量走 `api.tokex.vip` -> Worker -> `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`）与隐藏源站 `/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
 
