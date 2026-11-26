@@ -1696,3 +1696,89 @@ export function parseTaskResult(){return {};}
 		})
 	}
 }
+
+func TestSearchModelsGroupedByVendorOrder(t *testing.T) {
+	db := modelManagementDB(t, "sqlite", "")
+
+	v1 := model.Vendor{Name: "Vendor Alpha"}
+	v2 := model.Vendor{Name: "Vendor Beta"}
+	require.NoError(t, v1.Insert())
+	require.NoError(t, v2.Insert())
+
+	fixtures := []model.Model{
+		{ModelName: "sort-v2-old", VendorID: v2.Id, Status: 1},
+		{ModelName: "sort-v0-old", VendorID: 0, Status: 1},
+		{ModelName: "sort-v1-old", VendorID: v1.Id, Status: 1},
+		{ModelName: "sort-v2-new", VendorID: v2.Id, Status: 1},
+		{ModelName: "sort-v1-new", VendorID: v1.Id, Status: 1},
+		{ModelName: "sort-v0-new", VendorID: 0, Status: 1},
+	}
+	for i := range fixtures {
+		require.NoError(t, fixtures[i].Insert())
+	}
+
+	channel := model.Channel{
+		Name:   "Sort channel",
+		Type:   1,
+		Key:    "sort-fixture",
+		Models: "sort-v1-old,sort-channel-only-b,sort-channel-only-a",
+		Group:  "default",
+		Status: common.ChannelStatusEnabled,
+	}
+	require.NoError(t, channel.Insert())
+	require.NoError(t, db.Where("id = ?", channel.Id).First(&channel).Error)
+
+	modelNames := func(items []*model.Model) []string {
+		names := make([]string, 0, len(items))
+		for _, item := range items {
+			names = append(names, item.ModelName)
+		}
+		return names
+	}
+
+	expectedMetaOrder := []string{
+		"sort-v0-new",
+		"sort-v0-old",
+		"sort-v1-new",
+		"sort-v1-old",
+		"sort-v2-new",
+		"sort-v2-old",
+	}
+
+	got, total, err := model.SearchModels("", "", "", "", 0, 20)
+	require.NoError(t, err)
+	assert.EqualValues(t, len(expectedMetaOrder), total)
+	assert.Equal(t, expectedMetaOrder, modelNames(got))
+
+	allModels, err := model.GetAllModels(0, 20)
+	require.NoError(t, err)
+	assert.Equal(t, expectedMetaOrder, modelNames(allModels))
+
+	paged, total, err := model.SearchModels("", "", "", "", 1, 3)
+	require.NoError(t, err)
+	assert.EqualValues(t, len(expectedMetaOrder), total)
+	assert.Equal(t, []string{"sort-v0-old", "sort-v1-new", "sort-v1-old"}, modelNames(paged))
+
+	byVendorName, total, err := model.SearchModels("", "Vendor Beta", "", "", 0, 20)
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, total)
+	assert.Equal(t, []string{"sort-v2-new", "sort-v2-old"}, modelNames(byVendorName))
+
+	expectedWithChannels := append(append([]string{}, expectedMetaOrder...), "sort-channel-only-a", "sort-channel-only-b")
+	withChannels, total, err := model.SearchModelsWithChannels("", "", "", "", 0, 20)
+	require.NoError(t, err)
+	assert.EqualValues(t, len(expectedWithChannels), total)
+	assert.Equal(t, expectedWithChannels, modelNames(withChannels))
+
+	var httpResp struct {
+		Success bool
+		Data    struct {
+			Items []*model.Model
+			Total int
+		}
+	}
+	modelManagementRequest(t, SearchModelsMeta, http.MethodGet, "/api/models/search?include_channel_models=true&p=1&page_size=20", nil, &httpResp)
+	require.True(t, httpResp.Success)
+	assert.Equal(t, len(expectedWithChannels), httpResp.Data.Total)
+	assert.Equal(t, expectedWithChannels, modelNames(httpResp.Data.Items))
+}
