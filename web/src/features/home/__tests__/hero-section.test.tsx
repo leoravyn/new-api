@@ -102,7 +102,7 @@ const LIVE_PRICING_RESPONSE: PricingData = {
     },
     {
       id: 4,
-      model_name: 'claude-fable-5.2',
+      model_name: 'claude-fable-5-2',
       vendor_id: 5,
       quota_type: 0,
       model_ratio: 37.5,
@@ -113,7 +113,7 @@ const LIVE_PRICING_RESPONSE: PricingData = {
     },
     {
       id: 5,
-      model_name: 'claude-opus-5.5',
+      model_name: 'claude-opus-5-5',
       vendor_id: 5,
       quota_type: 0,
       model_ratio: 37.5,
@@ -124,7 +124,7 @@ const LIVE_PRICING_RESPONSE: PricingData = {
     },
     {
       id: 6,
-      model_name: 'claude-sonnet-5.5',
+      model_name: 'claude-sonnet-5-5',
       vendor_id: 5,
       quota_type: 0,
       model_ratio: 37.5,
@@ -248,8 +248,8 @@ describe('flagship model helpers', () => {
   it('selects up to 4 flagship models from live pricing and falls back round-robin by vendor', () => {
     const selected = selectFlagshipModels(LIVE_PRICING_RESPONSE.data, 4)
     expect(selected.map((m) => m.model_name)).toEqual([
-      'claude-fable-5.2',
-      'claude-opus-5.5',
+      'claude-fable-5-2',
+      'claude-opus-5-5',
       'gpt-6-astra',
       'gpt-6.2-astra',
     ])
@@ -301,7 +301,7 @@ describe('flagship model helpers', () => {
   it('computes strikethrough 1x original price when groupRatio !== 1 and hides it for 1x', () => {
     const officialDynamic: PricingModel = {
       id: 4,
-      model_name: 'claude-fable-5.2',
+      model_name: 'claude-fable-5-2',
       vendor_name: 'Anthropic',
       quota_type: 0,
       model_ratio: 37.5,
@@ -422,9 +422,9 @@ describe('TokexHeroSection', () => {
     resolvePricing(LIVE_PRICING_RESPONSE)
 
     const fableLink = await screen.findByRole('link', {
-      name: /claude-fable-5\.2/i,
+      name: /claude-fable-5-2/i,
     })
-    expect(fableLink).toHaveAttribute('href', '/pricing/claude-fable-5.2')
+    expect(fableLink).toHaveAttribute('href', '/pricing/claude-fable-5-2')
     expect(within(fableLink).getByText('Anthropic')).toBeVisible()
     expect(within(fableLink).getByText('Official · 1.35x')).toBeVisible()
     expect(within(fableLink).getAllByText('$8')[0]).toHaveClass('line-through')
@@ -451,7 +451,7 @@ describe('TokexHeroSection', () => {
 
     renderHero()
 
-    await screen.findByRole('link', { name: /claude-fable-5\.2/i })
+    await screen.findByRole('link', { name: /claude-fable-5-2/i })
 
     expect(screen.queryByText(/TOKEX Unified Model Router/i)).toBeNull()
     expect(screen.queryByText(/The Unified Interface For LLMs/i)).toBeNull()
@@ -474,7 +474,7 @@ describe('TokexHeroSection', () => {
       data: [
         {
           id: 99,
-          model_name: 'anthropic/claude-fable-5.2',
+          model_name: 'anthropic/claude-fable-5-2',
           vendor_id: 5,
           quota_type: 0,
           model_ratio: 37.5,
@@ -489,11 +489,11 @@ describe('TokexHeroSection', () => {
     const { router } = renderHero()
 
     const modelCardLink = await screen.findByRole('link', {
-      name: /anthropic\/claude-fable-5\.2/i,
+      name: /anthropic\/claude-fable-5-2/i,
     })
     expect(modelCardLink).toHaveAttribute(
       'href',
-      '/pricing/anthropic%2Fclaude-fable-5.2'
+      '/pricing/anthropic%2Fclaude-fable-5-2'
     )
     expect(within(modelCardLink).getByText('Standard · 1x')).toBeVisible()
     // No strikethrough when groupRatio === 1
@@ -503,11 +503,11 @@ describe('TokexHeroSection', () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(
-        '/pricing/anthropic%2Fclaude-fable-5.2'
+        '/pricing/anthropic%2Fclaude-fable-5-2'
       )
     })
     expect(
-      await screen.findByText('Model Details: anthropic/claude-fable-5.2')
+      await screen.findByText('Model Details: anthropic/claude-fable-5-2')
     ).toBeVisible()
   })
 
@@ -528,7 +528,7 @@ describe('TokexHeroSection', () => {
 
     expect(getPricingMock).toHaveBeenCalledTimes(2)
     expect(
-      await screen.findByRole('link', { name: /claude-fable-5\.2/i })
+      await screen.findByRole('link', { name: /claude-fable-5-2/i })
     ).toBeVisible()
   })
 
@@ -545,7 +545,7 @@ describe('TokexHeroSection', () => {
 
     renderHero()
 
-    await screen.findByRole('link', { name: /claude-fable-5\.2/i })
+    await screen.findByRole('link', { name: /claude-fable-5-2/i })
     expect(screen.queryByText(/TOKEX 多模型统一网关已就绪/)).toBeNull()
     expect(screen.queryByText(/大模型统一路由接口/)).toBeNull()
     expect(screen.queryByText(/示例提示词/)).toBeNull()
