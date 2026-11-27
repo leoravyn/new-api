@@ -65,11 +65,11 @@ export function NavGroup({ title, items }: NavGroupProps) {
   const href = useLocation({ select: (location) => location.href })
 
   return (
-    <SidebarGroup className='px-1.5 py-0 group-data-[collapsible=icon]:px-0.5'>
-      <SidebarGroupLabel className='mb-1 h-7 px-2.5 text-[11px] font-medium tracking-[0.08em] text-[#74747c] uppercase'>
+    <SidebarGroup className='px-1.5 py-0 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0'>
+      <SidebarGroupLabel className='h-8 px-2.5 text-[11px] font-medium tracking-[0.08em] text-[#74747c] uppercase'>
         {title}
       </SidebarGroupLabel>
-      <SidebarMenu>
+      <SidebarMenu className='group-data-[collapsible=icon]:items-center'>
         {items.map((item) => {
           const key = `${item.title}-${item.url || item.type}`
 
@@ -136,8 +136,14 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
         }
       >
         {item.icon && <item.icon className='shrink-0' />}
-        <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        <span className='min-w-0 flex-1 truncate group-data-[collapsible=icon]:hidden'>
+          {item.title}
+        </span>
+        {item.badge && (
+          <span className='group-data-[collapsible=icon]:hidden'>
+            <NavBadge>{item.badge}</NavBadge>
+          </span>
+        )}
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
@@ -179,8 +185,14 @@ function SidebarMenuCollapsible({
         render={<SidebarMenuButton tooltip={item.title} />}
       >
         {item.icon && <item.icon className='shrink-0' />}
-        <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        <span className='min-w-0 flex-1 truncate group-data-[collapsible=icon]:hidden'>
+          {item.title}
+        </span>
+        {item.badge && (
+          <span className='group-data-[collapsible=icon]:hidden'>
+            <NavBadge>{item.badge}</NavBadge>
+          </span>
+        )}
         <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[panel-open]/collapsible-trigger:rotate-90' />
       </CollapsibleTrigger>
       <CollapsibleContent className='CollapsibleContent'>
@@ -232,9 +244,15 @@ function SidebarMenuCollapsedDropdown({
           }
         >
           {item.icon && <item.icon className='shrink-0' />}
-          <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-          {item.badge && <NavBadge>{item.badge}</NavBadge>}
-          <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[popup-open]/dropdown-trigger:rotate-90' />
+          <span className='min-w-0 flex-1 truncate group-data-[collapsible=icon]:hidden'>
+            {item.title}
+          </span>
+          {item.badge && (
+            <span className='group-data-[collapsible=icon]:hidden'>
+              <NavBadge>{item.badge}</NavBadge>
+            </span>
+          )}
+          <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden group-data-[popup-open]/dropdown-trigger:rotate-90' />
         </DropdownMenuTrigger>
         <DropdownMenuContent side='right' align='start' sideOffset={4}>
           <DropdownMenuGroup>

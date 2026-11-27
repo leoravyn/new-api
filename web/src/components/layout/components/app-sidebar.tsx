@@ -93,10 +93,10 @@ export function AppSidebar() {
           </AnimatePresence>
         </SidebarContent>
 
-        <SidebarFooter className='border-t border-white/[0.06] px-2 py-2'>
-          <SidebarMenu>
+        <SidebarFooter className='border-t border-white/[0.06] px-2 py-2 group-data-[collapsible=icon]:px-0'>
+          <SidebarMenu className='group-data-[collapsible=icon]:items-center'>
             <SidebarMenuItem>
-              <div className='flex items-center justify-between gap-1.5 group-data-[collapsible=icon]:justify-center'>
+              <div className='flex items-center justify-between gap-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0'>
                 <Link
                   to='/profile'
                   className='flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-white/[0.05] group-data-[collapsible=icon]:hidden'
@@ -114,7 +114,7 @@ export function AppSidebar() {
                   tooltip={t('Sign out')}
                   onClick={() => setSignOutOpen(true)}
                   aria-label={t('Sign out')}
-                  className='h-8 w-8 shrink-0 justify-center rounded-lg text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100'
+                  className='size-8 shrink-0 justify-center rounded-lg text-zinc-400 group-data-[collapsible=icon]:size-9! hover:bg-white/[0.06] hover:text-zinc-100'
                 >
                   <LogOut className='size-4' />
                 </SidebarMenuButton>

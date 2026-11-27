@@ -41,7 +41,7 @@ export function LanguageSwitcher() {
             className={cn(
               'cursor-pointer rounded-full px-2.5 py-1 text-xs font-medium tracking-tight transition-all duration-200',
               isActive
-                ? 'bg-white text-black shadow-xs'
+                ? 'bg-white/[0.14] text-white ring-1 ring-white/[0.12]'
                 : 'text-zinc-400 hover:text-white'
             )}
           >

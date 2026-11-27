@@ -47,10 +47,10 @@ export function HeaderConsoleButton({
       to='/dashboard'
       disabled={disabled}
       className={cn(
-        'inline-flex h-8 shrink-0 items-center justify-center rounded-lg px-3.5 text-xs font-medium whitespace-nowrap transition-all duration-200',
+        'inline-flex shrink-0 items-center justify-center rounded-lg px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
         emphasized
-          ? 'border border-white/25 bg-white/[0.08] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] hover:border-white/45 hover:bg-white/[0.14] hover:text-white'
-          : 'border border-transparent bg-transparent text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200',
+          ? 'border border-white/25 bg-gradient-to-b from-[#fafafa] via-[#ededf0] to-[#d6d6db] text-[#08080a] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_3px_0_rgba(0,0,0,0.45)] hover:from-[#ffffff] hover:via-[#f4f4f6] hover:to-[#e0e0e5]'
+          : 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12] hover:bg-white/[0.08]',
         disabled && 'pointer-events-none opacity-50',
         className
       )}

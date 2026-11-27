@@ -118,10 +118,14 @@ export function AppHeader({
 
   return (
     <Header>
-      <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-2'>
-        <SystemBrand variant='inline' />
-        {showSearch && (
-          <Search className='ms-1 hidden w-8 flex-none sm:inline-flex sm:w-44 lg:w-52 [&>span]:hidden sm:[&>span]:inline' />
+      <div className='flex min-w-0 flex-1 items-center gap-4 lg:gap-6'>
+        <div className='@container/system-brand flex min-w-0 shrink-0 items-center gap-1'>
+          <SystemBrand variant='inline' />
+        </div>
+        {showTopNav && (
+          <div className='hidden lg:block'>
+            <TopNav links={links} />
+          </div>
         )}
       </div>
 
@@ -130,19 +134,10 @@ export function AppHeader({
       ) : null}
 
       {rightContent ?? (
-        <div className='ms-auto flex shrink-0 items-center gap-1 sm:gap-1.5'>
-          {showTopNav && (
-            <div className='hidden lg:block'>
-              <TopNav links={links} />
-            </div>
-          )}
-          {showTopNav && showNotifications && (
-            <div className='mx-2 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] lg:block' />
-          )}
+        <div className='ms-auto flex shrink-0 items-center gap-1.5'>
           {showSearch && (
-            <Search className='w-8 flex-none sm:hidden [&>span]:hidden' />
+            <Search className='w-8 flex-none sm:w-44 lg:w-48 [&>span]:hidden sm:[&>span]:inline' />
           )}
-          <LanguageSwitcher />
           {showNotifications && (
             <NotificationPopover
               open={notifications.popoverOpen}
@@ -155,9 +150,10 @@ export function AppHeader({
               loading={notifications.loading}
             />
           )}
+          <LanguageSwitcher />
           {showProfileDropdown && consoleLink && (
             <>
-              <div className='mx-1.5 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] sm:block' />
+              <div className='mx-1 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] sm:block' />
               <HeaderConsoleButton
                 label={consoleLabel}
                 emphasized={false}
