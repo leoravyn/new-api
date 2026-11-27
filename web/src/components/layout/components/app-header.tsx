@@ -16,9 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useTranslation } from 'react-i18next'
+
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
-import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
@@ -26,6 +27,10 @@ import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import type { TopNavLink } from '../types'
 import { Header } from './header'
+import {
+  HeaderConsoleButton,
+  splitHeaderNavLinks,
+} from './header-console-action'
 import { SystemBrand } from './system-brand'
 import { TopNav } from './top-nav'
 
@@ -101,17 +106,23 @@ export function AppHeader({
   showConfigDrawer: _showConfigDrawer = false,
   showProfileDropdown = true,
 }: AppHeaderProps) {
+  const { t } = useTranslation()
   // Prioritize dynamically generated links from backend
   const dynamicLinks = useTopNavLinks()
-  const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
+  const allLinks = dynamicLinks.length > 0 ? dynamicLinks : navLinks
+  const { navLinks: links, consoleLink } = splitHeaderNavLinks(allLinks)
+  const consoleLabel = consoleLink ? t(consoleLink.title) : t('Console')
 
   // Notifications hook
   const notifications = useNotifications()
 
   return (
     <Header>
-      <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-1'>
+      <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-2'>
         <SystemBrand variant='inline' />
+        {showSearch && (
+          <Search className='ms-1 hidden w-8 flex-none sm:inline-flex sm:w-44 lg:w-52 [&>span]:hidden sm:[&>span]:inline' />
+        )}
       </div>
 
       {leftContent ? (
@@ -125,12 +136,13 @@ export function AppHeader({
               <TopNav links={links} />
             </div>
           )}
-          {showTopNav && (showSearch || showNotifications) && (
-            <div className='mx-1.5 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] lg:block' />
+          {showTopNav && showNotifications && (
+            <div className='mx-2 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] lg:block' />
           )}
           {showSearch && (
-            <Search className='w-8 flex-none [&>span]:hidden sm:[&>span]:inline' />
+            <Search className='w-8 flex-none sm:hidden [&>span]:hidden' />
           )}
+          <LanguageSwitcher />
           {showNotifications && (
             <NotificationPopover
               open={notifications.popoverOpen}
@@ -143,11 +155,14 @@ export function AppHeader({
               loading={notifications.loading}
             />
           )}
-          <LanguageSwitcher />
-          {showProfileDropdown && (
+          {showProfileDropdown && consoleLink && (
             <>
-              <div className='mx-1 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] sm:block' />
-              <ProfileDropdown />
+              <div className='mx-1.5 hidden h-4 w-px bg-[rgba(255,255,255,0.1)] sm:block' />
+              <HeaderConsoleButton
+                label={consoleLabel}
+                emphasized={false}
+                disabled={consoleLink.disabled}
+              />
             </>
           )}
         </div>
