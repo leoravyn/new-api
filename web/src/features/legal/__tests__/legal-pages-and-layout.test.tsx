@@ -67,6 +67,11 @@ function buildTestRouter(initialPath: string) {
     }),
     createRoute({
       getParentRoute: () => root,
+      path: '/docs',
+      component: () => <div>Docs Page</div>,
+    }),
+    createRoute({
+      getParentRoute: () => root,
       path: '/pricing',
       component: () => <div>Pricing Page</div>,
     }),
@@ -119,6 +124,7 @@ function renderWithRouter(node: React.ReactNode) {
     '/aup',
     '/pricing',
     '/rankings',
+    '/docs',
     '/about',
   ].map((path) =>
     createRoute({
@@ -253,6 +259,14 @@ describe('Public legal pages, Footer, Home, About, and Auth legal links', () => 
     expect(screen.getByRole('link', { name: 'Rankings' })).toHaveAttribute(
       'href',
       '/rankings'
+    )
+    expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute(
+      'href',
+      '/docs'
+    )
+    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute(
+      'href',
+      '/about'
     )
     expect(
       screen.getByRole('link', { name: 'support@tokex.vip' })

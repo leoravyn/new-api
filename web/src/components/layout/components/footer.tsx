@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 interface FooterLink {
   labelZh: string
   labelEn: string
-  href: '/pricing' | '/rankings' | '/about'
+  href: '/pricing' | '/rankings' | '/docs' | '/about'
 }
 
 interface LegalLinkItem {
@@ -48,6 +48,7 @@ interface FooterProps {
 const FOOTER_LINKS: readonly FooterLink[] = [
   { labelZh: '模型定价', labelEn: 'Pricing', href: '/pricing' },
   { labelZh: '模型榜单', labelEn: 'Rankings', href: '/rankings' },
+  { labelZh: '接入文档', labelEn: 'Docs', href: '/docs' },
   { labelZh: '关于我们', labelEn: 'About', href: '/about' },
 ]
 
