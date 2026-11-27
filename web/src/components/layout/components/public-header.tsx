@@ -60,6 +60,7 @@ export interface PublicHeaderProps {
   showNavigation?: boolean
   showAuthButtons?: boolean
   showNotifications?: boolean
+  forceElevated?: boolean
   className?: string
 }
 
@@ -217,7 +218,7 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
-  const showElevatedBar = isScrolled || mobileOpen
+  const showElevatedBar = isScrolled || mobileOpen || Boolean(props.forceElevated)
 
   return (
     <>
@@ -232,88 +233,86 @@ export function PublicHeader(props: PublicHeaderProps) {
       >
         <div className='flex h-full w-full items-center justify-between gap-2 px-4 md:px-6'>
           <nav className='flex w-full items-center justify-between gap-2'>
-            {/* Left: Logo + Primary Nav */}
-            <div className='flex min-w-0 flex-1 items-center gap-4 lg:gap-6'>
-              <div className='@container/system-brand flex min-w-0 shrink-0 items-center gap-1'>
-                <Link
-                  to={homeUrl}
-                  aria-label={displaySiteName}
-                  className='group flex min-w-0 items-center gap-2.5'
-                >
-                  {loading ? (
-                    <Skeleton className='h-8 w-28 rounded-lg' />
-                  ) : !customLogo && displaySiteName === 'TOKEX' ? (
-                    <img
-                      src='/logo-tokex.svg'
-                      alt='TOKEX'
-                      width={226}
-                      height={64}
-                      className='h-8 w-auto shrink-0 object-contain transition-transform duration-300 select-none group-hover:scale-[1.02]'
-                    />
-                  ) : (
-                    <>
-                      <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
-                        {logoContent}
-                      </div>
-                      <span
-                        className='max-w-48 truncate text-sm font-semibold tracking-tight'
-                        title={displaySiteName}
-                      >
-                        {displaySiteName}
-                      </span>
-                    </>
-                  )}
-                </Link>
-              </div>
+            {/* Left: Brand Logo */}
+            <div className='flex min-w-0 items-center lg:flex-1'>
+              <Link
+                to={homeUrl}
+                aria-label={displaySiteName}
+                className='group inline-flex shrink-0 items-center gap-2.5'
+              >
+                {loading ? (
+                  <Skeleton className='h-8 w-28 rounded-lg' />
+                ) : !customLogo && displaySiteName === 'TOKEX' ? (
+                  <img
+                    src='/logo-tokex.svg'
+                    alt='TOKEX'
+                    width={226}
+                    height={64}
+                    className='h-8 w-auto shrink-0 object-contain transition-transform duration-300 select-none group-hover:scale-[1.02]'
+                  />
+                ) : (
+                  <>
+                    <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
+                      {logoContent}
+                    </div>
+                    <span
+                      className='max-w-48 truncate text-sm font-semibold tracking-tight'
+                      title={displaySiteName}
+                    >
+                      {displaySiteName}
+                    </span>
+                  </>
+                )}
+              </Link>
+            </div>
 
-              {/* Desktop nav grouped beside logo */}
-              <div className='hidden min-w-0 items-center gap-0.5 lg:flex'>
-                {links.map((link) => {
-                  const isActive = pathname === link.href
-                  if (link.external) {
-                    return (
-                      <a
-                        key={`${link.title}:${link.href}`}
-                        href={link.href}
-                        title={t(link.title)}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        aria-disabled={link.disabled}
-                        tabIndex={link.disabled ? -1 : undefined}
-                        onClick={(event) => handleNavLinkClick(event, link)}
-                        className={cn(
-                          'text-muted-foreground hover:text-foreground min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors duration-200',
-                          link.disabled && 'pointer-events-none opacity-50'
-                        )}
-                      >
-                        {t(link.title)}
-                      </a>
-                    )
-                  }
+            {/* Center: Primary Navigation */}
+            <div className='hidden shrink-0 items-center justify-center gap-0.5 lg:flex'>
+              {links.map((link) => {
+                const isActive = pathname === link.href
+                if (link.external) {
                   return (
-                    <Link
+                    <a
                       key={`${link.title}:${link.href}`}
-                      to={link.href}
+                      href={link.href}
                       title={t(link.title)}
-                      disabled={link.disabled}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      aria-disabled={link.disabled}
+                      tabIndex={link.disabled ? -1 : undefined}
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
-                        'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                        isActive
-                          ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
-                          : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                        'text-muted-foreground hover:text-foreground min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors duration-200',
                         link.disabled && 'pointer-events-none opacity-50'
                       )}
                     >
                       {t(link.title)}
-                    </Link>
+                    </a>
                   )
-                })}
-              </div>
+                }
+                return (
+                  <Link
+                    key={`${link.title}:${link.href}`}
+                    to={link.href}
+                    title={t(link.title)}
+                    disabled={link.disabled}
+                    onClick={(event) => handleNavLinkClick(event, link)}
+                    className={cn(
+                      'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                      isActive
+                        ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
+                        : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                      link.disabled && 'pointer-events-none opacity-50'
+                    )}
+                  >
+                    {t(link.title)}
+                  </Link>
+                )
+              })}
             </div>
 
             {/* Right: Utilities + Console CTA */}
-            <div className='hidden shrink-0 items-center gap-1.5 lg:flex'>
+            <div className='hidden shrink-0 items-center justify-end gap-1.5 lg:flex lg:flex-1'>
               {showNotifications && (
                 <NotificationPopover
                   open={notifications.popoverOpen}

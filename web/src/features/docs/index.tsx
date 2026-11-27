@@ -35,6 +35,7 @@ import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
 import { PublicLayout } from '@/components/layout'
+import { PageTransition } from '@/components/page-transition'
 import { LEGAL_CONFIG } from '@/features/legal/content/legal-config'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
@@ -59,7 +60,7 @@ export function DocsPage() {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='min-h-screen px-4 py-10 sm:px-6 lg:px-8'>
+      <PageTransition className='min-h-screen px-4 py-10 sm:px-6 lg:px-8'>
         <div className='mx-auto max-w-6xl'>
           {/* Top Breadcrumb + Bilingual Switcher */}
           <div className='flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-5'>
@@ -179,6 +180,23 @@ export function DocsPage() {
                     {content.subtitle}
                   </p>
 
+                  <div className='mt-5 flex flex-wrap items-center gap-2.5'>
+                    <Link
+                      to='/keys'
+                      className='inline-flex h-9 items-center gap-2 rounded-xl border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] px-4 text-xs font-semibold text-[#08080a] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] transition-opacity hover:opacity-90'
+                    >
+                      <KeyRound className='size-3.5' />
+                      <span>{isZh ? '获取 API 令牌' : 'Get API Key'}</span>
+                    </Link>
+                    <Link
+                      to='/pricing'
+                      className='inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/10 bg-[#141418] px-4 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:text-white'
+                    >
+                      <span>{isZh ? '模型广场' : 'Model Square'}</span>
+                      <ArrowRight className='size-3.5' />
+                    </Link>
+                  </div>
+
                   <div className='mt-6 grid gap-3 sm:grid-cols-2'>
                     <div className='flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'>
                       <div className='min-w-0'>
@@ -201,23 +219,15 @@ export function DocsPage() {
                       />
                     </div>
 
-                    <div className='flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'>
-                      <Link
-                        to='/keys'
-                        className='inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db] px-3 py-1.5 text-xs font-semibold text-[#08080a] transition-opacity hover:opacity-90'
-                      >
-                        <KeyRound className='size-3.5' />
-                        <span>
-                          {isZh ? '获取 API 令牌' : 'Get API Key'}
-                        </span>
-                      </Link>
-                      <Link
-                        to='/pricing'
-                        className='inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#141418] px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:text-white'
-                      >
-                        <span>{isZh ? '模型广场' : 'Model Square'}</span>
-                        <ArrowRight className='size-3' />
-                      </Link>
+                    <div className='flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'>
+                      <div className='min-w-0'>
+                        <div className='text-[11px] font-medium tracking-wide text-zinc-400 uppercase'>
+                          {isZh ? '支持协议端点' : 'Endpoints'}
+                        </div>
+                        <div className='mt-1 truncate font-mono text-sm font-semibold text-white'>
+                          /v1/responses · /messages · /chat
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </header>
@@ -652,7 +662,7 @@ export function DocsPage() {
             </article>
           </div>
         </div>
-      </div>
+      </PageTransition>
     </PublicLayout>
   )
 }

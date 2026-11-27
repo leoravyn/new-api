@@ -12,6 +12,7 @@ import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
+import { PageTransition } from '@/components/page-transition'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
@@ -216,12 +217,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='relative min-h-screen bg-[#000000] text-zinc-100'>
-        <div
-          aria-hidden='true'
-          className='pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(255,255,255,0.05),transparent_70%)]'
-        />
-
+      <PageTransition className='relative min-h-screen text-zinc-100'>
         <div className='relative mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6 lg:px-8'>
           {/* Top Document Switcher + Inline Language Toggle */}
           <div className='flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5'>
@@ -468,7 +464,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
             </article>
           </div>
         </div>
-      </div>
+      </PageTransition>
     </PublicLayout>
   )
 }

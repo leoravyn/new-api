@@ -17,6 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import type { TopNavLink } from '../types'
+import {
+  AmbientBackdrop,
+  type AmbientBackdropPreset,
+} from './ambient-backdrop'
 import { Footer } from './footer'
 import { PublicHeader, type PublicHeaderProps } from './public-header'
 
@@ -24,6 +28,8 @@ type PublicLayoutProps = {
   children: React.ReactNode
   showMainContainer?: boolean
   showFooter?: boolean
+  showBackdrop?: boolean
+  backdropPreset?: AmbientBackdropPreset
   navContent?: React.ReactNode
   headerProps?: Omit<PublicHeaderProps, 'navContent'>
   navLinks?: TopNavLink[]
@@ -37,6 +43,10 @@ type PublicLayoutProps = {
 export function PublicLayout(props: PublicLayoutProps) {
   return (
     <div className='bg-background text-foreground relative flex min-h-svh flex-col overflow-x-clip dark:bg-transparent'>
+      {props.showBackdrop !== false && (
+        <AmbientBackdrop preset={props.backdropPreset ?? 'default'} />
+      )}
+
       <PublicHeader
         navContent={props.navContent}
         navLinks={props.navLinks}
@@ -49,11 +59,11 @@ export function PublicLayout(props: PublicLayoutProps) {
       />
 
       {props.showMainContainer !== false ? (
-        <main className='container flex-1 px-4 py-6 md:px-6'>
+        <main className='container relative z-10 flex-1 px-4 py-6 md:px-6'>
           {props.children}
         </main>
       ) : (
-        <div className='flex-1'>{props.children}</div>
+        <div className='relative z-10 flex-1'>{props.children}</div>
       )}
 
       {props.showFooter !== false && <Footer />}

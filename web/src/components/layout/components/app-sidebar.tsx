@@ -16,6 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { SidebarLeftIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 import { LogOut } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -26,15 +28,18 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { useLayout } from '@/context/layout-provider'
 import useDialogState from '@/hooks/use-dialog'
 import { useSidebarView } from '@/hooks/use-sidebar-view'
 import { useUserDisplay } from '@/hooks/use-user-display'
+import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { MOTION_TRANSITION, MOTION_VARIANTS } from '@/lib/motion'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -59,17 +64,51 @@ import { SidebarViewHeader } from './sidebar-view-header'
  * in the registry; this component requires no changes.
  */
 export function AppSidebar() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { collapsible, variant } = useLayout()
+  const { state, toggleSidebar } = useSidebar()
   const { key, view, navGroups } = useSidebarView()
   const shouldReduce = useReducedMotion()
   const user = useAuthStore((s) => s.auth.user)
   const { displayName, roleLabel } = useUserDisplay(user)
   const [signOutOpen, setSignOutOpen] = useDialogState()
+  const isZh =
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language) ===
+    'zhCN'
+  const collapseLabel =
+    state === 'collapsed'
+      ? isZh
+        ? '展开侧栏'
+        : 'Expand'
+      : isZh
+        ? '收起侧栏'
+        : 'Collapse'
 
   return (
     <>
       <Sidebar collapsible={collapsible} variant={variant}>
+        <SidebarHeader className='hidden border-b border-white/[0.06] px-1.5 py-2 md:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0'>
+          <SidebarMenu className='group-data-[collapsible=icon]:items-center'>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip={collapseLabel}
+                onClick={toggleSidebar}
+                aria-label={collapseLabel}
+                className='text-zinc-400 hover:text-zinc-100'
+              >
+                <HugeiconsIcon
+                  icon={SidebarLeftIcon}
+                  strokeWidth={2}
+                  className='shrink-0'
+                />
+                <span className='min-w-0 flex-1 truncate text-xs group-data-[collapsible=icon]:hidden'>
+                  {collapseLabel}
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+
         {view && <SidebarViewHeader view={view} />}
 
         <SidebarContent className='py-2.5'>

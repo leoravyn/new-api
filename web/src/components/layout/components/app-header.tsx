@@ -118,25 +118,28 @@ export function AppHeader({
 
   return (
     <Header>
-      <div className='flex min-w-0 flex-1 items-center gap-4 lg:gap-6'>
-        <div className='@container/system-brand flex min-w-0 shrink-0 items-center gap-1'>
-          <SystemBrand variant='inline' />
-        </div>
-        {showTopNav && (
-          <div className='hidden lg:block'>
-            <TopNav links={links} />
-          </div>
-        )}
+      <div className='@container/system-brand flex min-w-0 items-center gap-2 lg:flex-1'>
+        <SystemBrand variant='inline' />
+        {leftContent ? (
+          <div className='ms-2 flex items-center'>{leftContent}</div>
+        ) : null}
       </div>
 
-      {leftContent ? (
-        <div className='ms-2 flex items-center'>{leftContent}</div>
-      ) : null}
+      {showTopNav && (
+        <div className='hidden shrink-0 justify-center lg:flex'>
+          <TopNav links={links} />
+        </div>
+      )}
 
       {rightContent ?? (
-        <div className='ms-auto flex shrink-0 items-center gap-1.5'>
+        <div className='ms-auto flex shrink-0 items-center justify-end gap-1.5 lg:flex-1'>
+          {showTopNav && (
+            <div className='lg:hidden'>
+              <TopNav links={links} />
+            </div>
+          )}
           {showSearch && (
-            <Search className='w-8 flex-none sm:w-44 lg:w-48 [&>span]:hidden sm:[&>span]:inline' />
+            <Search className='w-8 flex-none sm:w-40 lg:w-44 [&>span]:hidden sm:[&>span]:inline' />
           )}
           {showNotifications && (
             <NotificationPopover

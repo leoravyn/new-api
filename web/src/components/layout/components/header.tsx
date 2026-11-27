@@ -33,7 +33,7 @@ export function Header({ className, children, ...props }: HeaderProps) {
       <div className='flex h-full items-center gap-2 px-4 md:px-6'>
         <SidebarTrigger
           variant='ghost'
-          className='size-8 rounded-lg text-[#9a9aa2] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#f4f4f5]'
+          className='size-8 rounded-lg text-[#9a9aa2] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#f4f4f5] md:hidden'
         />
         {children}
       </div>

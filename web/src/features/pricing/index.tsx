@@ -164,18 +164,6 @@ export function Pricing() {
   return (
     <PublicLayout showMainContainer={false}>
       <div className='relative'>
-        <div
-          aria-hidden
-          className='pointer-events-none absolute inset-x-0 -top-14 h-[576px]'
-          style={{
-            background:
-              'radial-gradient(ellipse 65% 50% at 50% 0%, rgba(255, 255, 255, 0.036) 0%, transparent 72%)',
-            maskImage:
-              'linear-gradient(to bottom, black 45%, transparent 100%)',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, black 45%, transparent 100%)',
-          }}
-        />
         <PageTransition className='relative mx-auto w-full max-w-[1800px] px-3 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10 xl:px-8'>
           <header className='mx-auto mb-5 max-w-3xl pt-3 text-center sm:mb-7 sm:pt-6'>
             <h1 className='text-[clamp(1.85rem,4.5vw,3rem)] leading-[1.15] font-bold tracking-tight'>
