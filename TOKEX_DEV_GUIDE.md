@@ -19,8 +19,8 @@
   - **上游代理**：`tokex-pool`（官方 `weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
 ### 当前核心功能实现
-1. **品牌视觉与双语**：纯无色相石墨黑 + 拉丝铂金 + 银灰深色材质体系（外框/侧栏 `#08080A`、主工作区 `#0C0C0E`、卡片 `#121214`、内嵌/次级 `#17171A`/`#1B1B1F`、拉丝铂金渐变主按钮 `#FAFAFA`→`#D6D6DB` 配 `#0A0A0B` 深色字、中性 1px 高光描边 `rgba(255,255,255,0.07)`、顶部柔和中性棚光 `rgba(255,255,255,0.04)` 与 SVG `feTurbulence` 细腻胶片颗粒层，状态色统一收敛为低饱和鼠尾草绿/香槟金/暗玫瑰红）；公开页顶栏与控制台顶栏统一采用全宽 `h-14` (`3.5rem`) 与 `px-4 md:px-6` 基准线并取消顶栏头像，主导航紧跟左侧 Logo，右侧归拢工具区（搜索/公告/双语）并在最右侧展示 `Console`（公开页为拉丝铂金强调框，进入控制台后转为默认选中框），账户资料/登出置于 `AppSidebar` 底部；模型广场顶部光晕向上穿透透明顶栏消除水平切线，桌面端控制台采用 Linear 嵌入式工作区外壳，锁定 `dark` 模式与 `zhCN`/`en` 双语；完整 Token 与 Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
-2. **首页与模型广场**：首页右侧实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
+1. **品牌视觉与双语**：纯无色相石墨黑 + 拉丝铂金 + 银灰深色材质体系（外框/侧栏 `#08080A`、主工作区 `#0C0C0E`、卡片 `#121214`、内嵌/次级 `#17171A`/`#1B1B1F`、拉丝铂金渐变主按钮 `#FAFAFA`→`#D6D6DB` 配 `#0A0A0B` 深色字、中性 1px 高光描边 `rgba(255,255,255,0.07)`、状态色统一收敛为低饱和鼠尾草绿/香槟金/暗玫瑰红）；公开页统一采用全屏冷银环境光与建筑点阵视差背景（`components/layout/components/ambient-backdrop.tsx` 集成于 `PublicLayout`）及统一 `PageTransition` 页面入场动效，顶栏采用全宽三栏居中结构（左 Logo — 中居中主导航 — 右工具区与 `Console` 入口，公开页为拉丝铂金强调框，进入控制台后转为默认暗玻璃选中框），取消顶栏头像并把桌面端侧边栏折叠入口与账户/登出操作置入 `AppSidebar` 顶部与底部；桌面端控制台采用 Linear 嵌入式工作区外壳，锁定 `dark` 模式与 `zhCN`/`en` 双语；完整 Token 与 Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
+2. **首页与模型广场**：首页（`src/features/home/`）桌面端采用双屏平滑翻页与透明顶栏（第 1 屏 `1440px` 宽屏 Hero + 实时旗舰模型连线 + 底部生态跑马灯；第 2 屏交互式接入终端沙盒含纯前端流式试运行 + 4 格动态 Bento 卡片 + 页脚，背景冷银光源随翻页斜向视差流动），实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
 3. **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile、GitHub OAuth 与 Google OIDC。
 4. **站内文档、法务与关于页面**：
    - 免登录公开路由 `/docs`（`src/features/docs/`、`src/routes/docs/index.tsx`）：提供双语接入文档，涵盖 API 使用规则、网关域名 `https://api.tokex.vip`、Codex（`/v1/responses`）、Claude Code（`/v1/messages`）、通用客户端与 SDK（`/v1/chat/completions`）、令牌按分组隔离的通用提醒（引导去「模型广场」查看分组与费率，不写死具体模型清单）、常见错误排查及平台/法务快捷跳转；`use-top-nav-links.ts` 对相对路径按站内路由跳转，`footer.tsx` 增加 `/docs` 入口，`options` 表 `general_setting.docs_link` 设为 `/docs`。
@@ -85,10 +85,10 @@
   - 资产与入口：`public/{favicon,logo-tokex,banner-tokex}.svg`、`index.html`、`rsbuild.config.ts`
   - 主题与双语：`src/styles/{theme,index}.css`、`src/lib/{constants,avatar,nav-modules}.ts`、`src/context/{theme,theme-customization,layout}-provider.tsx`（锁定 `dark` + 默认样式）、`src/i18n/{languages,config}.ts`
 - **导航与通用 UI**：
-  - 布局与导航：`src/components/layout/components/{public-header,public-layout,header,app-header,system-brand,footer,section-page-layout,authenticated-layout}.tsx`、`src/components/{profile-dropdown,notification-popover}.tsx`
+  - 布局与导航：`src/components/layout/components/{ambient-backdrop,public-header,public-layout,header,header-console-action,app-header,app-sidebar,system-brand,footer,section-page-layout,authenticated-layout}.tsx`、`src/components/{language-switcher,page-transition,notification-popover}.tsx`
   - 深色玻璃基元：`src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty,sidebar}.tsx`
 - **核心业务页面**：
-  - 首页：`src/features/home/index.tsx`、`src/features/home/components/tokex/hero-section.tsx`
+  - 首页：`src/features/home/index.tsx`、`src/features/home/components/tokex/{hero-section,home-showcase}.tsx`
   - 文档、法务与关于：`src/features/docs/`（`content.ts`、`types.ts`、`components/docs-code-block.tsx`）、`src/routes/docs/index.tsx`、`src/features/legal/`（`content/{legal-config,terms,privacy-policy,aup}.ts`、`components/legal-document-layout.tsx`）、`src/routes/{terms,aup,user-agreement,privacy-policy}.tsx`、`src/features/about/`
   - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`components/{terms-footer,legal-consent}.tsx`、`hooks/`）
   - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/{model-helpers,price,dynamic-price}.ts`、`components/{model-card,price-comparison,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`

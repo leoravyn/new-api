@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, ArrowUpRight, RefreshCw } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChevronDown, RefreshCw } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -398,7 +398,59 @@ function FlagshipPriceList(props: {
   )
 }
 
-export function TokexHeroSection() {
+const MARQUEE_ITEMS = [
+  { iconKey: 'OpenAI', label: 'OpenAI' },
+  { iconKey: 'Anthropic', label: 'Anthropic' },
+  { iconKey: 'Claude', label: 'Claude' },
+  { iconKey: null, label: 'Codex CLI' },
+  { iconKey: null, label: 'Claude Code' },
+  { iconKey: null, label: 'Cherry Studio' },
+  { iconKey: null, label: 'Chatbox' },
+  { iconKey: null, label: 'LobeChat' },
+  { iconKey: null, label: 'NextChat' },
+  { iconKey: null, label: 'Open WebUI' },
+  { iconKey: null, label: 'Python SDK' },
+  { iconKey: null, label: 'Responses API' },
+  { iconKey: null, label: 'Messages API' },
+] as const
+
+function AnimatedCount({
+  value,
+  disabled,
+}: {
+  value: number
+  disabled?: boolean
+}) {
+  const [display, setDisplay] = useState(disabled ? value : 0)
+
+  useEffect(() => {
+    if (disabled || value <= 0) {
+      setDisplay(value)
+      return
+    }
+    let rafId = 0
+    const duration = 620
+    const start = performance.now()
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(value * eased))
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick)
+      }
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [value, disabled])
+
+  return <>{display}</>
+}
+
+export function TokexHeroSection({
+  onScrollDown,
+}: {
+  onScrollDown?: () => void
+} = {}) {
   const { i18n } = useTranslation()
   const isAuthenticated = useAuthStore((s) => Boolean(s.auth.user))
   const currency = useSystemConfigStore((s) => s.config.currency)
@@ -450,59 +502,45 @@ export function TokexHeroSection() {
   const activeRoute = routeGeometry.routes[safeActiveIndex]
 
   return (
-    <div className='relative flex min-h-[calc(100vh-3.5rem)] flex-col justify-center overflow-x-clip'>
-      {/* Soft neutral studio light (blends seamlessly with PublicHeader canvas) */}
-      <div
-        aria-hidden='true'
-        className='pointer-events-none absolute top-12 left-1/2 -z-10 h-[520px] w-[960px] -translate-x-1/2 rounded-full bg-white/[0.018] blur-[140px]'
-      />
-      {/* Ultra-subtle static CSS architectural dot grid (smoothly masked at top so zero header seam) */}
-      <div
-        aria-hidden='true'
-        className='pointer-events-none absolute inset-0 -z-10 opacity-35 [background-image:radial-gradient(rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(60%_48%_at_50%_44%,#000_18%,transparent_96%)]'
-      />
+    <div className='relative flex min-h-[calc(100svh-3.5rem)] flex-col justify-between overflow-x-clip'>
+      <div className='flex flex-1 items-center'>
+        <section className='mx-auto w-full max-w-[1440px] px-6 pt-6 pb-8 md:px-10 lg:-translate-y-4 lg:px-14 lg:pt-4 lg:pb-6'>
+          <div className='grid items-center gap-10 lg:grid-cols-12 lg:gap-12'>
+            {/* Left Column: Clean TOKEX AI API Positioning + Primary CTAs */}
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: EASE_LIQUID }}
+              className='lg:col-span-6'
+            >
+              <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#0e0e11]/92 px-3 py-1 text-xs font-medium text-[#e4e4e7] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
+                <span className='size-1.5 animate-pulse rounded-full bg-emerald-400' />
+                <span className='tracking-wide'>TOKEX API</span>
+              </div>
 
-      <section className='mx-auto w-full max-w-6xl px-6 py-12 sm:py-16 lg:py-20'>
-        <div className='grid items-center gap-12 lg:grid-cols-12 lg:gap-10'>
-          {/* Left Column: Clean TOKEX AI API Positioning + Primary CTAs */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: EASE_LIQUID }}
-            className='lg:col-span-6'
-          >
-            <div className='inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[#0e0e11]/92 px-3 py-1 text-xs font-medium text-[#e4e4e7] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'>
-              <span className='size-1.5 rounded-full bg-[#fafafa]' />
-              <span>
+              <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#fafafa] sm:text-5xl lg:text-[60px] lg:leading-[1.06] xl:text-[66px]'>
+                {isZh ? (
+                  <>
+                    前沿模型，
+                    <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
+                      统一接入
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    One API,{' '}
+                    <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
+                      Every Model
+                    </span>
+                  </>
+                )}
+              </h1>
+
+              <p className='mt-4 max-w-md text-base leading-relaxed text-[#a1a1aa] sm:text-lg'>
                 {isZh
-                  ? 'TOKEX · 开发者 AI 模型 API 平台'
-                  : 'TOKEX · Developer AI Model API'}
-              </span>
-            </div>
-
-            <h1 className='mt-6 text-4xl font-semibold tracking-tight text-[#fafafa] sm:text-5xl lg:text-[54px] lg:leading-[1.08]'>
-              {isZh ? (
-                <>
-                  前沿 AI 模型，
-                  <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
-                    按量计费 API
-                  </span>
-                </>
-              ) : (
-                <>
-                  Frontier AI Models,{' '}
-                  <span className='bg-gradient-to-r from-[#fafafa] via-[#e4e4e7] to-[#a1a1aa] bg-clip-text text-transparent'>
-                    Pay-As-You-Go API
-                  </span>
-                </>
-              )}
-            </h1>
-
-            <p className='mt-5 max-w-lg text-base leading-relaxed text-[#a1a1aa] sm:text-lg'>
-              {isZh
-                ? '通过标准 OpenAI 兼容协议直接调用 Claude 与 GPT 系列模型。实时分组费率、按 Token 透明计量、即充即用。'
-                : 'Access Claude and GPT models through standard OpenAI-compatible APIs on TOKEX. Transparent per-token pricing, live group rates, and pay-as-you-go credits.'}
-            </p>
+                  ? '按量计费，即充即用。'
+                  : 'Pay-as-you-go compute credits. Instant access.'}
+              </p>
 
             {/* Primary CTAs */}
             <div className='mt-8 flex flex-wrap items-center gap-3'>
@@ -536,7 +574,10 @@ export function TokexHeroSection() {
                   {isLoading ? (
                     <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : models.length > 0 ? (
-                    models.length
+                    <AnimatedCount
+                      value={models.length}
+                      disabled={Boolean(prefersReducedMotion)}
+                    />
                   ) : (
                     '—'
                   )}
@@ -550,7 +591,10 @@ export function TokexHeroSection() {
                   {isLoading ? (
                     <Skeleton className='h-6 w-10 bg-[rgba(255,255,255,0.07)]' />
                   ) : vendors.length > 0 ? (
-                    vendors.length
+                    <AnimatedCount
+                      value={vendors.length}
+                      disabled={Boolean(prefersReducedMotion)}
+                    />
                   ) : (
                     '—'
                   )}
@@ -935,6 +979,53 @@ export function TokexHeroSection() {
           </motion.div>
         </div>
       </section>
+      </div>
+
+      {/* Bottom full-bleed ambient ecosystem marquee + scroll cue */}
+      <div className='w-full pb-5 sm:pb-6'>
+        <div
+          className='mx-auto w-full max-w-[1440px] overflow-hidden px-6 md:px-10 lg:px-14'
+          style={{
+            maskImage:
+              'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+            WebkitMaskImage:
+              'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+          }}
+        >
+          <div className='tokex-marquee-track items-center gap-3 py-2'>
+            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, idx) => (
+              <div
+                key={`${item.label}-${idx}`}
+                className='inline-flex shrink-0 items-center gap-2 rounded-full border border-white/[0.07] bg-[#0c0c0f]/80 px-3.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-white/[0.15] hover:text-zinc-200'
+              >
+                {item.iconKey ? (
+                  <span className='flex size-4 items-center justify-center text-zinc-300'>
+                    {getLobeIcon(item.iconKey, 14)}
+                  </span>
+                ) : (
+                  <span className='size-1.5 rounded-full bg-zinc-600' />
+                )}
+                <span className='font-medium tracking-tight whitespace-nowrap'>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {onScrollDown && (
+          <div className='mt-2 hidden justify-center lg:flex'>
+            <button
+              type='button'
+              onClick={onScrollDown}
+              className='group inline-flex cursor-pointer items-center gap-1.5 px-3 py-1 text-xs font-medium text-zinc-400 transition-colors hover:text-white'
+            >
+              <span>{isZh ? '接入与生态' : 'Explore'}</span>
+              <ChevronDown className='size-3.5 animate-bounce text-zinc-400 transition-colors group-hover:text-white' />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

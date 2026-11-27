@@ -22,6 +22,7 @@ import { CreditCard, FileText, Mail, ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
+import { PageTransition } from '@/components/page-transition'
 import { RichContent } from '@/components/rich-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LEGAL_CONFIG } from '@/features/legal/content/legal-config'
@@ -171,7 +172,9 @@ export function About() {
   if (!hasContent) {
     return (
       <PublicLayout>
-        <AboutOverviewState />
+        <PageTransition>
+          <AboutOverviewState />
+        </PageTransition>
       </PublicLayout>
     )
   }
