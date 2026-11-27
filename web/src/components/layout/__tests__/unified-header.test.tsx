@@ -30,17 +30,23 @@ import i18next from 'i18next'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { SearchProvider } from '@/context/search-provider'
+import { LayoutProvider } from '@/context/layout-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { STATUS_QUERY_KEY } from '@/lib/status-query'
 import { useAuthStore } from '@/stores/auth-store'
 import { useSystemConfigStore } from '@/stores/system-config-store'
 
 import { AppHeader } from '../components/app-header'
+import { AppSidebar } from '../components/app-sidebar'
 import { PublicHeader } from '../components/public-header'
 
 let queryClient: QueryClient
 
-function renderWithRouter(node: React.ReactNode, initialPath = '/') {
+function renderWithRouter(
+  node: React.ReactNode,
+  initialPath = '/',
+  sidebarDefaultOpen = true
+) {
   const root = createRootRoute({
     component: () => <Outlet />,
   })
@@ -73,6 +79,11 @@ function renderWithRouter(node: React.ReactNode, initialPath = '/') {
     }),
     createRoute({
       getParentRoute: () => root,
+      path: '/profile',
+      component: () => <div>Profile</div>,
+    }),
+    createRoute({
+      getParentRoute: () => root,
       path: '/sign-in',
       component: () => <div>Sign In</div>,
     }),
@@ -85,11 +96,13 @@ function renderWithRouter(node: React.ReactNode, initialPath = '/') {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <SearchProvider>
-        <SidebarProvider>
-          <RouterProvider router={router} />
-        </SidebarProvider>
-      </SearchProvider>
+      <LayoutProvider>
+        <SearchProvider>
+          <SidebarProvider defaultOpen={sidebarDefaultOpen}>
+            <RouterProvider router={router} />
+          </SidebarProvider>
+        </SearchProvider>
+      </LayoutProvider>
     </QueryClientProvider>
   )
 }
@@ -128,12 +141,13 @@ describe('Unified PublicHeader and AppHeader', () => {
     const consoleLinks = await screen.findAllByRole('link', { name: 'Console' })
     expect(consoleLinks.length).toBeGreaterThan(0)
     expect(consoleLinks[0]).toHaveAttribute('href', '/dashboard')
-    expect(consoleLinks[0].className).toContain('border-white/25')
+    expect(consoleLinks[0].className).toContain('text-sm')
+    expect(consoleLinks[0].className).toContain('from-[#fafafa]')
     // Console link should not be duplicated inside the mid nav list
     expect(screen.queryAllByRole('link', { name: 'Console' })).toHaveLength(2) // desktop + mobile compact CTA
   })
 
-  it('shows un-emphasized Console link on AppHeader without avatar dropdown', async () => {
+  it('shows default active-box Console link on AppHeader without avatar dropdown', async () => {
     useAuthStore.setState((state) => ({
       auth: {
         ...state.auth,
@@ -145,7 +159,28 @@ describe('Unified PublicHeader and AppHeader', () => {
 
     const consoleLink = await screen.findByRole('link', { name: 'Console' })
     expect(consoleLink).toHaveAttribute('href', '/dashboard')
-    expect(consoleLink.className).toContain('border-transparent')
-    expect(consoleLink.className).not.toContain('border-white/25')
+    expect(consoleLink.className).toContain('text-sm')
+    expect(consoleLink.className).toContain('ring-white/[0.12]')
+    expect(consoleLink.className).not.toContain('from-[#fafafa]')
+  })
+
+  it('hides sidebar labels when collapsed and keeps sign-out button centered', async () => {
+    useAuthStore.setState((state) => ({
+      auth: {
+        ...state.auth,
+        user: { id: 1, username: 'alice', role: 1 } as never,
+      },
+    }))
+
+    const { container } = renderWithRouter(<AppSidebar />, '/dashboard', false)
+
+    const signOutBtn = await screen.findByRole('button', { name: 'Sign out' })
+    expect(signOutBtn).toBeInTheDocument()
+    const sidebar = container.querySelector('[data-state="collapsed"]')
+    expect(sidebar).not.toBeNull()
+    const hiddenLabels = container.querySelectorAll(
+      '[class*="group-data-[collapsible=icon]:hidden"]'
+    )
+    expect(hiddenLabels.length).toBeGreaterThan(0)
   })
 })

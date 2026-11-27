@@ -238,8 +238,10 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
             render={<SidebarMenuButton tooltip={item.title} />}
           >
             {item.icon && <item.icon className='h-4 w-4 shrink-0' />}
-            <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-            <ChevronRight className='ms-auto h-4 w-4 shrink-0 opacity-70' />
+            <span className='min-w-0 flex-1 truncate group-data-[collapsible=icon]:hidden'>
+              {item.title}
+            </span>
+            <ChevronRight className='ms-auto h-4 w-4 shrink-0 opacity-70 group-data-[collapsible=icon]:hidden' />
           </DropdownMenuTrigger>
           <DropdownMenuContent align='start'>
             {visiblePresets.map((preset) => (
