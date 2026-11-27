@@ -75,24 +75,24 @@ function AboutOverviewState() {
           <div className='tokex-glass rounded-xl border border-white/10 bg-[#050506]/90 p-4'>
             <div className='flex items-center gap-2 text-sm font-semibold text-white'>
               <CreditCard className='size-4 text-zinc-300' />
-              <span>{LEGAL_CONFIG.paymentProcessor} MoR</span>
+              <span>{isZh ? '安全便捷支付' : 'Secure Checkout'}</span>
             </div>
             <p className='mt-2 text-xs leading-5 text-zinc-400'>
               {isZh
-                ? 'PCI-DSS 合规支付处理，TOKEX 不存储任何银行卡信息。'
-                : 'PCI-DSS compliant checkout with local tax handling and zero card storage on TOKEX servers.'}
+                ? '支持美元及多种常见支付方式结算，即时到账，不存储银行卡信息。'
+                : 'Supports USD and popular payment methods with instant credit delivery and zero card storage.'}
             </p>
           </div>
 
           <div className='tokex-glass rounded-xl border border-white/10 bg-[#050506]/90 p-4'>
             <div className='flex items-center gap-2 text-sm font-semibold text-white'>
               <ShieldCheck className='size-4 text-zinc-300' />
-              <span>{isZh ? '安全与合规保障' : 'Safety & Support'}</span>
+              <span>{isZh ? '安全与支持' : 'Safety & Support'}</span>
             </div>
             <p className='mt-2 text-xs leading-5 text-zinc-400'>
               {isZh
-                ? '安全规范全面对齐 Waffo、Anthropic 与 OpenAI 政策；所有咨询与合规请求请联络 support@tokex.vip。'
-                : 'Usage safeguards aligned with Waffo, Anthropic, and OpenAI policies. Support and compliance inquiries: support@tokex.vip.'}
+                ? '遵循主流模型安全使用规范；如需支持或咨询，请联系 support@tokex.vip。'
+                : 'Aligned with mainstream AI safety standards. For support or inquiries, contact support@tokex.vip.'}
             </p>
           </div>
         </div>
