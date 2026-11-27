@@ -293,28 +293,16 @@ export function DocsPage() {
                     <div className='rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-4 py-3 text-xs leading-6 text-amber-100/90'>
                       <div className='flex items-start gap-2.5'>
                         <AlertTriangle className='mt-1 size-4 shrink-0 text-amber-300' />
-                        <span>{content.rules.groupsNotice}</span>
+                        <span>
+                          {content.rules.groupsNotice}{' '}
+                          <Link
+                            to='/pricing'
+                            className='font-medium text-amber-200 underline decoration-amber-300/40 underline-offset-4 hover:text-white'
+                          >
+                            {isZh ? '查看模型广场' : 'Open Model Square'}
+                          </Link>
+                        </span>
                       </div>
-                    </div>
-                    <div className='grid gap-3 sm:grid-cols-2'>
-                      {content.rules.groups.map((item) => (
-                        <div
-                          key={item.group}
-                          className='rounded-xl border border-white/10 bg-[#0a0a0c]/90 p-4'
-                        >
-                          <div className='flex items-center justify-between gap-2'>
-                            <span className='font-semibold text-white'>
-                              {item.group}
-                            </span>
-                            <span className='rounded-md border border-white/10 bg-[#141418] px-2 py-0.5 font-mono text-xs text-zinc-300 tabular-nums'>
-                              {item.ratio}
-                            </span>
-                          </div>
-                          <p className='mt-2 font-mono text-xs leading-6 break-words text-zinc-400'>
-                            {item.models}
-                          </p>
-                        </div>
-                      ))}
                     </div>
                   </div>
 

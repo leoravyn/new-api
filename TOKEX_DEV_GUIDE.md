@@ -23,7 +23,7 @@
 2. **首页与模型广场**：首页右侧实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
 3. **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile、GitHub OAuth 与 Google OIDC。
 4. **站内文档、法务与关于页面**：
-   - 免登录公开路由 `/docs`（`src/features/docs/`、`src/routes/docs/index.tsx`）：提供双语接入文档，涵盖 API 使用规则、网关域名 `https://api.tokex.vip`、Codex（`/v1/responses`）、Claude Code（`/v1/messages`）、通用客户端与 SDK（`/v1/chat/completions`）、令牌分组说明（`Codex Pro` / `Claude Max`）、常见错误排查及平台/法务快捷跳转；`use-top-nav-links.ts` 对相对路径按站内路由跳转，`footer.tsx` 增加 `/docs` 入口，`options` 表 `general_setting.docs_link` 设为 `/docs`。
+   - 免登录公开路由 `/docs`（`src/features/docs/`、`src/routes/docs/index.tsx`）：提供双语接入文档，涵盖 API 使用规则、网关域名 `https://api.tokex.vip`、Codex（`/v1/responses`）、Claude Code（`/v1/messages`）、通用客户端与 SDK（`/v1/chat/completions`）、令牌按分组隔离的通用提醒（引导去「模型广场」查看分组与费率，不写死具体模型清单）、常见错误排查及平台/法务快捷跳转；`use-top-nav-links.ts` 对相对路径按站内路由跳转，`footer.tsx` 增加 `/docs` 入口，`options` 表 `general_setting.docs_link` 设为 `/docs`。
    - 免登录法务路由 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（仅面向中国大陆以外非受限地区、`Waffo Pancake` MoR、`support@tokex.vip`、10% 清算与行政管理手续费例外条款、中国香港特别行政区法律与 HKIAC 仲裁）；全站 `PublicLayout` 页脚、认证页及钱包结账页均常驻合规入口；`/about` 页面保留并简化了支付与安全卡片面向用户的描述。
 5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
    - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`1.0` USD 结算，内置 W 图标需在 `PayMethods` 中将 `icon` 留空）与 **Epay / Zpay**（`https://zpayz.cn`，涵盖 `alipay`、`wxpay` 等非 Waffo/Stripe 渠道，按 `Price=7` 折算 `CNY` 结算）共存时，前端按 `getPaymentSettlementCurrency` 在充值页、确认弹窗与账单历史中自动区分展示 `USD` 与 `CNY`（默认预览优先对齐 Waffo Pancake 的 `USD` 展示）。
