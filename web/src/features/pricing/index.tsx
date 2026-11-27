@@ -166,10 +166,10 @@ export function Pricing() {
       <div className='relative'>
         <div
           aria-hidden
-          className='pointer-events-none absolute inset-x-0 top-0 h-[520px]'
+          className='pointer-events-none absolute inset-x-0 -top-14 h-[576px]'
           style={{
             background:
-              'radial-gradient(ellipse 65% 50% at 50% 0%, rgba(255, 255, 255, 0.045) 0%, transparent 72%)',
+              'radial-gradient(ellipse 65% 50% at 50% 0%, rgba(255, 255, 255, 0.036) 0%, transparent 72%)',
             maskImage:
               'linear-gradient(to bottom, black 45%, transparent 100%)',
             WebkitMaskImage:

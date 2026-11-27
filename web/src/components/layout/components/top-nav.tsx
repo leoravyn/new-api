@@ -104,7 +104,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
       {/* 桌面端水平导航 */}
       <nav
         className={cn(
-          'hidden items-center space-x-1 lg:flex xl:space-x-2',
+          'hidden items-center gap-0.5 lg:flex',
           className
         )}
         {...props}
@@ -117,7 +117,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               target='_blank'
               rel='noopener noreferrer'
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isActive
                   ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
                   : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
@@ -131,7 +131,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
               to={href}
               disabled={disabled}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'min-w-0 truncate rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isActive
                   ? 'bg-white/[0.06] text-[#f4f4f5] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-white/[0.12]'
                   : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'

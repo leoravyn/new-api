@@ -23,7 +23,6 @@ import { useTranslation } from 'react-i18next'
 import { Dialog } from '@/components/dialog'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
-import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNotifications } from '@/hooks/use-notifications'
@@ -34,6 +33,10 @@ import { useAuthStore } from '@/stores/auth-store'
 
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import type { TopNavLink } from '../types'
+import {
+  HeaderConsoleButton,
+  splitHeaderNavLinks,
+} from './header-console-action'
 import { HeaderLogo } from './header-logo'
 
 const AUTH_PROMPT_SECONDS = 5
@@ -100,7 +103,8 @@ export function PublicHeader(props: PublicHeaderProps) {
     rawSiteName.toLowerCase() === 'tokex'
       ? 'TOKEX'
       : rawSiteName
-  const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
+  const allLinks = dynamicLinks.length > 0 ? dynamicLinks : navLinks
+  const { navLinks: links, consoleLink } = splitHeaderNavLinks(allLinks)
 
   let logoContent: ReactNode = (
     <HeaderLogo
@@ -113,7 +117,9 @@ export function PublicHeader(props: PublicHeaderProps) {
   if (customLogo) logoContent = customLogo
   if (loading) logoContent = <Skeleton className='size-full rounded-lg' />
 
-  let authContent = (
+  const consoleLabel = consoleLink ? t(consoleLink.title) : t('Console')
+
+  let authContent: ReactNode = (
     <Button
       size='sm'
       className='h-8 rounded-lg px-3.5 text-xs font-medium'
@@ -122,7 +128,15 @@ export function PublicHeader(props: PublicHeaderProps) {
       {t('Sign in')}
     </Button>
   )
-  if (isAuthenticated) authContent = <ProfileDropdown />
+  if (isAuthenticated) {
+    authContent = consoleLink ? (
+      <HeaderConsoleButton
+        label={consoleLabel}
+        emphasized
+        disabled={consoleLink.disabled}
+      />
+    ) : null
+  }
   if (loading) authContent = <Skeleton className='h-8 w-20 rounded-lg' />
 
   useEffect(() => {
@@ -217,7 +231,7 @@ export function PublicHeader(props: PublicHeaderProps) {
           props.className
         )}
       >
-        <div className='mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-2 px-4 md:px-6'>
+        <div className='flex h-full w-full items-center justify-between gap-2 px-4 md:px-6'>
           <nav className='flex w-full items-center justify-between gap-2'>
             {/* Logo */}
             <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-1 lg:min-w-36'>
@@ -314,7 +328,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                 />
               )}
 
-              {showAuthButtons && (
+              {showAuthButtons && authContent && (
                 <>
                   <div className='mx-1.5 h-4 w-px bg-[rgba(255,255,255,0.1)]' />
                   {authContent}
@@ -325,8 +339,13 @@ export function PublicHeader(props: PublicHeaderProps) {
             {/* Mobile: compact actions + hamburger */}
             <div className='flex shrink-0 items-center gap-2 lg:hidden'>
               {showLanguageSwitcher && <LanguageSwitcher />}
-              {showAuthButtons && !loading && isAuthenticated && (
-                <ProfileDropdown />
+              {showAuthButtons && !loading && isAuthenticated && consoleLink && (
+                <HeaderConsoleButton
+                  label={consoleLabel}
+                  emphasized
+                  disabled={consoleLink.disabled}
+                  className='px-2.5'
+                />
               )}
               <Button
                 type='button'
