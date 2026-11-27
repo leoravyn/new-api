@@ -31,12 +31,6 @@ export interface DocsEndpointItem {
   baseUrlNote: string
 }
 
-export interface DocsGroupRuleItem {
-  group: string
-  ratio: string
-  models: string
-}
-
 export interface DocsKvRow {
   label: string
   value: string
@@ -79,7 +73,6 @@ export interface DocsContentLocale {
     endpoints: DocsEndpointItem[]
     groupsTitle: string
     groupsNotice: string
-    groups: DocsGroupRuleItem[]
     guidelinesTitle: string
     guidelines: string[]
   }

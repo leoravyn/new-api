@@ -86,23 +86,9 @@ const DOCS_ZH: DocsContentLocale = {
         baseUrlNote: 'Base URL 填写 https://api.tokex.vip/v1',
       },
     ],
-    groupsTitle: '令牌分组对应关系',
+    groupsTitle: '令牌分组说明',
     groupsNotice:
-      '在「令牌管理」创建密钥时，请务必按所调用的模型选择对应分组。不同分组的密钥不可混用。',
-    groups: [
-      {
-        group: 'Codex Pro',
-        ratio: '0.18x',
-        models:
-          'gpt-6.2-astra, gpt-6.2-sol, gpt-6.1-sol, gpt-6.1-terra, gpt-6-astra',
-      },
-      {
-        group: 'Claude Max',
-        ratio: '0.36x',
-        models:
-          'claude-fable-5-2, claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5',
-      },
-    ],
+      '密钥按分组隔离。创建令牌前，请前往「模型广场」查看目标模型所属的分组与实时倍率，并在「令牌管理」中选择对应分组；不同分组的密钥不可混用。',
     guidelinesTitle: '使用规范与限制',
     guidelines: [
       '所有 API 请求统一使用 https://api.tokex.vip 作为网关域名。',
@@ -113,7 +99,8 @@ const DOCS_ZH: DocsContentLocale = {
     ],
   },
   codex: {
-    groupNote: '请在控制台「令牌管理」中创建 Codex Pro 分组的密钥用于 Codex。',
+    groupNote:
+      '请在控制台「令牌管理」中创建支持目标模型的分组密钥（可在「模型广场」查看模型所属分组）。',
     step1Title: '第 1 步：写入配置',
     step1Command: `mkdir -p ~/.codex && cat > ~/.codex/config.toml << 'EOF'
 model = "gpt-6.2-astra"
@@ -134,7 +121,7 @@ codex`,
   },
   claudeCode: {
     groupNote:
-      '请在控制台「令牌管理」中创建 Claude Max 分组的密钥用于 Claude Code。',
+      '请在控制台「令牌管理」中创建支持目标模型的分组密钥（可在「模型广场」查看模型所属分组）。',
     runTitle: '设置环境变量并启动',
     runCommand: `ANTHROPIC_AUTH_TOKEN="sk-YOUR_KEY" \\
 ANTHROPIC_BASE_URL="https://api.tokex.vip" \\
@@ -161,7 +148,7 @@ claude`,
       {
         label: 'API Key',
         value: 'sk-YOUR_KEY',
-        hint: '按调用模型选择 Codex Pro 或 Claude Max 分组令牌',
+        hint: '请选择支持目标模型的分组令牌',
       },
       {
         label: 'API Path',
@@ -206,7 +193,7 @@ print(response.choices[0].message.content)`,
       },
     ],
     groupNote:
-      '示例中的 claude-sonnet-5-5 需配合 Claude Max 分组令牌使用；若调用 gpt-6.2-astra 等模型，请使用 Codex Pro 分组令牌。',
+      '请确保所使用的密钥所属分组支持目标模型；各分组支持的模型清单与费率可在「模型广场」查看。',
   },
   troubleshooting: {
     items: [
@@ -236,7 +223,7 @@ print(response.choices[0].message.content)`,
         code: '503',
         title: '无可用渠道或分组不匹配',
         detail:
-          '请确认密钥所属分组与目标模型匹配（Codex Pro 对应 GPT-6 系列，Claude Max 对应 Claude 系列），并在模型广场核对模型 ID。',
+          '请确认密钥所属分组包含所请求的模型，并在「模型广场」核对模型 ID 与所属分组。',
       },
     ],
   },
@@ -327,23 +314,9 @@ const DOCS_EN: DocsContentLocale = {
         baseUrlNote: 'Set base_url to https://api.tokex.vip/v1',
       },
     ],
-    groupsTitle: 'Token Group Mapping',
+    groupsTitle: 'Token Group Notice',
     groupsNotice:
-      'When creating a key in API Keys, select the group matching the model you intend to call. Keys from different groups cannot be mixed.',
-    groups: [
-      {
-        group: 'Codex Pro',
-        ratio: '0.18x',
-        models:
-          'gpt-6.2-astra, gpt-6.2-sol, gpt-6.1-sol, gpt-6.1-terra, gpt-6-astra',
-      },
-      {
-        group: 'Claude Max',
-        ratio: '0.36x',
-        models:
-          'claude-fable-5-2, claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5',
-      },
-    ],
+      'Keys are scoped by group. Check Model Square for the supported group and live rate of your target model before creating a key—keys from different groups cannot be mixed.',
     guidelinesTitle: 'Usage Rules & Limits',
     guidelines: [
       'Always use https://api.tokex.vip as your API gateway domain.',
@@ -354,7 +327,8 @@ const DOCS_EN: DocsContentLocale = {
     ],
   },
   codex: {
-    groupNote: 'Create a key under the Codex Pro group in API Keys for Codex.',
+    groupNote:
+      'Create a key in API Keys under a group that supports your target model (check Model Square for group details).',
     step1Title: 'Step 1: Write config',
     step1Command: `mkdir -p ~/.codex && cat > ~/.codex/config.toml << 'EOF'
 model = "gpt-6.2-astra"
@@ -376,7 +350,7 @@ codex`,
   },
   claudeCode: {
     groupNote:
-      'Create a key under the Claude Max group in API Keys for Claude Code.',
+      'Create a key in API Keys under a group that supports your target Claude model (check Model Square for group details).',
     runTitle: 'Run with environment variables',
     runCommand: `ANTHROPIC_AUTH_TOKEN="sk-YOUR_KEY" \\
 ANTHROPIC_BASE_URL="https://api.tokex.vip" \\
@@ -403,7 +377,7 @@ claude`,
       {
         label: 'API Key',
         value: 'sk-YOUR_KEY',
-        hint: 'Use a Codex Pro or Claude Max key based on your chosen model',
+        hint: 'Select a key group that supports your chosen model',
       },
       {
         label: 'API Path',
@@ -448,7 +422,7 @@ print(response.choices[0].message.content)`,
       },
     ],
     groupNote:
-      'claude-sonnet-5-5 requires a Claude Max group key; for gpt-6.2-astra or other GPT-6 models, use a Codex Pro group key.',
+      'Ensure your key group supports the requested model. Check Model Square for live group coverage and pricing.',
   },
   troubleshooting: {
     items: [
@@ -479,7 +453,7 @@ print(response.choices[0].message.content)`,
         code: '503',
         title: 'No Available Channel / Group Mismatch',
         detail:
-          'Ensure the token group matches the requested model (Codex Pro for GPT-6, Claude Max for Claude) and verify the model ID in Model Square.',
+          'Ensure your token group covers the requested model and verify the exact model ID and group in Model Square.',
       },
     ],
   },
