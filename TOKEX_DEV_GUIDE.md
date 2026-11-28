@@ -117,7 +117,7 @@
 |---|---|---|
 | **文案 / 局部 CSS 样式 / 单页面微调** | `bun check -b` + **1~3 个直接受影响的 Vitest 文件** + `rsbuild build` | 不跑全仓库 Vitest、不跑已通过未再改源码的测试 |
 | **公共组件 / 跨模块核心逻辑 / 路由契约** | `bun check -b` + 受影响模块测试集 + `rsbuild build` | 无关业务模块测试 |
-| **Go 后端或数据库逻辑** | 改动模块 `go test`（加 `-p 1` 防 OOM）及镜像构建 | 前端未改时可不重建前端 |
+| **Go 后端或数据库逻辑** | 推送 `dev` 由云端 [`.github/workflows/tokex-dev-test.yml`](file:///home/ubuntu/tokex/.github/workflows/tokex-dev-test.yml) 执行 `go vet` 与 `make test`（**不在 1.8Gi 主机本地跑 Go 单测/编译**） | 前端未改时可不重建前端 |
 
 ### B. 本机环境与缓存硬约束
 1. **运行时路径**：容器默认 `node` 为 `v18.19.1`（缺少 Vitest/Rolldown 所需 API），本地命令必须通过 Bun 执行：`bun --bun ./node_modules/.bin/vitest run <file...>` 与 `bun --bun ./node_modules/.bin/rsbuild build`。
@@ -134,11 +134,13 @@ bun --bun ./node_modules/.bin/vitest run src/features/<module>/__tests__/<target
 bun --bun ./node_modules/.bin/rsbuild build
 rsync -a --delete /home/ubuntu/tokex/web/dist/ /var/www/tokex/dist/
 
-# 方式 2：合并发版 / 涉及后端改动 — 推送 main 走 GitHub Actions（.github/workflows/tokex-build.yml）
+# 方式 2：合并发版 / 涉及后端改动 — 先推 dev 跑云端 Go 单测（tokex-dev-test.yml），再推 main 走镜像构建（tokex-build.yml）
 cd /home/ubuntu/tokex
+git push origin dev
+# 待 tokex-dev-test.yml 通过后合并 main 发版：
 git checkout main && git merge dev --no-ff
-git push origin dev && git push origin main
+git push origin main
 git checkout dev
-# 待 Actions 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/ 或拉取 ghcr.io/leoravyn/tokex-web:latest 重启 tokex-web
+# 待 tokex-build.yml 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/ 或拉取 ghcr.io/leoravyn/tokex-web:latest 重启 tokex-web
 ```
 *(线上基础冒烟：`curl -sS -o /dev/null -w "%{http_code}\n" https://tokex.vip/`、`https://tokex.vip/api/status`、`https://tokex.vip/pricing`。)*
