@@ -19,9 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { NotificationPopover } from '@/components/notification-popover'
 import { Search } from '@/components/search'
-import { useNotifications } from '@/hooks/use-notifications'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 
 import { defaultTopNavLinks } from '../config/top-nav.config'
@@ -94,6 +92,10 @@ type AppHeaderProps = {
    * @default true
    */
   showProfileDropdown?: boolean
+  /**
+   * Extra class name forwarded to Header
+   */
+  className?: string
 }
 
 export function AppHeader({
@@ -102,9 +104,10 @@ export function AppHeader({
   leftContent,
   showSearch = true,
   rightContent,
-  showNotifications = true,
+  showNotifications: _showNotifications = false,
   showConfigDrawer: _showConfigDrawer = false,
   showProfileDropdown = true,
+  className,
 }: AppHeaderProps) {
   const { t } = useTranslation()
   // Prioritize dynamically generated links from backend
@@ -113,11 +116,8 @@ export function AppHeader({
   const { navLinks: links, consoleLink } = splitHeaderNavLinks(allLinks)
   const consoleLabel = consoleLink ? t(consoleLink.title) : t('Console')
 
-  // Notifications hook
-  const notifications = useNotifications()
-
   return (
-    <Header>
+    <Header className={className}>
       <div className='@container/system-brand flex min-w-0 items-center gap-2 lg:flex-1'>
         <SystemBrand variant='inline' />
         {leftContent ? (
@@ -138,21 +138,7 @@ export function AppHeader({
               <TopNav links={links} />
             </div>
           )}
-          {showSearch && (
-            <Search className='w-8 flex-none sm:w-40 lg:w-44 [&>span]:hidden sm:[&>span]:inline' />
-          )}
-          {showNotifications && (
-            <NotificationPopover
-              open={notifications.popoverOpen}
-              onOpenChange={notifications.setPopoverOpen}
-              unreadCount={notifications.unreadCount}
-              activeTab={notifications.activeTab}
-              onTabChange={notifications.setActiveTab}
-              notice={notifications.notice}
-              announcements={notifications.announcements}
-              loading={notifications.loading}
-            />
-          )}
+          {showSearch && <Search className='flex-none' />}
           <LanguageSwitcher />
           {showProfileDropdown && consoleLink && (
             <>

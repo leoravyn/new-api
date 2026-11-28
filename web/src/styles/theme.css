@@ -233,8 +233,8 @@ For commercial licensing, please contact support@quantumnous.com
   --skeleton-base: rgba(255, 255, 255, 0.045);
   --skeleton-highlight: rgba(255, 255, 255, 0.09);
   --table-row: transparent;
-  --table-header: rgba(255, 255, 255, 0.025);
-  --table-header-hover: rgba(255, 255, 255, 0.05);
+  --table-header: #121215;
+  --table-header-hover: #17171b;
   --table-disabled: rgba(255, 255, 255, 0.02);
   --table-disabled-hover: rgba(255, 255, 255, 0.04);
   --table-disabled-border: rgba(255, 255, 255, 0.08);

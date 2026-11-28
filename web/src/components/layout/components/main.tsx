@@ -20,13 +20,20 @@ import { cn } from '@/lib/utils'
 
 type MainProps = React.HTMLAttributes<HTMLElement> & {
   fluid?: boolean
+  flushTop?: boolean
 }
 
-export function Main({ className, fluid = true, ...props }: MainProps) {
+export function Main({
+  className,
+  fluid = true,
+  flushTop = false,
+  ...props
+}: MainProps) {
   return (
     <main
       className={cn(
         'flex min-h-0 flex-1 flex-col overflow-hidden',
+        !flushTop && 'md:pt-[var(--app-header-height,3.5rem)]',
         !fluid &&
           '@7xl/content:mx-auto @7xl/content:w-full @7xl/content:max-w-7xl',
         className

@@ -144,8 +144,8 @@ export function LogStatCards(props: LogStatCardsProps) {
   })
 
   return (
-    <div className='overflow-hidden rounded-lg border'>
-      <div className='divide-border/60 grid min-w-0 grid-cols-2 divide-x sm:grid-cols-3 lg:grid-cols-7'>
+    <div className='tokex-console-panel'>
+      <div className='divide-border/60 dark:divide-white/[0.06] grid min-w-0 grid-cols-2 divide-x overflow-hidden rounded-[inherit] sm:grid-cols-3 lg:grid-cols-7'>
         {items.map((it, idx) => {
           const Icon = it.icon
           let valueContent
@@ -217,11 +217,6 @@ export function LogStatCards(props: LogStatCardsProps) {
           )
         })}
       </div>
-      {/*<p className='text-muted-foreground border-t px-3 py-2 text-xs'>*/}
-      {/*  {t(*/}
-      {/*    'Cache usage is recorded only after the upgrade; historical data is not backfilled.'*/}
-      {/*  )}*/}
-      {/*</p>*/}
     </div>
   )
 }

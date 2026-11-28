@@ -18,10 +18,9 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { Gauge, HeartPulse, Timer } from 'lucide-react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
+import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getPerfMetricsSummary } from '@/features/performance-metrics/api'
 import {
@@ -35,7 +34,6 @@ import { requireServerSuccess } from '@/lib/server-error-message'
 import { cn } from '@/lib/utils'
 
 const PERFORMANCE_WINDOW_HOURS = 24
-const TOP_MODEL_LIMIT = 6
 
 export function PerformanceHealthPanel() {
   const { t } = useTranslation()
@@ -49,133 +47,90 @@ export function PerformanceHealthPanel() {
     retry: false,
   })
 
-  const models = useMemo(
-    () => metricsQuery.data?.data.models ?? [],
-    [metricsQuery.data]
-  )
-
   const summary = metricsQuery.data?.data.summary
-
-  const topModels = useMemo(() => models.slice(0, TOP_MODEL_LIMIT), [models])
   const loading = metricsQuery.isLoading
-  const hasData = models.length > 0
+  const successRate = summary?.success_rate ?? Number.NaN
 
   return (
-    <section className='h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-white/[0.14]'>
-      <div className='flex items-center gap-2 border-b border-white/[0.08] px-4 py-3 sm:px-5'>
-        <IconBadge tone='success' size='sm'>
-          <HeartPulse />
-        </IconBadge>
-        <h3 className='text-sm font-semibold'>{t('Performance health')}</h3>
-        <span className='text-muted-foreground ml-auto text-xs'>
+    <section className='tokex-console-panel flex h-full flex-col'>
+      <div className='border-border/60 flex items-center justify-between gap-2 border-b px-4 py-3 sm:px-5 dark:border-white/[0.06]'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <IconBadge tone='success' size='sm'>
+            <HeartPulse />
+          </IconBadge>
+          <h3 className='truncate text-sm font-semibold'>
+            {t('Performance health')}
+          </h3>
+        </div>
+        <span className='text-muted-foreground shrink-0 text-xs'>
           {t('Performance metrics for the last 24 hours')}
         </span>
       </div>
 
-      <div className='space-y-3 p-4 sm:p-5'>
-        <div className='grid grid-cols-3 gap-2'>
-          <MetricCell
-            icon={HeartPulse}
-            label={t('Success rate')}
-            value={formatUptimePct(summary?.success_rate ?? Number.NaN)}
-            loading={loading}
-            valueClassName={getSuccessRateTextClass(
-              summary?.success_rate ?? Number.NaN
-            )}
-            tone='success'
-          />
-          <MetricCell
-            icon={Timer}
-            label={t('Average latency')}
-            value={formatLatency(summary?.avg_latency_ms ?? 0)}
-            loading={loading}
-            tone='warning'
-          />
-          <MetricCell
-            icon={Gauge}
-            label={t('Throughput')}
-            value={formatThroughput(summary?.avg_tps ?? 0)}
-            loading={loading}
-            tone='info'
-          />
-        </div>
-
-        {loading ? (
-          <div className='space-y-1'>
-            {['success', 'latency', 'throughput'].map((key) => (
-              <Skeleton key={key} className='h-5 w-full rounded' />
-            ))}
-          </div>
-        ) : (
-          hasData && (
-            <div>
-              <span className='text-muted-foreground mb-1 block text-[11px] font-medium'>
-                {t('Top models by traffic')}
-              </span>
-              <div className='grid grid-cols-1 gap-x-4 sm:grid-cols-2'>
-                {topModels.map((model) => (
-                  <div
-                    key={model.model_name}
-                    className='flex items-center justify-between gap-2 rounded px-1.5 py-1'
-                  >
-                    <span className='min-w-0 flex-1 truncate font-mono text-[11px]'>
-                      {model.model_name}
-                    </span>
-                    <span className='inline-flex shrink-0 items-center gap-1'>
-                      <span
-                        className={cn(
-                          'size-1.5 rounded-full',
-                          getSuccessRateDotClass(model.success_rate)
-                        )}
-                        aria-hidden='true'
-                      />
-                      <span
-                        className={cn(
-                          'font-mono text-[11px] font-semibold tabular-nums',
-                          getSuccessRateTextClass(model.success_rate)
-                        )}
-                      >
-                        {formatUptimePct(model.success_rate)}
-                      </span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        )}
+      <div className='tokex-content-enter grid flex-1 grid-cols-3 items-center divide-x divide-border/50 px-1 py-3.5 sm:px-2 sm:py-4 dark:divide-white/[0.06]'>
+        <TelemetryMetric
+          icon={HeartPulse}
+          label={t('Success rate')}
+          value={formatUptimePct(successRate)}
+          loading={loading}
+          valueClassName={getSuccessRateTextClass(successRate)}
+          dotClassName={
+            Number.isFinite(successRate)
+              ? getSuccessRateDotClass(successRate)
+              : undefined
+          }
+        />
+        <TelemetryMetric
+          icon={Timer}
+          label={t('Average latency')}
+          value={formatLatency(summary?.avg_latency_ms ?? 0)}
+          loading={loading}
+        />
+        <TelemetryMetric
+          icon={Gauge}
+          label={t('Throughput')}
+          value={formatThroughput(summary?.avg_tps ?? 0)}
+          loading={loading}
+        />
       </div>
     </section>
   )
 }
 
-function MetricCell(props: {
+function TelemetryMetric(props: {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: string
   loading: boolean
   valueClassName?: string
-  tone: IconBadgeTone
+  dotClassName?: string
 }) {
   const Icon = props.icon
+
   return (
-    <div className='rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-2.5'>
+    <div className='flex min-w-0 flex-col gap-1.5 px-3 sm:px-4'>
       <div className='text-muted-foreground flex items-center gap-1.5 text-[11px] font-medium'>
-        <IconBadge tone={props.tone} size='xs'>
-          <Icon />
-        </IconBadge>
+        <Icon className='size-3.5 shrink-0 opacity-75' aria-hidden='true' />
         <span className='truncate'>{props.label}</span>
       </div>
       {props.loading ? (
-        <Skeleton className='mt-1.5 h-5 w-16' />
+        <Skeleton className='h-6 w-16' />
       ) : (
-        <div
-          className={cn(
-            'mt-1.5 font-mono text-sm font-semibold tabular-nums',
-            props.valueClassName
+        <div className='flex items-center gap-1.5'>
+          {props.dotClassName && (
+            <span
+              className={cn('size-1.5 shrink-0 rounded-full', props.dotClassName)}
+              aria-hidden='true'
+            />
           )}
-        >
-          {props.value}
+          <span
+            className={cn(
+              'truncate font-mono text-base font-semibold tracking-tight tabular-nums sm:text-lg',
+              props.valueClassName
+            )}
+          >
+            {props.value}
+          </span>
         </div>
       )}
     </div>

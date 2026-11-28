@@ -245,7 +245,7 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
   return (
     <div
       className={cn(
-        'bg-card/50 rounded-lg border p-2.5 sm:p-3',
+        'tokex-console-panel p-2.5 sm:p-3',
         props.className
       )}
     >

@@ -56,11 +56,11 @@ export function SystemTasksPanel() {
   const hasActiveTasks = activeTasks.length > 0
 
   return (
-    <section className='bg-card overflow-hidden rounded-lg border shadow-xs'>
-      <div className='flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5'>
+    <section className='tokex-console-panel'>
+      <div className='flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-white/[0.07]'>
         <div className='min-w-0'>
           <div className='flex items-center gap-2'>
-            <span className='bg-muted text-muted-foreground inline-flex size-7 items-center justify-center rounded-md'>
+            <span className='tokex-surface-subtle text-muted-foreground inline-flex size-7 items-center justify-center rounded-md'>
               <ListChecks className='size-4' aria-hidden='true' />
             </span>
             <div className='min-w-0'>
@@ -147,7 +147,7 @@ export function SystemTasksPanel() {
               {activeTasks.length > 0 ? (
                 <SystemTasksTable tasks={activeTasks} />
               ) : (
-                <div className='text-muted-foreground rounded-md border border-dashed px-4 py-6 text-center text-sm'>
+                <div className='tokex-surface-subtle text-muted-foreground border-dashed px-4 py-6 text-center text-sm'>
                   {t('No active system tasks.')}
                 </div>
               )}

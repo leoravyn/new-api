@@ -20,7 +20,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
-import { PageTransition } from '@/components/page-transition'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import {
@@ -57,8 +56,7 @@ export function Rankings() {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='relative'>
-        <PageTransition className='relative mx-auto w-full max-w-[1280px] space-y-8 px-3 pt-4 pb-10 sm:px-6 sm:pt-6 sm:pb-12 xl:px-8'>
+      <div className='relative mx-auto w-full max-w-[1280px] space-y-8 px-3 pt-4 pb-10 sm:px-6 sm:pt-6 sm:pb-12 xl:px-8'>
           <RankingsHero period={period} onPeriodChange={handlePeriodChange} />
 
           {rankingsQuery.isLoading ? (
@@ -91,7 +89,6 @@ export function Rankings() {
               />
             </>
           )}
-        </PageTransition>
       </div>
     </PublicLayout>
   )
@@ -110,7 +107,7 @@ function RankingsLoading() {
 function RankingsError(props: { message: string }) {
   const { t } = useTranslation()
   return (
-    <div className='bg-card rounded-xl border border-dashed px-6 py-12 text-center'>
+    <div className='tokex-console-panel border-dashed px-6 py-12 text-center'>
       <h2 className='text-foreground text-base font-semibold'>
         {t('Unable to load rankings')}
       </h2>

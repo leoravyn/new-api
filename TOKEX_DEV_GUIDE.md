@@ -1,7 +1,7 @@
 # TOKEX 项目架构与开发管理手册
 
-> **最后更新**：2026-11-27  
-> **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握当前架构、分支规范、主机运维边界与发布流程）。
+> **最后更新**：2026-11-28  
+> **适用对象**：后续接手本项目的开发者与 AI Agent（阅读本文件即可掌握当前架构、前端全局接口、主机运维边界与精准验证/发布流程）。
 
 ---
 
@@ -9,31 +9,29 @@
 
 - **三域名流量隔离与防超时架构**：
   - **Web 控制台主站**：`https://tokex.vip`（Cloudflare Proxy / 橙云开启）— 仅承载前端控制台与 `/api` 等控制台接口；Cloudflare WAF 在边缘直接拦截 `/v1*`，避免 API 长连接命中 Cloudflare 100–125s 读取超时。
-  - **API 独立网关（防超时流式代理）**：`https://api.tokex.vip`（Custom Domain -> Cloudflare Worker `tokex-api-proxy`，已禁用默认 `*.workers.dev` 域名）— 针对流式请求，在等待上游首字期间先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 注释行保活，首字到达后通过原生 `pipeTo` 零拷贝透传响应流，从而绕过 Cloudflare 100s 读取超时并将 Worker CPU 消耗控制在 10ms 限制内。
-  - **Worker 专用隐藏源站**：`https://origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云直连主机公网 IP）— 专供 Cloudflare Worker 回源，仅监听 `443 ssl` 并使用通配符 Cloudflare Origin CA 证书（`/etc/nginx/ssl/origin-tokex/cert.pem` 与 `key.pem`），配置 `client_max_body_size 50m;`、`proxy_read_timeout 600s;`、`proxy_send_timeout 600s;`、`proxy_buffering off;`，将 `/` 全部反代至 `127.0.0.1:3000`。
+  - **API 独立网关（防超时流式代理）**：`https://api.tokex.vip`（Custom Domain -> Cloudflare Worker `tokex-api-proxy`，已禁用默认 `*.workers.dev` 域名）— 流式请求在等待上游首字期间先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 保活，首字到达后通过 `pipeTo` 零拷贝透传响应流，绕过 Cloudflare 100s 超时且将 Worker CPU 控制在 10ms 内。
+  - **Worker 专用隐藏源站**：`https://origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云直连主机公网 IP）— 专供 Worker 回源，监听 `443 ssl`（通配符 Cloudflare Origin CA `/etc/nginx/ssl/origin-tokex/{cert,key}.pem`），配置 `client_max_body_size 50m;`、`proxy_read/send_timeout 600s;`、`proxy_buffering off;`，反代至 `127.0.0.1:3000`。
 - **上游号池管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 后端**
   - **前端产物**：基于 New API 前端（`/home/ubuntu/tokex/web`）二次开发，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管。
   - **后端网关**：`tokex-web`（镜像 `tokex-web:v1.0.0-rc.51-tokex`，由 GitHub Actions 构建 `ghcr.io/leoravyn/tokex-web:latest` 后拉取打标或本地兜底构建，基于 `QuantumNous/new-api` `v1.0.0-rc.51` 并合入 TOKEX 补丁，`127.0.0.1:3000`）。
   - **数据库与缓存**：`tokex-db`（`postgres:18-alpine`，承载 `newapi` 与 `sub2api` 库，Docker 内网 `tokex-net:5432`）、`tokex-redis`（`redis:8-alpine`，Docker 内网 `tokex-net:6379`）。
-  - **上游代理**：`tokex-pool`（官方 `weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
+  - **上游代理**：`tokex-pool`（`weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
 ### 当前核心功能实现
-1. **品牌视觉与双语**：纯无色相石墨黑 + 拉丝铂金 + 银灰深色材质体系（外框/侧栏 `#08080A`、主工作区 `#0C0C0E`、卡片 `#121214`、内嵌/次级 `#17171A`/`#1B1B1F`、拉丝铂金渐变主按钮 `#FAFAFA`→`#D6D6DB` 配 `#0A0A0B` 深色字、中性 1px 高光描边 `rgba(255,255,255,0.07)`、状态色统一收敛为低饱和鼠尾草绿/香槟金/暗玫瑰红）；公开页统一采用全屏冷银环境光与建筑点阵视差背景（`components/layout/components/ambient-backdrop.tsx` 集成于 `PublicLayout`）及统一 `PageTransition` 页面入场动效，顶栏采用全宽三栏居中结构（左 Logo — 中居中主导航 — 右工具区与 `Console` 入口，公开页为拉丝铂金强调框，进入控制台后转为默认暗玻璃选中框），取消顶栏头像并把桌面端侧边栏折叠入口与账户/登出操作置入 `AppSidebar` 顶部与底部；桌面端控制台采用 Linear 嵌入式工作区外壳，锁定 `dark` 模式与 `zhCN`/`en` 双语；完整 Token 与 Waffo 收银台定制视觉规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
-2. **首页与模型广场**：首页（`src/features/home/`）桌面端采用双屏平滑翻页与透明顶栏（第 1 屏 `1440px` 宽屏 Hero + 实时旗舰模型连线 + 底部生态跑马灯；第 2 屏交互式接入终端沙盒含纯前端流式试运行 + 4 格动态 Bento 卡片 + 页脚，背景冷银光源随翻页斜向视差流动），实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊（`Official` / `Proxy`）、侧边栏分组筛选、详情页多分组切换，并对所有 `groupRatio !== 1` 分组展示带删除线的 `1x` 原价与当前价格。
+1. **品牌视觉与双语**：纯中性**曜石黑 + 铂金银灰**磨砂玻璃材质体系（外框/侧栏 `#050506` → 主画布 `#08080A` → 一级毛玻璃卡片 `rgba(14, 14, 17, 0.56)` 配 `blur(12px) saturate(130%)` → `--muted` `#141418` / `--secondary` `#19191E`；拉丝铂金主按钮 `#FAFAFA → #EBEBEF → #D6D6DB` 配 `#08080A` 文字；中性 1px 高光描边 `rgba(255, 255, 255, 0.08)`），底层由全局 [`AmbientBackdrop`](file:///home/ubuntu/tokex/web/src/components/layout/components/ambient-backdrop.tsx) 提供纯中性银灰环境光与点阵光束视差；顶栏采用全宽三栏居中结构（左 Logo — 中主导航 — 右工具区与 `Console` 入口）；控制台锁定 `dark` 模式与 `zhCN`/`en` 双语，完整 Token 与动效规范见 [DESIGN.md](file:///home/ubuntu/tokex/DESIGN.md)。
+2. **首页与模型广场**：首页（`src/features/home/`）桌面端采用双屏平滑翻页与透明顶栏（第 1 屏 `1440px` 宽屏 Hero + 实时旗舰模型卡片 + 底部生态跑马灯；第 2 屏交互式接入终端沙盒含纯前端流式试运行 + 4 格 Bento 卡片 + 页脚，背景中性银灰光源随翻页视差流动），实时接入 `/api/pricing` 旗舰模型并直链 `/pricing/$modelId`；模型广场支持分组倍率胶囊、侧边栏分组筛选与详情页多分组切换。
 3. **认证与安全链路**：Resend 邮件验证码（`noreply@tokex.vip`）、邮箱域名白名单、Cloudflare Turnstile、GitHub OAuth 与 Google OIDC。
 4. **站内文档、法务与关于页面**：
-   - 免登录公开路由 `/docs`（`src/features/docs/`、`src/routes/docs/index.tsx`）：提供双语接入文档，涵盖 API 使用规则、网关域名 `https://api.tokex.vip`、Codex（`/v1/responses`）、Claude Code（`/v1/messages`）、通用客户端与 SDK（`/v1/chat/completions`）、令牌按分组隔离的通用提醒（引导去「模型广场」查看分组与费率，不写死具体模型清单）、常见错误排查及平台/法务快捷跳转；`use-top-nav-links.ts` 对相对路径按站内路由跳转，`footer.tsx` 增加 `/docs` 入口，`options` 表 `general_setting.docs_link` 设为 `/docs`。
-   - 免登录法务路由 `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（仅面向中国大陆以外非受限地区、`Waffo Pancake` MoR、`support@tokex.vip`、10% 清算与行政管理手续费例外条款、中国香港特别行政区法律与 HKIAC 仲裁）；全站 `PublicLayout` 页脚、认证页及钱包结账页均常驻合规入口；`/about` 页面保留并简化了支付与安全卡片面向用户的描述。
+   - `/docs`（`src/features/docs/`、`src/routes/docs/index.tsx`）：双语接入文档，涵盖网关域名 `https://api.tokex.vip`、Codex（`/v1/responses`）、Claude Code（`/v1/messages`）、通用 SDK（`/v1/chat/completions`）及令牌分组引导；`use-top-nav-links.ts` 对相对路径按站内路由跳转，`general_setting.docs_link` 设为 `/docs`。
+   - `/terms`、`/user-agreement`、`/privacy-policy`、`/aup`（`src/features/legal/`、`Waffo Pancake` MoR、`support@tokex.vip`、中国香港法律与 HKIAC 仲裁）；`/about` 保留精简说明。
 5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
-   - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`1.0` USD 结算，内置 W 图标需在 `PayMethods` 中将 `icon` 留空）与 **Epay / Zpay**（`https://zpayz.cn`，涵盖 `alipay`、`wxpay` 等非 Waffo/Stripe 渠道，按 `Price=7` 折算 `CNY` 结算）共存时，前端按 `getPaymentSettlementCurrency` 在充值页、确认弹窗与账单历史中自动区分展示 `USD` 与 `CNY`（默认预览优先对齐 Waffo Pancake 的 `USD` 展示）。
-   - Epay 支付完成回跳 `/usage-logs` 时，前端路由 `src/routes/_authenticated/usage-logs/index.tsx` 通过 `isEpayReturnQuery` 识别回调参数（`trade_status` / `out_trade_no` / `trade_no`）并直接重定向回 `/wallet`；常规访问 `/usage-logs` 仍跳转 `/usage-logs/common`。
-   - 后端基于已合入的 `v1.0.0-rc.51`（`c9c6da2`）保留 `MatchAmountDiscount`（`>= 阈值` 阶梯折扣匹配；Stripe 保留精确键匹配）、全局 `MinTopUp` 下限校验，以及邀请推广返佣与首充 9 折覆盖能力（对应 PR #8437 / #8438 及 TOKEX 推广返佣补丁）。
-   - 模型管理列表排序补丁：`model/model_meta.go` 中 `SearchModels` 使用 `.Order("models.vendor_id ASC, models.id DESC")` 按供应商分组（同供应商内按 `id DESC` 倒序），`SearchModelsWithChannels` 保留该排序并在末尾追加无元数据的渠道模型。
-6. **独立邀请推广中心（`/referrals`）、首充 9 折特权与 5% 自动入账返佣**：
-   - **受邀首充 9 折覆盖**：通过推荐链接注册（`inviter_id > 0`）且尚无已完成真实钱包充值（`top_ups.status = 'success' AND amount > 0`，订阅镜像 `amount = 0` 记录不消耗资格）的用户，在合规条款已确认且 `InviteFirstTopUpDiscount < 1` 时，`GET /api/user/topup/info` 返回 `first_topup_discount_eligible: true` 与 `first_topup_discount`（默认 `0.9`）。前后端全链路（Epay、Waffo Pancake、Waffo、Stripe 报价、钱包预设卡片、自定义金额优惠提示、Epay CNY 预估及确认弹窗）统一以首充特权折扣**直接覆盖**常规阶梯折扣（不叠加），并在钱包充值卡片顶部展示翡翠绿特权横幅。
-   - **5% 充值返佣与冷静期自动入账**：所有 6 条充值入账路径（Epay / Stripe / Admin 手动补单 / Creem / Waffo / Waffo Pancake）在同一事务内幂等写入 `aff_commissions`（`trade_no` 唯一索引）；按实付 USD（Epay 实付 CNY 按 `Price` 换算为 USD）的 `AffCommissionRate`（默认 `0.05`）计算返佣，进入 `AffCommissionCooldownDays`（默认 `7` 天）冷静期。后台主节点定时任务 `service/aff_commission_task.go` 启动及每 10 分钟扫描到期记录，自动核验订单与双方账户状态后直接计入邀请人钱包余额（`users.quota` + `users.aff_history`）并刷新缓存。
-   - **独立页面与配置入口**：控制台左侧导航 `Personal` 组新增 `/referrals`（`src/features/referrals/`），对接 `GET /api/user/referral/summary` 与 `GET /api/user/referral/commissions`，展示专属推广链接、动态规则说明、4 项核心 KPI、分页/状态筛选的返佣流水（脱敏展示被邀请人）及历史遗留余额手动划转入口（仅 `legacy_aff_quota > 0` 时展示）；`/wallet` 保持聚焦充值，底部精简为单行 `/referrals` 跳转卡片；超管可在 `/system-settings/billing/quota` 调整 `AffCommissionEnabled`、`AffCommissionRate`、`AffCommissionCooldownDays`、`InviteFirstTopUpDiscount`。
+   - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`USD` 结算，内置 W 图标需将 `icon` 留空）与 **Epay / Zpay**（`CNY` 按 `Price=7` 结算）共存时，前端按 `getPaymentSettlementCurrency` 自动区分展示 `USD`/`CNY`。
+   - Epay 支付回跳 `/usage-logs` 时由 `src/routes/_authenticated/usage-logs/index.tsx`（`isEpayReturnQuery`）重定向回 `/wallet`。
+   - 后端保留 `MatchAmountDiscount` 阶梯匹配、全局 `MinTopUp` 下限校验（PR #8437 / #8438）；`model/model_meta.go` 中 `SearchModels` 按 `.Order("models.vendor_id ASC, models.id DESC")` 按供应商聚拢排序。
+6. **独立邀请推广中心（`/referrals`）、首充 9 折与 5% 自动入账返佣**：
+   - **受邀首充 9 折覆盖**：推荐注册且未完成真实充值的用户，合规确认且 `InviteFirstTopUpDiscount < 1` 时直接覆盖常规阶梯折扣。
+   - **5% 充值返佣与冷静期自动入账**：6 条充值路径同一事务幂等写入 `aff_commissions`，按 `AffCommissionRate`（`0.05`）与 `AffCommissionCooldownDays`（`7` 天）由 `service/aff_commission_task.go` 自动核验入账；页面入口 `/referrals`（`src/features/referrals/`），设置项位于 `/system-settings/billing/quota`。
 
 ---
 
@@ -41,24 +39,17 @@
 
 | 路径 | 用途 | 备注 |
 |---|---|---|
-| `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 主要维护 `web/`、文档与少量 Go 充值补丁（见第 1 节） |
-| `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 Bun 运行类型检查、测试与构建 |
-| `/home/ubuntu/tokex/.github/workflows/tokex-build.yml` | **TOKEX CI/CD 构建工作流** | `main` 推送自动构建 `web-dist` 与 ARM64 镜像 |
-| `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | 优先从 Actions `web-dist` 产物同步至此目录 |
+| `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 维护 `web/`、文档与少量 Go 补丁 |
+| `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 `bun` 运行类型检查、Vitest 与构建 |
+| `/home/ubuntu/tokex/.github/workflows/tokex-build.yml` | **CI/CD 构建工作流** | `main` 推送自动构建 `web-dist` 与 ARM64 镜像 |
+| `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | 静态产物直接部署于此目录 |
 | `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
-| `/opt/tokex/sub2api/` | **Sub2API 数据目录** | `data/`、`postgres_data/`、`redis_data/`（`.env` 软链至 `/opt/tokex/.env`） |
-| `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 软链至 `/etc/nginx/sites-enabled/tokex.conf`（含 `tokex.vip`、`sub.tokex.vip`、`origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` 与 `default_server` `444` 兜底块） |
-| `/etc/nginx/conf.d/cloudflare-geo.conf` | **Cloudflare 源站 IP 白名单映射** | `geo $realip_remote_addr $cf_allowed` 校验真实 TCP 对端 IP（`127.0.0.1`、`::1` 与 Cloudflare IPv4/IPv6 CIDR 置 `1`，其余 `0`），在 `realip` 改写 `$remote_addr` 前生效 |
-| `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 访问控制与真实 IP 片段** | `if ($cf_allowed = 0) { return 403; }` + `set_real_ip_from` + `real_ip_header CF-Connecting-IP;`（避免 `allow`/`deny` 与 `realip` 冲突） |
-| `/etc/nginx/ssl/origin-tokex/` | **Cloudflare Origin CA 证书** | `cert.pem` / `key.pem`（通配符证书，用于隐藏源站与 `443` `default_server`） |
-| `/usr/local/bin/update-cf-nginx.sh` | **Cloudflare IP 同步脚本** | 拉取 Cloudflare 最新 IPv4/IPv6 CIDR，原子重写 `cloudflare-geo.conf` 与 `cloudflare-access.conf` 并校验重载 Nginx |
+| `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 含 `tokex.vip`、`sub.tokex.vip`、隐藏源站与 `default_server` `444` 兜底 |
+| `/etc/nginx/conf.d/cloudflare-geo.conf` & `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 源站访问控制** | `geo $realip_remote_addr $cf_allowed` 校验回源 IP；由 `/usr/local/bin/update-cf-nginx.sh` 同步 |
 
 - **Git 分支与远程**（位于 `/home/ubuntu/tokex/`）：
-  - `upstream-base`：`QuantumNous/new-api` 初始只读对照基线（`48a6c87` / `v1.0.0-rc.49`；当前 `dev`/`main` 已合并 `v1.0.0-rc.51` `c9c6da2`）。
-  - **`main`**：生产发布分支；推送到 `origin/main` 会触发 `.github/workflows/tokex-build.yml`。
-  - **`dev`**：默认开发分支，日常改动在此提交验收后再 `--no-ff` 合并到 `main`。
-  - 远程 `origin` 指向 TOKEX Fork 仓库（`https://github.com/leoravyn/new-api.git`），日常 `dev` / `main` 均推送至此仓库。
-  - 远程 `upstream` 指向官方 GitHub 主仓（`Calcium-Ion/new-api` -> `QuantumNous/new-api`），**勿直接 `git push`**；升级官方版本时先拉取 `upstream`，确认 PR #8437 / #8438 是否已合入后再决定直接切换官方镜像或合并后重编镜像。
+  - `upstream-base`：`QuantumNous/new-api` 只读对照基线（当前已合并 `v1.0.0-rc.51` `c9c6da2`）；勿向 `upstream` 直接 `push`。
+  - `dev` 为日常开发分支，验收后 `--no-ff` 合并到 `main` 并推送 `origin`（`leoravyn/new-api`）。
 
 ---
 
@@ -66,137 +57,88 @@
 
 主机物理内存 **1.8Gi（2GB 规格）** + **`/swapfile`（2.0Gi，`vm.swappiness=20`）**，磁盘 **30G（`/` 分区 27G）**；全链路请求体上限对齐 **40 MiB** 防 OOM：
 
-| 组件 | 配置文件 | 关键生效参数 | 说明 |
-|---|---|---|---|
-| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `tokex.vip`: `client_max_body_size 40m;` / `proxy_read/send_timeout 1800s;` / `limit_conn api_key_conn 3;`（`429`）；`origin-*.tokex.vip`: `client_max_body_size 50m;` / `proxy_read/send_timeout 600s;` / `proxy_buffering off;`；全局 `default_server` `so_keepalive=on` `return 444;` + `cloudflare-access.conf` | 隐藏源站承接 Worker 回源并保持 SSE 零缓冲；`tokex.vip` 承载控制台与本地回退；`default_server` 丢弃公网 IP 直连扫描 |
-| **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m` / `GOMEMLIMIT=700MiB` / `GOGC=75` / `MAX_REQUEST_BODY_MB=40` / `MAX_FILE_DOWNLOAD_MB=32` / `STREAM_SCANNER_MAX_BUFFER_MB=32` / `DEBUG=false` | 日志截断保留 `LocalLogContentLimit=2048`；`json-file` 限 `20m x 3` |
-| **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true` / `threshold_mb=4` / `max_size_mb=256` | `>=4MB` 请求体暂存临时文件并在请求结束后清理 |
-| **tokex-pool** | `/opt/tokex/docker-compose.yml` & `.env` | `mem_limit: 384m` / `GOMEMLIMIT=280MiB` / `GOGC=75` / `RUN_MODE=simple` / `SERVER_MAX_REQUEST_BODY_SIZE=41943040` / `GATEWAY_MAX_BODY_SIZE=41943040` / `GATEWAY_REQUEST_BODY_MEMORY_BUDGET_BYTES=134217728` / `LOG_OUTPUT_TO_FILE=false` | 防大图 Base64 OOM，关闭全量日志落盘 |
-| **tokex-db** | `/opt/tokex/docker-compose.yml` | `mem_limit: 320m` / `shared_buffers=96MB` / `max_connections=100` / `effective_cache_size=192MB` | Docker 日志轮转 `10m x 3` |
-| **tokex-redis** | `/opt/tokex/docker-compose.yml` | `mem_limit: 96m` / `--maxmemory 64mb` / `--appendonly yes` | Docker 日志轮转 `10m x 3` |
+| 组件 | 配置文件 | 关键生效参数 |
+|---|---|---|
+| **Nginx** | `/etc/nginx/sites-available/tokex.conf` | `tokex.vip`: `client_max_body_size 40m;`, `proxy_read/send_timeout 1800s;`, `limit_conn api_key_conn 3;`; `origin-*`: `50m` / `600s` / `proxy_buffering off;` |
+| **tokex-web** | `/opt/tokex/docker-compose.yml` | `mem_limit: 900m`, `GOMEMLIMIT=700MiB`, `GOGC=75`, `MAX_REQUEST_BODY_MB=40`, `MAX_FILE_DOWNLOAD_MB=32`, `STREAM_SCANNER_MAX_BUFFER_MB=32` |
+| **DiskCache** | DB `options` (`newapi`) | `disk_cache_enabled=true`, `threshold_mb=4`, `max_size_mb=256` |
+| **tokex-pool** | `/opt/tokex/docker-compose.yml` & `.env` | `mem_limit: 384m`, `GOMEMLIMIT=280MiB`, `RUN_MODE=simple`, `LOG_OUTPUT_TO_FILE=false`, `GATEWAY_REQUEST_BODY_MEMORY_BUDGET_BYTES=134217728` |
+| **tokex-db / tokex-redis** | `/opt/tokex/docker-compose.yml` | `tokex-db`: `320m` / `shared_buffers=96MB`; `tokex-redis`: `96m` / `--maxmemory 64mb` |
 
 > 历史配置文件与数据库变更前备份保存在 `/opt/tokex/backups/`。
 
 ---
 
-## 4. 前端源码核心定位（`/home/ubuntu/tokex/web/`）
+## 4. 前端全局统一接口（毛玻璃、动画、背景与表格）
 
-- **品牌、样式与锁定约束**：
-  - 资产与入口：`public/{favicon,logo-tokex,banner-tokex}.svg`、`index.html`、`rsbuild.config.ts`
-  - 主题与双语：`src/styles/{theme,index}.css`、`src/lib/{constants,avatar,nav-modules}.ts`、`src/context/{theme,theme-customization,layout}-provider.tsx`（锁定 `dark` + 默认样式）、`src/i18n/{languages,config}.ts`
-- **导航与通用 UI**：
-  - 布局与导航：`src/components/layout/components/{ambient-backdrop,public-header,public-layout,header,header-console-action,app-header,app-sidebar,system-brand,footer,section-page-layout,authenticated-layout}.tsx`、`src/components/{language-switcher,page-transition,notification-popover}.tsx`
-  - 深色玻璃基元：`src/components/ui/{card,titled-card,icon-badge,tabs,table,dropdown-menu,popover,dialog,alert-dialog,alert,empty,sidebar}.tsx`
-- **核心业务页面**：
-  - 首页：`src/features/home/index.tsx`、`src/features/home/components/tokex/{hero-section,home-showcase}.tsx`
-  - 文档、法务与关于：`src/features/docs/`（`content.ts`、`types.ts`、`components/docs-code-block.tsx`）、`src/routes/docs/index.tsx`、`src/features/legal/`（`content/{legal-config,terms,privacy-policy,aup}.ts`、`components/legal-document-layout.tsx`）、`src/routes/{terms,aup,user-agreement,privacy-policy}.tsx`、`src/features/about/`
-  - 认证：`src/features/auth/`（`sign-in`、`sign-up`、`forgot-password`、`secure-verification`、`components/{terms-footer,legal-consent}.tsx`、`hooks/`）
-  - 模型广场与榜单：`src/features/pricing/`（`index.tsx`、`lib/{model-helpers,price,dynamic-price}.ts`、`components/{model-card,price-comparison,pricing-table,pricing-columns,pricing-sidebar,model-group-ratio-badges,model-details,dynamic-pricing-breakdown}.tsx`）、`src/features/rankings/`
-  - 渠道与计费设置：`src/features/channels/`、`src/features/system-settings/integrations/`
-  - 控制台与账户：`src/features/dashboard/`、`src/features/profile/`、`src/features/security/`、`src/features/wallet/`、`src/features/referrals/`；全部控制台路由见 `src/routes/_authenticated/`
+日常开发或扩展页面时**必须复用以下全局统一接口**，不要自行手写过渡外壳或零散颜色：
+
+### A. 全局环境背景与壳层
+* **`AmbientBackdrop`**（[`ambient-backdrop.tsx`](file:///home/ubuntu/tokex/web/src/components/layout/components/ambient-backdrop.tsx)）：统一渲染全屏点阵、中性银灰辐射光晕与斜向发丝光束。
+  * 已集成于 [`PublicLayout`](file:///home/ubuntu/tokex/web/src/components/layout/components/public-layout.tsx)（支持 `backdropPreset`: `'home-0' | 'home-1' | 'default'`）与 [`AuthenticatedLayout`](file:///home/ubuntu/tokex/web/src/components/layout/components/authenticated-layout.tsx)（暗色模式自动挂载 `preset='console'`）。
+* **路由壳层约束**：[`AuthenticatedLayout`](file:///home/ubuntu/tokex/web/src/components/layout/components/authenticated-layout.tsx#L66) 直接渲染 `{props.children ?? <Outlet />}`；路由 `<Outlet />` 与玻璃卡片外层壳体保持无 `opacity` / `filter` / `transform` 过渡的纯容器结构，否则会触发 Backdrop Root 导致卡片“先透明后闪变毛玻璃”。
+
+### B. 毛玻璃与半透明表面系统（[`index.css`](file:///home/ubuntu/tokex/web/src/styles/index.css#L278-L406)）
+| 类名 / 选择器 | 暗色效果 | 适用场景与规则 |
+|---|---|---|
+| `.tokex-liquid-card` / `.tokex-console-panel` / `<Card>`（`[data-slot='card']`） | `rgba(14, 14, 17, 0.56)` + `blur(12px) saturate(130%)` + 鼠标近场边框高光 | **一级容器**：表格外框、仪表盘面板、卡片；内部圆角贴边光泽层需加 `rounded-[inherit]` 且外层加 `overflow-hidden transform-gpu` |
+| `.tokex-surface-subtle` | `rgba(255, 255, 255, 0.03)` + 细微描边（**无二次模糊**） | 嵌在玻璃面板内部的子卡片/代码块/分组条（内部可安全挂动画） |
+| `.tokex-surface-pill` | `rgba(11, 11, 14, 0.58)` + 细微描边 | 胶囊标签、分段控件底壳 |
+| `.tokex-glass` / `.tokex-glass-interactive` / `.tokex-glass-elevated` | `rgba(14, 14, 17, 0.52 / 0.62)` + `blur(12px / 16px)` | 独立悬浮玻璃模块（非通用 `<Card>` 场景） |
+* **鼠标近场高光追踪**：[`installLiquidGlassTracker()`](file:///home/ubuntu/tokex/web/src/lib/liquid-glass-tracker.ts#L55) 已在 [`__root.tsx`](file:///home/ubuntu/tokex/web/src/routes/__root.tsx#L55) 全局挂载，通过 `rAF` 零重渲染更新 `--lg-o`/`--lg-x`/`--lg-y` 驱动 `[data-slot='card']` / `.tokex-liquid-card` / `.tokex-console-panel` / `[data-slot='sidebar-inner']` 的 `::after` 边框高光。
+
+### C. 内容级入场动效接口
+* **CSS 动画类（[`index.css`](file:///home/ubuntu/tokex/web/src/styles/index.css#L746-L822)）**：用在**玻璃容器内部**的子内容节点上，动画完成后自动释放 `transform`/`opacity`：
+  * `.tokex-content-enter`（单块内容上浮渐现 `0.24s`，如 [`PanelWrapper`](file:///home/ubuntu/tokex/web/src/features/dashboard/components/ui/panel-wrapper.tsx#L109)）
+  * `.tokex-content-reveal`（直接子元素错峰渐现 `0.28s + 40ms/item`）
+  * 表格行默认入场 `[data-slot='table'] tbody tr > td:not(.sticky)`（`tableRowEnter` 仅作用于非固定单元格）
+* **Motion 原语（[`page-transition.tsx`](file:///home/ubuntu/tokex/web/src/components/page-transition.tsx) + [`motion.ts`](file:///home/ubuntu/tokex/web/src/lib/motion.ts)）**：只保留内容级组件 `FadeIn`、`StaggerContainer` / `StaggerItem`、`TableStaggerContainer` / `TableStaggerRow`（全内置 `useReducedMotion` 降级）。
+
+### D. 表格统一规范
+* **表头与表体**：[`table.tsx`](file:///home/ubuntu/tokex/web/src/components/ui/table.tsx) 中 `<TableHeader>` 默认使用不透明 `--table-header`（`#121215` / hover `#17171B`），[`SplitHeaderTableView`](file:///home/ubuntu/tokex/web/src/components/data-table/core/data-table-view.tsx#L159) 表头固定 `sticky top-0 z-20`；`TableHead` 与 `TableCell` 统一使用 `px-3` 水平内边距（对齐勾选框与列头文字）。
+* **固定列（[`column-pinning.ts`](file:///home/ubuntu/tokex/web/src/components/data-table/core/column-pinning.ts)）**：固定表体单元格暗色底统一为贴合卡片合成色的 `#0b0b0e`（hover `#121215` / selected `#19191d`，禁用双层 `backdrop-blur-xl`）；[`ModelsTable`](file:///home/ubuntu/tokex/web/src/features/models/components/models-table.tsx#L252) 仅右侧固定 `actions` 列。
 
 ---
 
 ## 5. 路由边界、接口与数据库现状
 
-### Nginx 流量隔离、访问控制与动静分流
-- **三域名职责边界**：
-  - `tokex.vip`（Cloudflare 橙云）：Web 控制台入口；Cloudflare WAF 拦截外部 `/v1*` 请求，防止 API 请求进入常规代理链路触发 100–125s 超时。
-  - `api.tokex.vip`（Cloudflare Worker `tokex-api-proxy`，`*.workers.dev` 已禁用）：对外 API 网关；流式请求先返回 `HTTP 200` 并每 `15s` 发送 `: keep-alive` SSE 注释行保活，首字到达后通过 `pipeTo` 透传，避免 100s 超时且保持 CPU < 10ms。
-  - `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`（DNS Only / 灰云）：Worker 专用隐藏源站，`443 ssl` 使用 `/etc/nginx/ssl/origin-tokex/{cert,key}.pem`（通配符 Origin CA 证书），`client_max_body_size 50m;`、`proxy_read_timeout 600s;`、`proxy_send_timeout 600s;`、`proxy_buffering off;`，将 `/` 全部反代至 `127.0.0.1:3000`。
-- **Cloudflare 仅限源站访问控制与防 IP 扫描**：
-  - `/etc/nginx/conf.d/cloudflare-geo.conf`：在 `http` 上下文通过 `geo $realip_remote_addr $cf_allowed` 校验 `realip` 改写 `$remote_addr` 之前的真实 TCP 对端 IP（仅 `127.0.0.1`、`::1` 与 Cloudflare 官方 IPv4/IPv6 CIDR 为 `1`，其余为 `0`）。
-  - `/etc/nginx/snippets/cloudflare-access.conf`：通过 `if ($cf_allowed = 0) { return 403; }` 拦截非 Cloudflare 直连请求，并结合 `set_real_ip_from` + `real_ip_header CF-Connecting-IP;` 还原客户端真实 IP（避免 `allow`/`deny` 在 `realip` 改写 `$remote_addr` 后误拦）；已同时引入 `tokex.vip` 与 `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` server 块。
-  - `default_server` 兜底块：监听 `80` / `[::]:80` / `443 ssl` / `[::]:443 ssl`（`default_server so_keepalive=on`，`server_name _;`），使用通配符 Origin CA 证书直接 `return 444;`，阻断针对公网 IP 的直接扫描与未授权访问。
-  - `/usr/local/bin/update-cf-nginx.sh`：定期从 Cloudflare 拉取最新 IPv4/IPv6 段并原子更新 `cloudflare-geo.conf` 与 `cloudflare-access.conf`，随后执行 `nginx -t && systemctl reload nginx`。
-- **静态 SPA（`tokex.vip`）**：`/static/*`（30d 强缓存）、`/index.html`（`no-cache, no-store, must-revalidate`）及所有前端路由（`/`, `/pricing`, `/rankings`, `/docs`, `/about`, `/terms`, `/user-agreement`, `/privacy-policy`, `/aup`, `/sign-in`, `/sign-up`, `/dashboard`, `/keys`, `/channels` 等）走 `try_files $uri $uri/ /index.html;`。
-- **后端反代**：`tokex.vip` 上的 `location ~ ^/(api|v1|v1beta|pg|mj)(/|$)|^/[^/]+/mj/|^/(v1/)?dashboard/billing/`（含 `/v1/` 的 `limit_conn api_key_conn 3;` 并发限制与 `1800s` 超时兜底，但外网 `/v1*` 已由 Cloudflare WAF 拦截，实际 API 流量走 `api.tokex.vip` -> Worker -> `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip`）与隐藏源站 `/` -> `http://127.0.0.1:3000`。**勿将 `/dashboard` 整体反代给后端。**
-
-### 线上计费、分组与渠道现状（`newapi` 库）
-- **计费与支付口径**：`QuotaDisplayType=USD`、`USDExchangeRate=1`、`MinTopUp=5`、`Price=7`（Epay/Zpay CNY 汇率）；启用 `Waffo Pancake`（`USD` 结算，`min_topup=10`，`icon` 留空使用内置 W 图标）与 `Epay / Zpay`（`Alipay`，`CNY` 结算，`min_topup=5`）。
-- **现行分组**：`Codex Pro`（`0.18x`）、`Claude Max`（`0.36x`）、`Official`（`1.2x`），见 `options` 表 `GroupRatio` / `UserUsableGroups`。
-- **启用渠道**（`channels` 表）：
-  - `id=3`：`Codex-Pool`（`status=1`, `group=Codex Pro`, `http://tokex-pool:8080`, `gpt-6.1-sol` / `gpt-6-astra` / `gpt-6.2-sol` / `gpt-6.2-astra` / `gpt-6.1-terra`）
-  - `id=5`：`DeRouter`（`status=1`, `group=Claude Max`, `https://api-direct.derouter.ai/proxy`, `claude-fable-5-2` / `claude-opus-5-5` / `claude-sonnet-5-5` / `claude-haiku-5-5`）
-- **重要提示**：直接修改库内 `options` 后需 `docker restart tokex-web` 重载；连接凭据见 `/opt/tokex/docker-compose.yml` 与 `/opt/tokex/.env`。
+- **Nginx 静态 SPA（`tokex.vip`）**：`/static/*`（30d 缓存）、`/index.html`（禁缓存）及前端路由走 `try_files $uri $uri/ /index.html;`。**勿将 `/dashboard` 整体反代给后端。**
+- **后端反代**：`tokex.vip` 仅反代 `/(api|v1|v1beta|pg|mj)` 与 `dashboard/billing/`；实际 `/v1*` 外部 API 流量由 Cloudflare WAF 拦截并引流至 `api.tokex.vip` -> Worker -> `origin-1n1m4s5l1s4b1w9c1n9m8d1b0.tokex.vip` -> `127.0.0.1:3000`。
+- **线上计费与渠道现状（`newapi` 库）**：`QuotaDisplayType=USD`、`USDExchangeRate=1`、`MinTopUp=5`、`Price=7`；启用 `Waffo Pancake`（`USD`，`min_topup=10`）与 `Epay / Zpay`（`CNY`，`min_topup=5`）；分组 `Codex Pro`（`0.18x`）、`Claude Max`（`0.36x`）、`Official`（`1.2x`）；启用渠道 `id=3 Codex-Pool` 与 `id=5 DeRouter`。直接改库 `options` 后需 `docker restart tokex-web`。
 
 ---
 
-## 6. 开发、验证与发布标准流程
+## 6. 精准验证与发布流程（节约时间、适配 2GB 主机）
 
-### 主流程：GitHub Actions 云端构建 + 服务端拉取同步（推荐）
+### A. 分级精准检测原则（严禁局部变量盲跑全量测试）
+由于主机仅 **2 vCPU / 1.8Gi 内存**，日常验证遵循**“精准最小验证”**，避免无意义的慢速全量重跑：
 
-由于生产主机仅 **2GB 内存**，日常发布优先走云端构建流水线（`.github/workflows/tokex-build.yml`）：
-- **本地编辑并在 `dev` 验证后合并推送 `origin`**（`leoravyn/new-api`）
-- **GitHub Actions 自动并发构建**：
-  1. `build-web`（`ubuntu-latest`）：使用 Bun 执行 `bun check -b` 与 `bun run build`，上传 `web-dist` Artifact（供 Nginx 快速静态同步）。
-  2. `build-docker`（`ubuntu-24.04-arm`，原生 ARM64）：使用 `Dockerfile` + `docker/build-push-action`（含 GHA 缓存）构建 `linux/arm64` 镜像，并通过 `GITHUB_TOKEN` 推送至 `ghcr.io/leoravyn/tokex-web:latest` 与 `ghcr.io/leoravyn/tokex-web:<short-sha>`。
-- **服务端下载同步并重启容器**：拉取 GHCR 镜像打标重启 `tokex-web`，下载 `web-dist` 同步到 `/var/www/tokex/dist` 并重载 Nginx。
+| 改动范围 | 必跑检查 | 无需重复执行 |
+|---|---|---|
+| **文案 / 局部 CSS 样式 / 单页面微调** | `bun check -b` + **1~3 个直接受影响的 Vitest 文件** + `rsbuild build` | 不跑全仓库 Vitest、不跑已通过未再改源码的测试 |
+| **公共组件 / 跨模块核心逻辑 / 路由契约** | `bun check -b` + 受影响模块测试集 + `rsbuild build` | 无关业务模块测试 |
+| **Go 后端或数据库逻辑** | 改动模块 `go test`（加 `-p 1` 防 OOM）及镜像构建 | 前端未改时可不重建前端 |
 
+### B. 本机环境与缓存硬约束
+1. **运行时路径**：容器默认 `node` 为 `v18.19.1`（缺少 Vitest/Rolldown 所需 API），本地命令必须通过 Bun 执行：`bun --bun ./node_modules/.bin/vitest run <file...>` 与 `bun --bun ./node_modules/.bin/rsbuild build`。
+2. **跳过 ARM64 崩溃工具**：`oxlint` 与 `oxfmt` 在当前 ARM64 容器环境触发 allocator `SIGABRT` panic，本地跳过，使用 `bun check -b`（`~10s`）与 CI 校验兜底。
+3. **保持 `buildCache: false`**：[`rsbuild.config.ts`](file:///home/ubuntu/tokex/web/rsbuild.config.ts#L89) 必须保持 `buildCache: false`。实测在 1.8Gi 内存下开启会写入约 `598M` 缓存并顶满 Swap（`1.9Gi/2.0Gi`），导致构建从约 `38s–51s` 恶化为 `1m39s–2m32s`。
+
+### C. 本地微调快速上线 vs 完整 CI 发布
 ```bash
-# 1. 本地（dev 分支）轻量校验、合并至 main 并推送 origin
+# 方式 1：纯前端局部改动 — 本地精准校验并直接热同步到 Nginx（推荐日常使用）
 export PATH="$HOME/.bun/bin:$PATH"
 cd /home/ubuntu/tokex/web
 bun check -b
-# 按需运行相关单测：bun --bun x vitest run src/features/wallet/__tests__/copy.test.tsx
+bun --bun ./node_modules/.bin/vitest run src/features/<module>/__tests__/<target>.test.tsx
+bun --bun ./node_modules/.bin/rsbuild build
+rsync -a --delete /home/ubuntu/tokex/web/dist/ /var/www/tokex/dist/
 
+# 方式 2：合并发版 / 涉及后端改动 — 推送 main 走 GitHub Actions（.github/workflows/tokex-build.yml）
 cd /home/ubuntu/tokex
 git checkout main && git merge dev --no-ff
 git push origin dev && git push origin main
 git checkout dev
-
-# 2. 查看 GitHub Actions 构建状态（push main 自动触发）
-gh run list --workflow=tokex-build.yml --limit 5
-# 如需等待最近一次运行完成：gh run watch
-
-# 3. 同步前端 web-dist 至 /var/www/tokex/dist 并重载 Nginx
-RUN_ID=$(gh run list --workflow=tokex-build.yml --branch main --status success --limit 1 --json databaseId -q '.[0].databaseId')
-rm -rf /tmp/tokex-web-dist && gh run download "$RUN_ID" -n web-dist -D /tmp/tokex-web-dist
-sudo rm -rf /var/www/tokex/dist && sudo mkdir -p /var/www/tokex/dist
-sudo cp -r /tmp/tokex-web-dist/* /var/www/tokex/dist/
-sudo chmod -R a+rX /var/www/tokex/dist
-sudo nginx -t && sudo systemctl reload nginx
-rm -rf /tmp/tokex-web-dist
-
-# 4. 拉取最新 ARM64 镜像、打标并重启 tokex-web（若仅改前端可跳过）
-# 若 ghcr.io/leoravyn/tokex-web 为私有包，先执行：gh auth token | docker login ghcr.io -u leoravyn --password-stdin
-docker pull ghcr.io/leoravyn/tokex-web:latest
-docker tag ghcr.io/leoravyn/tokex-web:latest tokex-web:v1.0.0-rc.51-tokex
-cd /opt/tokex && docker compose up -d --force-recreate web
-
-# 5. 线上基础冒烟
-curl -sS -o /dev/null -w "root:%{http_code}\n" https://tokex.vip/
-curl -sS -o /dev/null -w "api_status:%{http_code}\n" https://tokex.vip/api/status
-curl -sS -o /dev/null -w "pricing:%{http_code}\n" https://tokex.vip/pricing
+# 待 Actions 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/ 或拉取 ghcr.io/leoravyn/tokex-web:latest 重启 tokex-web
 ```
-
-### 兜底方案：本地 2GB ARM64 离线构建（Fallback）
-
-仅在 GitHub Actions / GHCR 不可用时使用本地构建：
-
-> **2GB ARM64 构建约束**：
-> 1. **`oxlint` 在 ARM64 存在原生 panic，禁止运行 `oxlint`**，统一使用 `bun check -b` 做类型校验。
-> 2. 内存紧张，**全量构建前先停止临时 `rsbuild dev` 进程**，并限制 `NODE_OPTIONS="--max-old-space-size=1536"`；如本地重编 Go 后端镜像，应先确保 `VERSION` 已写入版本号，并使用 `GOMEMLIMIT=700MiB`（或先以 `golang:1.26.10-alpine` 运行 `go test -p 1`），完成后及时 `docker builder prune -f` 清理临时构建缓存（避免占用 `/` 分区）。
-
-```bash
-# 1. 本地前端校验、单测与生产构建（在 dev 分支）
-export PATH="$HOME/.bun/bin:$PATH"
-cd /home/ubuntu/tokex/web
-bun check -b
-bun --bun x vitest run src/features/pricing/__tests__/group-ratio-display.test.tsx
-NODE_OPTIONS="--max-old-space-size=1536" bun --bun x rsbuild build
-
-# 2. 合并至 main 并发布前端静态产物
-cd /home/ubuntu/tokex
-git checkout main && git merge dev --no-ff
-sudo rm -rf /var/www/tokex/dist && sudo mkdir -p /var/www/tokex/dist
-sudo cp -r /home/ubuntu/tokex/web/dist/* /var/www/tokex/dist/
-sudo chmod -R a+rX /var/www/tokex/dist
-sudo nginx -t && sudo systemctl reload nginx
-
-# 3. （仅后端有改动时）本地构建 tokex-web 镜像并重启
-docker build -t tokex-web:v1.0.0-rc.51-tokex /home/ubuntu/tokex
-cd /opt/tokex && docker compose up -d --force-recreate web
-docker builder prune -f
-cd /home/ubuntu/tokex && git checkout dev
-```
+*(线上基础冒烟：`curl -sS -o /dev/null -w "%{http_code}\n" https://tokex.vip/`、`https://tokex.vip/api/status`、`https://tokex.vip/pricing`。)*

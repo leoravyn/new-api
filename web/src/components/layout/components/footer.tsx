@@ -113,7 +113,7 @@ export function Footer(props: FooterProps) {
   return (
     <footer
       className={cn(
-        'relative z-10 border-t border-[rgba(255,255,255,0.08)] bg-[#050506]/92 backdrop-blur-xl',
+        'relative z-10 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#050506]/92 backdrop-blur-xl',
         props.className
       )}
     >

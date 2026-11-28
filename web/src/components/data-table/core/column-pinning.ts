@@ -60,8 +60,8 @@ function getPinnedColumnClassName(
 ) {
   const edgeClassName =
     pinnedColumn.side === 'left'
-      ? 'shadow-[8px_0_10px_-10px_hsl(var(--foreground))]'
-      : 'shadow-[-8px_0_10px_-10px_hsl(var(--foreground))]'
+      ? 'shadow-[8px_0_10px_-10px_hsl(var(--foreground))] dark:shadow-[8px_0_16px_-12px_rgba(0,0,0,0.7)]'
+      : 'shadow-[-8px_0_10px_-10px_hsl(var(--foreground))] dark:shadow-[-8px_0_16px_-12px_rgba(0,0,0,0.7)]'
 
   return cn(
     'sticky whitespace-nowrap',
@@ -69,7 +69,7 @@ function getPinnedColumnClassName(
     edgeClassName,
     kind === 'header'
       ? '[background-color:var(--table-header-bg,var(--table-header))] group-hover:[background-color:var(--table-header-hover)] z-30'
-      : 'bg-background z-10 group-hover:[background-color:color-mix(in_oklch,var(--muted)_50%,var(--background))] group-data-[state=selected]:bg-muted',
+      : 'bg-background group-hover:[background-color:color-mix(in_oklch,var(--muted)_50%,var(--background))] group-data-[state=selected]:bg-muted dark:[background-color:#0b0b0e] dark:group-hover:[background-color:#121215] dark:group-data-[state=selected]:[background-color:#19191d] z-10',
     pinnedColumn.className,
     kind === 'header'
       ? pinnedColumn.headerClassName

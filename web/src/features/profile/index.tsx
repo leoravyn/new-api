@@ -16,11 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Main } from '@/components/layout'
-import {
-  CardStaggerContainer,
-  CardStaggerItem,
-} from '@/components/page-transition'
+import { useEffect } from 'react'
+
+import { Main, useConsoleScrollReporter } from '@/components/layout'
 import { useStatus } from '@/hooks/use-status'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -35,6 +33,14 @@ export function Profile() {
   const { profile, loading, refreshProfile } = useProfile()
   const { status } = useStatus()
   const permissions = useAuthStore((s) => s.auth.user?.permissions)
+  const reportScrollTop = useConsoleScrollReporter()
+
+  useEffect(() => {
+    reportScrollTop(0)
+    return () => {
+      reportScrollTop(0)
+    }
+  }, [reportScrollTop])
 
   const checkinEnabled = status?.checkin_enabled === true
   const turnstileEnabled = !!(
@@ -47,15 +53,15 @@ export function Profile() {
   const quotaRemindThreshold = status?.quota_remind_threshold ?? 0
 
   return (
-    <Main>
-      <div className='min-h-0 flex-1 overflow-auto px-3 py-4 sm:px-5 sm:py-6'>
-        <CardStaggerContainer className='mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6'>
-          <CardStaggerItem>
-            <ProfileHeader profile={profile} loading={loading} />
-          </CardStaggerItem>
+    <Main flushTop>
+      <div
+        onScroll={(event) => reportScrollTop(event.currentTarget.scrollTop)}
+        className='tokex-scrollbar min-h-0 flex-1 overflow-auto px-3 py-4 sm:px-5 sm:py-6 md:pt-[calc(var(--app-header-height,3.5rem)+1rem)]'
+      >
+        <div className='mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6'>
+          <ProfileHeader profile={profile} loading={loading} />
 
-          <CardStaggerItem>
-            <div className='grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.46fr)] xl:items-start'>
+          <div className='grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.46fr)] xl:items-start'>
               <div className='space-y-4 sm:space-y-6'>
                 <ProfileSettingsCard
                   profile={profile}
@@ -70,7 +76,7 @@ export function Profile() {
                 />
               </div>
 
-              <div className='space-y-4 sm:space-y-6 xl:sticky xl:top-6'>
+              <div className='space-y-4 sm:space-y-6 xl:sticky xl:top-20'>
                 {checkinEnabled && (
                   <CheckinCalendarCard
                     checkinEnabled={checkinEnabled}
@@ -80,9 +86,8 @@ export function Profile() {
                 )}
                 {canConfigureSidebar && <SidebarModulesCard />}
               </div>
-            </div>
-          </CardStaggerItem>
-        </CardStaggerContainer>
+          </div>
+        </div>
       </div>
     </Main>
   )

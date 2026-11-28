@@ -45,7 +45,7 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
 
   if (loading) {
     return (
-      <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
+      <Card data-card-hover='false' className='gap-0 py-0'>
         <CardContent className='p-4 sm:p-5'>
           <div className='flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left'>
             <Skeleton className='h-16 w-16 rounded-2xl' />
@@ -115,9 +115,9 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
   ]
 
   return (
-    <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
-      <CardContent className='bg-linear-to-b from-white/[0.03] to-transparent p-4 sm:p-6'>
-        <div className='flex items-center gap-3.5 text-left sm:gap-5'>
+    <Card data-card-hover='false' className='gap-0 py-0'>
+      <CardContent className='rounded-t-2xl bg-linear-to-b from-white/[0.025] to-transparent p-4 sm:p-6'>
+        <div className='tokex-content-enter flex items-center gap-3.5 text-left sm:gap-5'>
           <Avatar className='h-12 w-12 rounded-2xl border border-white/[0.14] text-sm sm:h-16 sm:w-16 sm:text-lg'>
             <AvatarFallback
               className='rounded-2xl font-semibold text-white'
@@ -157,8 +157,8 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
           </div>
         </div>
       </CardContent>
-      <div className='border-t border-white/[0.08] bg-white/[0.015]'>
-        <div className='grid grid-cols-3 divide-x divide-white/[0.08]'>
+      <div className='rounded-b-2xl border-t border-white/[0.08] bg-white/[0.015]'>
+        <div className='tokex-content-enter grid grid-cols-3 divide-x divide-white/[0.08]'>
           {stats.map((item) => (
             <div key={item.label} className='min-w-0 px-3 py-3 sm:px-5 sm:py-4'>
               <div className='flex items-center gap-2'>

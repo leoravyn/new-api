@@ -109,11 +109,10 @@ export function PricingTable(props: PricingTableProps) {
         emptyTitle={t('No Models Found')}
         emptyDescription={t('No models match your current filters.')}
         skeletonKeyPrefix='pricing-skeleton'
-        containerClassName='rounded-2xl border-white/[0.08] bg-[#0a0a0c]'
         applyHeaderSize
         getColumnClassName={(_columnId, kind) =>
           kind === 'header'
-            ? 'bg-[#0a0a0c] text-xs font-medium tracking-wide text-zinc-400'
+            ? 'text-xs font-medium tracking-wide text-zinc-400'
             : undefined
         }
         renderRow={(row: Row<PricingModel>) => (

@@ -42,6 +42,7 @@ import {
 } from '@/lib/auth-session'
 import { subscribeAuthSessionEvents } from '@/lib/auth-session-sync'
 import { resolveLegacyRoute } from '@/lib/legacy-route'
+import { installLiquidGlassTracker } from '@/lib/liquid-glass-tracker'
 import { useAuthStore } from '@/stores/auth-store'
 
 function RootComponent() {
@@ -50,6 +51,8 @@ function RootComponent() {
 
   // Load system configuration (logo, system name, etc.) from backend
   useSystemConfig({ autoLoad: true })
+
+  useEffect(() => installLiquidGlassTracker(), [])
 
   useEffect(() => {
     const aff = new URLSearchParams(window.location.search).get('aff')?.trim()

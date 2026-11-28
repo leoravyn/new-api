@@ -59,7 +59,7 @@ export function SearchBar(props: SearchBarProps) {
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
         className={cn(
-          'border-white/[0.08] bg-[#0a0a0c] text-[#fafafa] placeholder:text-zinc-500',
+          'border-white/[0.08] bg-[#0b0b0e]/78 text-[#fafafa] placeholder:text-zinc-500 backdrop-blur-xl',
           'hover:border-white/[0.16]',
           'focus:border-white/30 focus:ring-2 focus:ring-white/15',
           'h-10 w-full rounded-xl border pr-16 pl-10 text-sm transition-all outline-none'

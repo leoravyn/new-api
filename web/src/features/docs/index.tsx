@@ -35,7 +35,6 @@ import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
 import { PublicLayout } from '@/components/layout'
-import { PageTransition } from '@/components/page-transition'
 import { LEGAL_CONFIG } from '@/features/legal/content/legal-config'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
@@ -60,10 +59,10 @@ export function DocsPage() {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <PageTransition className='min-h-screen px-4 py-10 sm:px-6 lg:px-8'>
+      <div className='px-4 py-10 sm:px-6 lg:px-8'>
         <div className='mx-auto max-w-6xl'>
           {/* Top Breadcrumb + Bilingual Switcher */}
-          <div className='flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-5'>
+          <div className='tokex-content-enter flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-5'>
             <nav
               aria-label={isZh ? '页面导航' : 'Page navigation'}
               className='flex flex-wrap items-center gap-2 text-xs text-zinc-400'
@@ -80,7 +79,7 @@ export function DocsPage() {
             <div
               role='group'
               aria-label={isZh ? '切换文档语言' : 'Switch document language'}
-              className='inline-flex items-center rounded-full border border-white/10 bg-[#0a0a0c] p-0.5'
+              className='tokex-surface-pill inline-flex items-center p-0.5'
             >
               <button
                 type='button'
@@ -119,7 +118,7 @@ export function DocsPage() {
             {/* Desktop Sticky Table of Contents */}
             <aside className='hidden lg:col-span-3 lg:block'>
               <div className='sticky top-24 space-y-4'>
-                <div className='rounded-2xl border border-white/10 bg-[#050506]/90 p-4 backdrop-blur-xl'>
+                <div className='tokex-liquid-card tokex-content-reveal p-4'>
                   <div className='mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-zinc-400 uppercase'>
                     <BookOpen className='size-3.5 text-zinc-300' />
                     <span>{content.tocTitle}</span>
@@ -143,7 +142,7 @@ export function DocsPage() {
                   </nav>
                 </div>
 
-                <div className='rounded-2xl border border-white/10 bg-[#050506]/90 p-4 backdrop-blur-xl'>
+                <div className='tokex-liquid-card tokex-content-reveal p-4'>
                   <div className='mb-2.5 text-[11px] font-semibold tracking-wider text-zinc-400 uppercase'>
                     {content.quickLinksLabel}
                   </div>
@@ -167,7 +166,7 @@ export function DocsPage() {
             <article className='min-w-0 lg:col-span-9'>
               <div className='max-w-4xl space-y-8'>
                 {/* Document Header Card */}
-                <header className='rounded-2xl border border-white/10 bg-[#0a0a0c]/90 p-6 backdrop-blur-xl sm:p-8'>
+                <header className='tokex-liquid-card tokex-content-reveal p-6 sm:p-8'>
                   <div className='inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-xs font-medium text-zinc-200'>
                     <Terminal className='size-3.5 text-zinc-300' />
                     <span>{content.badge}</span>
@@ -198,7 +197,7 @@ export function DocsPage() {
                   </div>
 
                   <div className='mt-6 grid gap-3 sm:grid-cols-2'>
-                    <div className='flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'>
+                    <div className='flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.025] px-4 py-3'>
                       <div className='min-w-0'>
                         <div className='text-[11px] font-medium tracking-wide text-zinc-400 uppercase'>
                           {content.baseUrlLabel}
@@ -219,7 +218,7 @@ export function DocsPage() {
                       />
                     </div>
 
-                    <div className='flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'>
+                    <div className='flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.025] px-4 py-3'>
                       <div className='min-w-0'>
                         <div className='text-[11px] font-medium tracking-wide text-zinc-400 uppercase'>
                           {isZh ? '支持协议端点' : 'Endpoints'}
@@ -233,7 +232,7 @@ export function DocsPage() {
                 </header>
 
                 {/* Mobile Quick TOC */}
-                <details className='rounded-2xl border border-white/10 bg-[#0a0a0c]/80 p-4 lg:hidden'>
+                <details className='tokex-liquid-card p-4 lg:hidden'>
                   <summary className='cursor-pointer text-sm font-medium text-zinc-200'>
                     {content.mobileTocLabel}
                   </summary>
@@ -256,7 +255,7 @@ export function DocsPage() {
                 {/* Section 1: API Usage Rules */}
                 <section
                   id='rules'
-                  className='scroll-mt-24 space-y-5 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-5 p-6 sm:p-7'
                 >
                   <div>
                     <h2 className='flex items-baseline gap-2.5 text-lg font-semibold tracking-tight text-white sm:text-xl'>
@@ -279,7 +278,7 @@ export function DocsPage() {
                       {content.rules.endpoints.map((item) => (
                         <div
                           key={item.endpoint}
-                          className='rounded-xl border border-white/10 bg-[#0a0a0c]/90 p-3.5'
+                          className='rounded-xl border border-white/[0.06] bg-white/[0.025] p-3.5'
                         >
                           <div className='font-mono text-xs font-semibold text-white'>
                             {item.endpoint}
@@ -334,7 +333,7 @@ export function DocsPage() {
                 {/* Section 2: Codex CLI */}
                 <section
                   id='codex'
-                  className='scroll-mt-24 space-y-4 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-4 p-6 sm:p-7'
                 >
                   <div>
                     <h2 className='flex items-baseline gap-2.5 text-lg font-semibold tracking-tight text-white sm:text-xl'>
@@ -399,7 +398,7 @@ export function DocsPage() {
                 {/* Section 3: Claude Code */}
                 <section
                   id='claude-code'
-                  className='scroll-mt-24 space-y-4 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-4 p-6 sm:p-7'
                 >
                   <div>
                     <h2 className='flex items-baseline gap-2.5 text-lg font-semibold tracking-tight text-white sm:text-xl'>
@@ -449,7 +448,7 @@ export function DocsPage() {
                 {/* Section 4: Generic OpenAI Clients */}
                 <section
                   id='clients'
-                  className='scroll-mt-24 space-y-4 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-4 p-6 sm:p-7'
                 >
                   <div className='flex items-start justify-between gap-4'>
                     <div>
@@ -466,8 +465,8 @@ export function DocsPage() {
                     <MessageSquare className='hidden size-5 shrink-0 text-zinc-500 sm:block' />
                   </div>
 
-                  <div className='overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0c]'>
-                    <div className='border-b border-white/[0.08] bg-[#141418] px-4 py-2.5 text-xs font-semibold text-zinc-200'>
+                  <div className='tokex-surface-subtle overflow-hidden'>
+                    <div className='border-b border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-xs font-semibold text-zinc-200'>
                       {content.clients.configTitle}
                     </div>
                     <div className='divide-y divide-white/[0.06]'>
@@ -514,7 +513,7 @@ export function DocsPage() {
                 {/* Section 5: SDK & cURL */}
                 <section
                   id='sdk'
-                  className='scroll-mt-24 space-y-4 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-4 p-6 sm:p-7'
                 >
                   <div className='flex flex-wrap items-center justify-between gap-3'>
                     <div>
@@ -532,7 +531,7 @@ export function DocsPage() {
                     <div
                       role='tablist'
                       aria-label='SDK examples'
-                      className='inline-flex items-center rounded-xl border border-white/10 bg-[#0a0a0c] p-1'
+                      className='tokex-surface-subtle inline-flex items-center p-1'
                     >
                       {content.sdk.examples.map((tab) => {
                         const isSelected = tab.id === currentSdk.id
@@ -574,7 +573,7 @@ export function DocsPage() {
                 {/* Section 6: Troubleshooting */}
                 <section
                   id='troubleshooting'
-                  className='scroll-mt-24 space-y-4 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                  className='tokex-liquid-card tokex-content-reveal scroll-mt-24 space-y-4 p-6 sm:p-7'
                 >
                   <div>
                     <h2 className='flex items-baseline gap-2.5 text-lg font-semibold tracking-tight text-white sm:text-xl'>
@@ -588,7 +587,7 @@ export function DocsPage() {
                     </p>
                   </div>
 
-                  <div className='divide-y divide-white/[0.06] rounded-xl border border-white/10 bg-[#0a0a0c]'>
+                  <div className='tokex-surface-subtle divide-y divide-white/[0.06]'>
                     {content.troubleshooting.items.map((item) => (
                       <div
                         key={item.code}
@@ -611,7 +610,7 @@ export function DocsPage() {
                 </section>
 
                 {/* Resources & Legal Jump Box */}
-                <aside className='rounded-2xl border border-white/10 bg-[#0a0a0c]/90 p-6 backdrop-blur-xl'>
+                <aside className='tokex-liquid-card tokex-content-reveal p-6'>
                   <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                     <div className='space-y-1'>
                       <div className='flex items-center gap-2 text-sm font-semibold text-white'>
@@ -636,7 +635,7 @@ export function DocsPage() {
                       <Link
                         key={item.to}
                         to={item.to}
-                        className='inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-[#141418] px-3.5 py-1.5 font-medium text-zinc-100 transition-colors hover:border-white/25 hover:text-white'
+                        className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 font-medium text-zinc-100 hover:border-white/25 hover:text-white'
                       >
                         <span>{item.label}</span>
                         <ArrowRight className='size-3 text-zinc-400' />
@@ -646,7 +645,7 @@ export function DocsPage() {
                       <Link
                         key={item.to}
                         to={item.to}
-                        className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3.5 py-1.5 text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+                        className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-zinc-300 hover:border-white/20 hover:text-white'
                       >
                         {item.to === '/aup' ? (
                           <ShieldCheck className='size-3.5' />
@@ -662,7 +661,7 @@ export function DocsPage() {
             </article>
           </div>
         </div>
-      </PageTransition>
+      </div>
     </PublicLayout>
   )
 }

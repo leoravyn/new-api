@@ -20,7 +20,6 @@ import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
-import { PageTransition } from '@/components/page-transition'
 
 import {
   LoadingSkeleton,
@@ -163,8 +162,7 @@ export function Pricing() {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <div className='relative'>
-        <PageTransition className='relative mx-auto w-full max-w-[1800px] px-3 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10 xl:px-8'>
+      <div className='relative mx-auto w-full max-w-[1800px] px-3 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-10 xl:px-8'>
           <header className='mx-auto mb-5 max-w-3xl pt-3 text-center sm:mb-7 sm:pt-6'>
             <h1 className='text-[clamp(1.85rem,4.5vw,3rem)] leading-[1.15] font-bold tracking-tight'>
               {t('Model Square')}
@@ -175,14 +173,14 @@ export function Pricing() {
               )}
             </p>
             <div className='mt-3 flex flex-wrap items-center justify-center gap-2 text-xs'>
-              <span className='inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#0a0a0c] px-3 py-1 text-zinc-300 tabular-nums'>
+              <span className='tokex-surface-pill inline-flex items-center gap-1.5 px-3 py-1 text-zinc-300 tabular-nums'>
                 <span className='size-1.5 rounded-full bg-[#fafafa]' />
                 {t('This site currently has {{count}} models enabled', {
                   count: models?.length || 0,
                 })}
               </span>
               {availableGroups.length > 0 && (
-                <span className='inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#0a0a0c] px-3 py-1 text-zinc-400 tabular-nums'>
+                <span className='tokex-surface-pill inline-flex items-center gap-1.5 px-3 py-1 text-zinc-400 tabular-nums'>
                   {t('Groups')}: {availableGroups.join(' / ')}
                 </span>
               )}
@@ -217,7 +215,7 @@ export function Pricing() {
               models={models || []}
               hasActiveFilters={hasActiveFilters}
               onClearFilters={clearFilters}
-              className='hover-scrollbar sticky top-20 hidden max-h-[calc(100dvh-6rem)] self-start overflow-y-auto xl:block'
+              className='sticky top-20 hidden self-start xl:block'
             />
 
             <main className='min-w-0 space-y-4'>
@@ -279,7 +277,6 @@ export function Pricing() {
               showRechargePrice={showRechargePrice}
             />
           )}
-        </PageTransition>
       </div>
     </PublicLayout>
   )

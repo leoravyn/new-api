@@ -72,7 +72,8 @@ export function AnnouncementsPanel() {
       empty={!list.length}
       emptyMessage={t('No announcements at this time')}
       height='h-72'
-      contentClassName='p-0'
+      className='flex h-full flex-col'
+      contentClassName='flex-1 p-0'
     >
       <ScrollArea className='h-72'>
         <div className='space-y-2 p-3 sm:p-4'>
@@ -84,7 +85,7 @@ export function AnnouncementsPanel() {
                 type='button'
                 onClick={() => handleAnnouncementClick(item)}
                 className={cn(
-                  'group w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-2.5 text-left transition-all duration-200 hover:border-white/[0.15] hover:bg-white/[0.05]'
+                  'group tokex-surface-subtle w-full px-3.5 py-2.5 text-left hover:bg-muted/60 dark:hover:border-white/[0.14] dark:hover:bg-white/[0.055]'
                 )}
               >
                 <div className='flex items-start gap-2.5'>

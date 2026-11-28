@@ -65,42 +65,46 @@ interface MobileCardListProps<TData> {
 
 function ListSkeleton() {
   return (
-    <div className='divide-y overflow-hidden rounded-lg border'>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className='px-3 py-2.5'>
-          <div className='flex items-center justify-between'>
-            <Skeleton className='h-4 w-32' />
-            <Skeleton className='h-5 w-16 rounded-md' />
-          </div>
-          <div className='mt-1.5 grid grid-cols-2 gap-2'>
-            <div className='flex-1'>
-              <Skeleton className='mb-1 h-2 w-8' />
-              <Skeleton className='h-4 w-full' />
+    <div className='tokex-console-panel'>
+      <div className='divide-y overflow-hidden rounded-[inherit] dark:divide-white/[0.07]'>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className='px-3 py-2.5'>
+            <div className='flex items-center justify-between'>
+              <Skeleton className='h-4 w-32' />
+              <Skeleton className='h-5 w-16 rounded-md' />
             </div>
-            <div className='flex-1'>
-              <Skeleton className='mb-1 h-2 w-8' />
-              <Skeleton className='h-4 w-full' />
+            <div className='mt-1.5 grid grid-cols-2 gap-2'>
+              <div className='flex-1'>
+                <Skeleton className='mb-1 h-2 w-8' />
+                <Skeleton className='h-4 w-full' />
+              </div>
+              <div className='flex-1'>
+                <Skeleton className='mb-1 h-2 w-8' />
+                <Skeleton className='h-4 w-full' />
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
 
 function FallbackListSkeleton() {
   return (
-    <div className='divide-y overflow-hidden rounded-lg border'>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className='space-y-1.5 px-3 py-2.5'>
-          {[1, 2, 3].map((j) => (
-            <div key={j} className='flex items-center justify-between'>
-              <Skeleton className='h-2.5 w-16' />
-              <Skeleton className='h-3.5 w-28' />
-            </div>
-          ))}
-        </div>
-      ))}
+    <div className='tokex-console-panel'>
+      <div className='divide-y overflow-hidden rounded-[inherit] dark:divide-white/[0.07]'>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className='space-y-1.5 px-3 py-2.5'>
+            {[1, 2, 3].map((j) => (
+              <div key={j} className='flex items-center justify-between'>
+                <Skeleton className='h-2.5 w-16' />
+                <Skeleton className='h-3.5 w-28' />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -145,7 +149,7 @@ export function MobileCardList<TData>(props: MobileCardListProps<TData>) {
 
   if (!rows || rows.length === 0) {
     return (
-      <div className='rounded-lg border p-6'>
+      <div className='tokex-console-panel p-6'>
         <Empty className='border-none p-0'>
           <EmptyHeader>
             <EmptyMedia variant='icon'>
@@ -160,49 +164,51 @@ export function MobileCardList<TData>(props: MobileCardListProps<TData>) {
   }
 
   return (
-    <div className='divide-y overflow-hidden rounded-lg border'>
-      {enableRowSelection && (
-        <label className='flex items-center gap-2 px-3 py-2 text-xs'>
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            indeterminate={table.getIsSomePageRowsSelected()}
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(Boolean(value))
-            }
-          />
-          {t('Select all')}
-        </label>
-      )}
-      {rows.map((row) => {
-        const key = getRowKey ? getRowKey(row) : row.id
-        return (
-          <div
-            key={key}
-            className={cn(
-              '[background-color:var(--data-table-card-bg,var(--table-row))] px-3 py-2.5',
-              getRowClassName?.(row)
-            )}
-          >
-            <div className='flex min-w-0 items-start gap-2'>
-              {enableRowSelection && (
-                <Checkbox
-                  className='mt-0.5'
-                  checked={row.getIsSelected()}
-                  onCheckedChange={(value) =>
-                    row.toggleSelected(Boolean(value))
-                  }
-                  aria-label={t('Select row {{number}}', {
-                    number: row.index + 1,
-                  })}
-                />
+    <div className='tokex-console-panel'>
+      <div className='divide-y overflow-hidden rounded-[inherit] dark:divide-white/[0.07]'>
+        {enableRowSelection && (
+          <label className='flex items-center gap-2 px-3 py-2 text-xs'>
+            <Checkbox
+              checked={table.getIsAllPageRowsSelected()}
+              indeterminate={table.getIsSomePageRowsSelected()}
+              onCheckedChange={(value) =>
+                table.toggleAllPageRowsSelected(Boolean(value))
+              }
+            />
+            {t('Select all')}
+          </label>
+        )}
+        {rows.map((row) => {
+          const key = getRowKey ? getRowKey(row) : row.id
+          return (
+            <div
+              key={key}
+              className={cn(
+                '[background-color:var(--data-table-card-bg,var(--table-row))] px-3 py-2.5',
+                getRowClassName?.(row)
               )}
-              <div className='min-w-0 flex-1'>
-                <CardRowContent row={row} compact={hasCompactMeta} />
+            >
+              <div className='flex min-w-0 items-start gap-2'>
+                {enableRowSelection && (
+                  <Checkbox
+                    className='mt-0.5'
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) =>
+                      row.toggleSelected(Boolean(value))
+                    }
+                    aria-label={t('Select row {{number}}', {
+                      number: row.index + 1,
+                    })}
+                  />
+                )}
+                <div className='min-w-0 flex-1'>
+                  <CardRowContent row={row} compact={hasCompactMeta} />
+                </div>
               </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

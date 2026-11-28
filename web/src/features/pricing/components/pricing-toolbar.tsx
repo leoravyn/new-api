@@ -86,7 +86,7 @@ export function PricingToolbar(props: PricingToolbarProps) {
   const sortLabels = getSortLabels(t)
 
   return (
-    <div className='rounded-2xl border border-white/[0.08] bg-[#0a0a0c] p-3'>
+    <div className='tokex-liquid-card p-3'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <div className='flex items-center gap-2'>
           <Button
