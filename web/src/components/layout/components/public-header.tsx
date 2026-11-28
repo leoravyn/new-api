@@ -22,10 +22,8 @@ import { useTranslation } from 'react-i18next'
 
 import { Dialog } from '@/components/dialog'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { NotificationPopover } from '@/components/notification-popover'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useNotifications } from '@/hooks/use-notifications'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { cn } from '@/lib/utils'
@@ -61,6 +59,8 @@ export interface PublicHeaderProps {
   showAuthButtons?: boolean
   showNotifications?: boolean
   forceElevated?: boolean
+  disableScrollElevation?: boolean
+  scrollTargetRef?: React.RefObject<HTMLElement | null>
   className?: string
 }
 
@@ -73,7 +73,7 @@ export function PublicHeader(props: PublicHeaderProps) {
     siteName: customSiteName,
     homeUrl = '/',
     showAuthButtons = true,
-    showNotifications = true,
+    showNotifications: _showNotifications = false,
   } = props
 
   const { t } = useTranslation()
@@ -92,7 +92,6 @@ export function PublicHeader(props: PublicHeaderProps) {
     logoLoaded,
   } = useSystemConfig()
   const dynamicLinks = useTopNavLinks()
-  const notifications = useNotifications()
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
 
@@ -140,15 +139,29 @@ export function PublicHeader(props: PublicHeaderProps) {
   if (loading) authContent = <Skeleton className='h-8 w-20 rounded-lg' />
 
   useEffect(() => {
+    const scrollTarget = props.scrollTargetRef?.current
+
     const syncScrollState = () => {
-      setIsScrolled(window.scrollY > 8)
+      if (props.disableScrollElevation) {
+        setIsScrolled(false)
+        return
+      }
+      const containerTop = scrollTarget?.scrollTop ?? 0
+      setIsScrolled(window.scrollY > 8 || containerTop > 8)
     }
+
     syncScrollState()
+    if (props.disableScrollElevation) {
+      return
+    }
+
     window.addEventListener('scroll', syncScrollState, { passive: true })
+    scrollTarget?.addEventListener('scroll', syncScrollState, { passive: true })
     return () => {
       window.removeEventListener('scroll', syncScrollState)
+      scrollTarget?.removeEventListener('scroll', syncScrollState)
     }
-  }, [])
+  }, [pathname, props.disableScrollElevation, props.scrollTargetRef])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -218,13 +231,16 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
-  const showElevatedBar = isScrolled || mobileOpen || Boolean(props.forceElevated)
+  const showElevatedBar =
+    mobileOpen ||
+    Boolean(props.forceElevated) ||
+    (!props.disableScrollElevation && isScrolled)
 
   return (
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 h-14 w-full border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          'sticky top-0 z-50 h-14 w-full shrink-0 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
           showElevatedBar
             ? 'border-white/[0.05] bg-[#08080a]/48 backdrop-blur-2xl backdrop-saturate-150'
             : 'border-transparent bg-transparent backdrop-blur-none',
@@ -313,18 +329,6 @@ export function PublicHeader(props: PublicHeaderProps) {
 
             {/* Right: Utilities + Console CTA */}
             <div className='hidden shrink-0 items-center justify-end gap-1.5 lg:flex lg:flex-1'>
-              {showNotifications && (
-                <NotificationPopover
-                  open={notifications.popoverOpen}
-                  onOpenChange={notifications.setPopoverOpen}
-                  unreadCount={notifications.unreadCount}
-                  activeTab={notifications.activeTab}
-                  onTabChange={notifications.setActiveTab}
-                  notice={notifications.notice}
-                  announcements={notifications.announcements}
-                  loading={notifications.loading}
-                />
-              )}
               {showLanguageSwitcher && <LanguageSwitcher />}
 
               {showAuthButtons && authContent && (

@@ -62,26 +62,28 @@ export function DataTableView<TData>(props: DataTableViewProps<TData>) {
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0e0e11]/92 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-xl',
+        'tokex-liquid-card flex flex-col rounded-2xl',
         props.containerClassName
       )}
       {...props.containerProps}
     >
-      {props.splitHeader ? (
-        <SplitHeaderTableView
-          props={props}
-          rows={rows}
-          colSpan={colSpan}
-          getColumnClassName={columnClassName}
-        />
-      ) : (
-        <UnifiedTableView
-          props={props}
-          rows={rows}
-          colSpan={colSpan}
-          getColumnClassName={columnClassName}
-        />
-      )}
+      <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[inherit]'>
+        {props.splitHeader ? (
+          <SplitHeaderTableView
+            props={props}
+            rows={rows}
+            colSpan={colSpan}
+            getColumnClassName={columnClassName}
+          />
+        ) : (
+          <UnifiedTableView
+            props={props}
+            rows={rows}
+            colSpan={colSpan}
+            getColumnClassName={columnClassName}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -154,7 +156,7 @@ function SplitHeaderTableView<TData>({
           <DataTableHeader
             table={props.table}
             applyHeaderSize={props.applyHeaderSize}
-            className={cn('sticky top-0 z-10', props.tableHeaderClassName)}
+            className={cn('sticky top-0 z-20', props.tableHeaderClassName)}
             rowClassName={props.tableHeaderRowClassName}
             getColumnClassName={getColumnClassName}
           />

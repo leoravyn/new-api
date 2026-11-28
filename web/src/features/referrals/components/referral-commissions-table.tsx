@@ -169,7 +169,7 @@ export function ReferralCommissionsTable({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className='flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#050506]/60 px-4 py-10 text-center'>
+        <div className='tokex-surface-subtle flex min-h-48 flex-col items-center justify-center border-dashed px-4 py-10 text-center'>
           <div className='flex size-10 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-zinc-400'>
             <Inbox className='size-5' />
           </div>
@@ -185,7 +185,7 @@ export function ReferralCommissionsTable({
           </p>
         </div>
       ) : (
-        <div className='overflow-hidden rounded-xl border border-white/[0.08] bg-[#050506]/60'>
+        <div className='tokex-surface-subtle overflow-hidden'>
           <Table>
             <TableHeader>
               <TableRow className='border-white/[0.08] hover:bg-transparent'>

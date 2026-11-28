@@ -34,14 +34,16 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   const { t } = useTranslation()
   if (props.loading) {
     return (
-      <div className='grid grid-cols-3 divide-x divide-white/[0.08] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl'>
-        {['balance', 'usage', 'requests'].map((key) => (
-          <div key={key} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
-            <Skeleton className='h-3.5 w-full' />
-            <Skeleton className='mt-2 h-6 w-full sm:h-7' />
-            <Skeleton className='mt-1.5 hidden h-3.5 w-24 md:block' />
-          </div>
-        ))}
+      <div className='tokex-console-panel'>
+        <div className='divide-border/50 grid grid-cols-3 divide-x overflow-hidden rounded-[inherit] dark:divide-white/[0.06]'>
+          {['balance', 'usage', 'requests'].map((key) => (
+            <div key={key} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
+              <Skeleton className='h-3.5 w-full' />
+              <Skeleton className='mt-2 h-6 w-full sm:h-7' />
+              <Skeleton className='mt-1.5 hidden h-3.5 w-24 md:block' />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -77,26 +79,28 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   ]
 
   return (
-    <div className='grid grid-cols-3 divide-x divide-white/[0.08] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color] duration-200 hover:border-white/[0.14]'>
-      {stats.map((item) => (
-        <div key={item.label} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
-          <div className='flex items-center gap-1.5 sm:gap-2.5'>
-            <IconBadge tone={item.tone} size='stat'>
-              <item.icon />
-            </IconBadge>
-            <div className='text-muted-foreground truncate text-[11px] font-medium tracking-wider uppercase sm:text-xs'>
-              {item.label}
+    <div className='tokex-console-panel'>
+      <div className='divide-border/50 grid grid-cols-3 divide-x overflow-hidden rounded-[inherit] dark:divide-white/[0.06]'>
+        {stats.map((item) => (
+          <div key={item.label} className='min-w-0 px-2.5 py-2.5 sm:px-5 sm:py-4'>
+            <div className='flex items-center gap-1.5 sm:gap-2.5'>
+              <IconBadge tone={item.tone} size='stat'>
+                <item.icon />
+              </IconBadge>
+              <div className='text-muted-foreground truncate text-[11px] font-medium tracking-wider uppercase sm:text-xs'>
+                {item.label}
+              </div>
+            </div>
+
+            <div className='text-foreground mt-1.5 font-mono text-sm font-bold tracking-tight break-all tabular-nums sm:mt-2.5 sm:text-2xl'>
+              {item.value}
+            </div>
+            <div className='text-muted-foreground/60 mt-1 hidden text-xs md:block'>
+              {item.description}
             </div>
           </div>
-
-          <div className='text-foreground mt-1.5 font-mono text-sm font-bold tracking-tight break-all tabular-nums sm:mt-2.5 sm:text-2xl'>
-            {item.value}
-          </div>
-          <div className='text-muted-foreground/60 mt-1 hidden text-xs md:block'>
-            {item.description}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

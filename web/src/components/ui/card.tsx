@@ -30,7 +30,7 @@ function Card({
       data-slot='card'
       data-size={size}
       className={cn(
-        'group/card flex flex-col gap-4 overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0e0e11]/92 py-4 text-sm text-card-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-colors duration-200 hover:border-[rgba(255,255,255,0.15)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
+        'group/card flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/90 py-4 text-sm text-card-foreground backdrop-blur-2xl transition-colors duration-300 hover:border-border has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
         className
       )}
       {...props}

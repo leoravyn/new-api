@@ -12,7 +12,6 @@ import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
-import { PageTransition } from '@/components/page-transition'
 import { normalizeInterfaceLanguage } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
@@ -166,7 +165,7 @@ function LegalBlockView({ block }: { block: LegalBlock }) {
     }
     case 'table':
       return (
-        <div className='overflow-x-auto rounded-xl border border-white/10 bg-[#050506]'>
+        <div className='tokex-surface-subtle overflow-x-auto'>
           <table className='w-full border-collapse text-left text-sm'>
             <thead>
               <tr className='border-b border-white/10 bg-white/[0.03]'>
@@ -217,7 +216,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <PageTransition className='relative min-h-screen text-zinc-100'>
+      <div className='relative text-zinc-100'>
         <div className='relative mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6 lg:px-8'>
           {/* Top Document Switcher + Inline Language Toggle */}
           <div className='flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5'>
@@ -236,7 +235,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
                       'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
                       isActive
                         ? 'border-white/25 bg-white text-black shadow-xs'
-                        : 'border-white/10 bg-[#0a0a0c] text-zinc-300 hover:border-white/20 hover:bg-[#141417] hover:text-white'
+                        : 'tokex-surface-pill text-zinc-300 hover:border-white/20 hover:text-white'
                     )}
                   >
                     <FileText className='size-3.5' />
@@ -249,7 +248,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
             <div
               role='group'
               aria-label={isZh ? '切换文档语言' : 'Switch document language'}
-              className='inline-flex items-center rounded-full border border-white/10 bg-[#0a0a0c] p-0.5'
+              className='tokex-surface-pill inline-flex items-center p-0.5'
             >
               <button
                 type='button'
@@ -287,7 +286,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
           <div className='mt-8 grid gap-10 lg:grid-cols-12'>
             {/* Desktop Sticky Table of Contents */}
             <aside className='hidden lg:col-span-3 lg:block'>
-              <div className='sticky top-24 rounded-2xl border border-white/10 bg-[#050506]/90 p-4 backdrop-blur-xl'>
+              <div className='tokex-liquid-card sticky top-24 p-4'>
                 <div className='mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-zinc-400 uppercase'>
                   <ShieldCheck className='size-3.5 text-zinc-300' />
                   <span>{isZh ? '条款目录' : 'Contents'}</span>
@@ -316,19 +315,19 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
             <article className='min-w-0 lg:col-span-9'>
               <div className='max-w-4xl space-y-8'>
                 {/* Document Header Card */}
-                <header className='rounded-2xl border border-white/10 bg-[#0a0a0c]/90 p-6 backdrop-blur-xl sm:p-8'>
+                <header className='tokex-liquid-card p-6 sm:p-8'>
                   <div className='flex flex-wrap items-center gap-2.5'>
                     <span className='inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-xs font-medium text-zinc-200'>
                       {content.badge}
                     </span>
-                    <span className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3 py-1 text-xs text-zinc-400'>
+                    <span className='tokex-surface-pill inline-flex items-center gap-1.5 px-3 py-1 text-xs text-zinc-400'>
                       <Calendar className='size-3.5 text-zinc-400' />
                       <span>
                         {isZh ? '生效日期：' : 'Effective: '}
                         {LEGAL_CONFIG.effectiveDate}
                       </span>
                     </span>
-                    <span className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3 py-1 text-xs text-zinc-400'>
+                    <span className='tokex-surface-pill inline-flex items-center gap-1.5 px-3 py-1 text-xs text-zinc-400'>
                       <span>
                         {isZh ? '最近更新：' : 'Last Updated: '}
                         {LEGAL_CONFIG.lastUpdated}
@@ -347,7 +346,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
                     {content.summaryPoints.map((point) => (
                       <div
                         key={point.label}
-                        className='rounded-xl border border-white/10 bg-[#050506]/90 px-4 py-3'
+                        className='rounded-xl border border-white/[0.06] bg-white/[0.025] px-4 py-3'
                       >
                         <div className='text-[11px] font-medium tracking-wide text-zinc-400 uppercase'>
                           {point.label}
@@ -361,7 +360,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
                 </header>
 
                 {/* Mobile Quick TOC */}
-                <details className='rounded-2xl border border-white/10 bg-[#0a0a0c]/80 p-4 lg:hidden'>
+                <details className='tokex-liquid-card p-4 lg:hidden'>
                   <summary className='cursor-pointer text-sm font-medium text-zinc-200'>
                     {isZh ? '查看章节目录' : 'Jump to section'}
                   </summary>
@@ -387,7 +386,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
                     <section
                       key={section.id}
                       id={section.id}
-                      className='scroll-mt-24 rounded-2xl border border-white/10 bg-[#050506]/90 p-6 backdrop-blur-xl sm:p-7'
+                      className='tokex-liquid-card scroll-mt-24 p-6 sm:p-7'
                     >
                       <h2 className='mb-4 flex items-baseline gap-2.5 text-lg font-semibold tracking-tight text-white sm:text-xl'>
                         <span className='font-mono text-sm text-zinc-500'>
@@ -405,7 +404,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
                 </div>
 
                 {/* Unified Contact & Cross-Navigation Footer Box */}
-                <aside className='rounded-2xl border border-white/10 bg-[#0a0a0c]/90 p-6 backdrop-blur-xl'>
+                <aside className='tokex-liquid-card p-6'>
                   <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                     <div className='space-y-1'>
                       <div className='flex items-center gap-2 text-sm font-semibold text-white'>
@@ -464,7 +463,7 @@ export function LegalDocumentLayout({ document }: LegalDocumentLayoutProps) {
             </article>
           </div>
         </div>
-      </PageTransition>
+      </div>
     </PublicLayout>
   )
 }

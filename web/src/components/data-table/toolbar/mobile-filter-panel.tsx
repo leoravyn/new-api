@@ -46,7 +46,7 @@ export function DataTableMobileFilterPanel(
       open={open}
       onOpenChange={setOpen}
       className={cn(
-        'bg-card/50 flex min-w-0 flex-col rounded-lg border p-2.5',
+        'tokex-console-panel flex min-w-0 flex-col p-2.5',
         open && (props.compact ? 'gap-2.5' : 'gap-2'),
         props.className
       )}

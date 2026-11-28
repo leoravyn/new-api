@@ -705,7 +705,7 @@ export function SystemInstancesPanel() {
   } else if (instances.length === 0) {
     instancesContent = (
       <div className='px-4 py-10 text-center sm:px-5'>
-        <div className='bg-muted mx-auto mb-3 flex size-10 items-center justify-center rounded-lg'>
+        <div className='tokex-surface-subtle mx-auto mb-3 flex size-10 items-center justify-center rounded-lg'>
           <ServerCog
             className='text-muted-foreground size-5'
             aria-hidden='true'
@@ -734,11 +734,11 @@ export function SystemInstancesPanel() {
 
   return (
     <>
-      <section className='bg-card overflow-hidden rounded-lg border shadow-xs'>
-        <div className='flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5'>
+      <section className='tokex-console-panel'>
+        <div className='flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-white/[0.07]'>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
-              <span className='bg-muted text-muted-foreground inline-flex size-7 items-center justify-center rounded-md'>
+              <span className='tokex-surface-subtle text-muted-foreground inline-flex size-7 items-center justify-center rounded-md'>
                 <ServerCog className='size-4' aria-hidden='true' />
               </span>
               <div className='min-w-0'>

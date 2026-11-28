@@ -1,224 +1,134 @@
 # TOKEX Design System (`DESIGN.md`)
 
 > **Brand**: TOKEX (`https://tokex.vip`)  
-> **Visual Aesthetic**: **Deep Obsidian + Brushed Platinum + Refined Mineral Accents** — crisp high-contrast obsidian surfaces (`#050506` outer shell → `#08080A` workspace → `#0E0E11` cards → `#141418` / `#19191E` inset/secondary), ultra-fine film-grain canvas texture (`feTurbulence`, `0.014` opacity), restrained top studio light (`rgba(255, 255, 255, 0.022)`), brushed-platinum metallic primary CTAs (`#FAFAFA` → `#D6D6DB` with `#08080A` ink), `1px` `rgba(255, 255, 255, 0.08)` neutral hairlines, clean moderate-chroma jade/amber/coral/steel-blue semantics & charts, and tabular financial typography.  
-> **Target Use**: Reference specification for TOKEX web UI, console layout shell, and **Waffo Pancake Hosted Checkout Customization** (upload directly to Waffo or map to Waffo `checkoutSettings`).
+> **Visual Aesthetic**: **Deep Obsidian + Brushed Platinum + Frosted Liquid Glass** — pure neutral obsidian canvas (`#050506` outer shell → `#08080A` workspace → `rgba(14, 14, 17, 0.56)` frosted cards → `#141418` / `#19191E` inset/secondary), neutral silver ambient light planes (`AmbientBackdrop`), ultra-fine film-grain texture (`feTurbulence`, `0.014` opacity), brushed-platinum metallic primary CTAs (`#FAFAFA` → `#EBEBEF` → `#D6D6DB` with `#08080A` ink), `1px` `rgba(255, 255, 255, 0.08)` neutral hairlines, moderate-chroma mineral semantics/charts, and tabular financial typography.  
+> **Target Use**: Design language and token specification for the TOKEX web application, public marketing shell, and authenticated console UI.
 
 ---
 
-## 1. Waffo Pancake Checkout Quick-Config (`checkoutSettings`)
+## 1. Design Principles & Design Language
 
-For direct mapping into **Waffo Dashboard → Settings → Checkout** (or AI-driven `DESIGN.md` theme generation):
-
-### Dark Theme (Primary — Matches `https://tokex.vip` Production Theme)
-| Waffo Field | Value | Notes |
-|---|---|---|
-| `checkoutColorPrimary` | `#FAFAFA` | High-contrast platinum-white CTA button fill (paired with `#08080A` button text) |
-| `checkoutColorBackground` | `#08080A` | Main workspace / page canvas background (deep obsidian) |
-| `checkoutColorCard` | `#0E0E11` | Checkout panel / order summary card background |
-| `checkoutColorText` | `#FAFAFA` | Primary platinum ink (secondary text: `#A1A1AA`) |
-| `checkoutBorderRadius` | `12px` | Balanced middle ground between `8px` controls (`rounded-lg`) and `16px` cards (`rounded-2xl`) |
-| `checkoutLogo` | `https://tokex.vip/logo-tokex.svg` | Horizontal vector brand mark (`226 × 64 px`) |
-
-### Light Theme (Secondary Fallback)
-| Waffo Field | Value | Notes |
-|---|---|---|
-| `checkoutColorPrimary` | `#0A0A0B` | Deep graphite CTA button fill with `#F4F4F5` text |
-| `checkoutColorBackground` | `#F4F4F5` | Clean neutral canvas |
-| `checkoutColorCard` | `#FFFFFF` | Elevated card surface with `1px solid #E4E4E7` hairline |
-| `checkoutColorText` | `#0A0A0B` | Primary ink text (secondary text: `#52525B`) |
-| `checkoutBorderRadius` | `12px` | Consistent corner geometry |
-
-### Store & Compliance Metadata
-| Field | Value |
-|---|---|
-| **Store Name** | `TOKEX` |
-| **Support Email** | `support@tokex.vip` |
-| **Terms of Service URL** | `https://tokex.vip/terms` |
-| **Privacy Policy URL** | `https://tokex.vip/privacy-policy` |
-| **Acceptable Use Policy URL** | `https://tokex.vip/aup` |
-| **Settlement Currency** | `USD` (`$`) |
-
-```json
-{
-  "checkoutSettings": {
-    "dark": {
-      "checkoutLogo": "https://tokex.vip/logo-tokex.svg",
-      "checkoutColorPrimary": "#FAFAFA",
-      "checkoutColorBackground": "#08080A",
-      "checkoutColorCard": "#0E0E11",
-      "checkoutColorText": "#FAFAFA",
-      "checkoutBorderRadius": "12px"
-    },
-    "light": {
-      "checkoutLogo": "https://tokex.vip/logo-tokex.svg",
-      "checkoutColorPrimary": "#0A0A0B",
-      "checkoutColorBackground": "#F4F4F5",
-      "checkoutColorCard": "#FFFFFF",
-      "checkoutColorText": "#0A0A0B",
-      "checkoutBorderRadius": "12px"
-    }
-  }
-}
-```
+1. **Neutral Obsidian & Platinum Hierarchy (Zero Blue Cast)**: Every structural surface, glass tint, border, ambient glow, hover state, and focus ring stays strictly achromatic obsidian/platinum (`#050506` outer shell & sidebar → `#08080A` canvas → `#0E0E11` / `rgba(14, 14, 17, 0.56)` primary surfaces → `#141418` muted → `#19191E` secondary).
+2. **Tactile Frosted Glass + Ambient Depth**: Background light planes, hairline arcs, and dot matrices (`AmbientBackdrop`) sit behind translucent obsidian surfaces (`backdrop-filter: blur(12px) saturate(130%)`) with subtle cursor-reactive border illumination (`--lg-o`, `--lg-x`, `--lg-y`), `inset 0 1px 0 0 rgba(255, 255, 255, 0.055–0.06)` top specular rims, monochrome film-grain (`opacity: 0.014`), and restrained top studio light (`rgba(255, 255, 255, 0.022)`).
+3. **Opaque Functional Table Chrome**: While card shells remain frosted, interactive data-table chrome is opaque so scrolling rows and horizontally pinned columns never bleed through: `--table-header: #121215` (sticky `z-20`) and pinned cells `#0B0B0E` (without stacked double `backdrop-blur`).
+4. **Restrained Mineral Semantics**: Badges, charts, and alerts use calibrated moderate-chroma accents — emerald jade (`oklch(0.73 0.115 162)`), warm amber (`oklch(0.79 0.125 78)`), coral red (`oklch(0.67 0.165 24)`), and steel blue (`oklch(0.76 0.085 245)`) — preserving focus on monochrome hierarchy.
+5. **Financial Precision (`tabular-nums`)**: All USD pricing, token quotas, table figures, and counters enforce `font-variant-numeric: tabular-nums`.
 
 ---
 
-## 2. Design Principles
-
-1. **Crisp Deep Obsidian Surface Hierarchy**: Every structural surface, border, hover state, active pill, and focus ring uses pure neutral obsidian, silver, and platinum (`#050506` outer shell & sidebar → `#08080A` workspace → `#0E0E11` cards & popovers → `#141418` muted inset → `#19191E` secondary) separated by `1px` `rgba(255, 255, 255, 0.08)` neutral hairlines. Cards and menus stay strictly black/platinum (`rgba(255, 255, 255, 0.065)` neutral hover/accent).
-2. **Tactile Materiality Without Milky Haze**: Depth comes from subtle physical cues — an ultra-fine monochrome SVG `feTurbulence` film-grain overlay (`opacity: 0.014`), restrained top studio lighting (`rgba(255, 255, 255, 0.022)`), `inset 0 1px 0 0 rgba(255, 255, 255, 0.06)` card specular rims, and brushed-platinum primary CTAs (`#FAFAFA` → `#D6D6DB`).
-3. **Clean Alive Moderate-Chroma Semantics**: Status indicators and explicit semantic badges have crisp clarity without neon glare — refined emerald (`oklch(0.73 0.115 162)`) for active/OK states, warm amber (`oklch(0.79 0.125 78)`) for warnings, coral-red (`oklch(0.67 0.165 24)`) for destructive alerts, and cool silver-blue (`oklch(0.76 0.085 245)`) for informational badges.
-4. **Seamless Public Header & Framed Console Shell**: On public pages, the top header starts fully transparent with no border over the `#08080A` canvas and transitions to a translucent `backdrop-blur-xl` bar with a faint `rgba(255, 255, 255, 0.07)` hairline only after scrolling (`> 8px`). On desktop console routes (`md:`), the outer shell and sidebar share `#050506` while the workspace sits in a framed `#08080A` panel (`rounded-xl`, `1px` neutral border, top specular rim).
-5. **Financial Precision (`tabular-nums`)**: All USD amounts (`$10.00 USD`), discount percentages (`5% OFF`), and pricing tables use tabular numerals for strict vertical alignment.
-
----
-
-## 3. Color Palette & Design Tokens
+## 2. Color Palette & Design Tokens
 
 ### Background & Surface Hierarchy (Dark Mode)
-| Token | Value | Usage |
+| Token / Surface | Value | Usage |
 |---|---|---|
-| `--sidebar` | `#050506` | Outer shell, console header, sidebar base |
-| `--background` | `#08080A` | Main workspace canvas, public page base, framed desktop panel |
-| `--studio-light` | `radial-gradient(960px circle at 50% -14%, rgba(255, 255, 255, 0.022), transparent 62%)` | Restrained top-center neutral studio light |
-| `--film-grain` | Inline SVG `feTurbulence` (`saturate=0`, `opacity: 0.014`, `fixed`) | Ultra-fine monochrome surface grain |
-| `--card` / `--popover` | `#0E0E11` | Primary cards, checkout containers, popovers |
-| `--glass-surface` | `rgba(14, 14, 17, 0.88)` – `rgba(14, 14, 17, 0.92)` | Translucent card fill (`blur(20px)`) |
-| `--glass-elevated` | `rgba(14, 14, 17, 0.95)` – `rgba(14, 14, 17, 0.96)` | Dialogs, sheets, dropdowns (`blur(24px)`) |
-| `--muted` | `#141418` | Subtle inset containers, code blocks, pills |
-| `--secondary` | `#19191E` | Secondary button fill, inactive badges |
-| `--surface-hover` | `rgba(25, 25, 30, 0.92)` | Interactive card hover state |
-| `--accent` / `--sidebar-accent` | `rgba(255, 255, 255, 0.065)` | Neutral hover row highlight, active nav/menu pill |
+| `--sidebar` | `#050506` | Outer app shell, sidebar base (`body:has([data-variant='inset'])` uses `#050507`) |
+| `--background` | `#08080A` | Public page & console canvas base |
+| Studio light (`html.dark body`) | `radial-gradient(960px circle at 50% -14%, rgba(255, 255, 255, 0.022), transparent 62%)` | Subtle top-center studio highlight on non-inset dark pages |
+| Film grain (`html.dark body::after`) | Inline SVG `feTurbulence` (`saturate=0`, `opacity: 0.014`, `fixed`) | Monochrome surface texture |
+| `--card` / `--popover` | `#0E0E11` | Solid card / modal / popover base token |
+| Liquid Card / Console Panel (`.tokex-liquid-card`, `.tokex-console-panel`, `[data-slot='card']`, `[data-slot='sidebar-inner']`) | `rgba(14, 14, 17, 0.56)` + `blur(12px) saturate(130%)` | Primary frosted glass containers; hover lifts to `rgba(20, 20, 24, 0.6)` |
+| `.tokex-glass` / `.tokex-glass-elevated` | `rgba(14, 14, 17, 0.52)` (`blur(12px)`) / `0.62` (`blur(16px)`) | Standalone frosted overlays; interactive hover `rgba(24, 24, 28, 0.58)` |
+| `[data-slot='dialog-content']` / `popover` / `dropdown-menu` | `rgba(14, 14, 17, 0.96)` + `blur(20px)` | Elevated overlay menus & dialogs |
+| `.tokex-surface-subtle` | `rgba(255, 255, 255, 0.03)` (`border: rgba(255, 255, 255, 0.065)`) | Nested tiles inside glass cards (no double blur) |
+| `.tokex-surface-pill` | `rgba(11, 11, 14, 0.58)` (`border: rgba(255, 255, 255, 0.09)`) | Compact pill badges & segmented pill shells |
+| `--muted` | `#141418` | Muted containers, code blocks, active chips |
+| `--secondary` | `#19191E` | Secondary buttons, inactive badges |
+| `--accent` / `--sidebar-accent` | `rgba(255, 255, 255, 0.065)` | Neutral hover highlights, active nav row pill |
+| `--table-header` / `--table-header-hover` | `#121215` / `#17171B` | Opaque sticky table headers |
+| Pinned Table Cells (dark) | `#0B0B0E` (hover `#121215`, selected `#19191D`) | Opaque pinned cells matched to composited card tone |
+
+### Ambient Backdrop (`AmbientBackdrop`)
+| Layer | Neutral Platinum Silver Values | Behavior |
+|---|---|---|
+| Dot matrix | `radial-gradient(rgba(255, 255, 255, 0.24) 1px, transparent 1px)`, `30px` grid | Elliptical radial mask, preset opacity `0.42–0.50` |
+| Radial optical glows | `rgba(218–235, 218–235, 224–240, 0.03–0.062)` → `rgba(182–200, 182–200, 188–206, 0.01–0.024)` | Soft neutral silver parallax planes (`home-0`, `home-1`, `default`, `console`) |
+| Depth arcs & hairline beams | `rgba(226–240, 226–240, 232–244, 0.13–0.16)` & `white/[0.095–0.26]` | Diagonal architectural hairlines & peripheral SVG arcs |
 
 ### Text & Ink Hierarchy (Dark Mode)
 | Token | Value | Usage |
 |---|---|---|
-| `--foreground` / `--primary` | `#FAFAFA` | Headings, primary copy, active values |
-| `--primary-foreground` | `#08080A` | Text/icons inside brushed-platinum primary buttons |
-| `--sidebar-foreground` | `#E4E4E7` | Navigation items, secondary headings |
-| `--sidebar-primary` | `#FAFAFA` | Brushed-platinum active indicator lead |
-| `--info` | `oklch(0.76 0.085 245)` | Crisp cool silver-blue informational emphasis |
+| `--foreground` / `--primary` | `#FAFAFA` | Headings, primary copy, active emphasis |
+| `--primary-foreground` | `#08080A` | Ink inside brushed-platinum primary buttons |
+| `--sidebar-foreground` | `#E4E4E7` | Navigation labels, secondary headings |
+| `--sidebar-primary` | `#FAFAFA` | Active sidebar indicator |
 | `--muted-foreground` | `#A1A1AA` | Descriptions, metadata, captions, placeholders |
-| `--text-tertiary` | `#74747C` | Sidebar group labels (`11px` small-caps), strikethrough original prices |
+| `--text-tertiary` | `#74747C` | Uppercase table column headers (`11px`), secondary icons |
 
-### Borders, Rings & Specular Depth
+### Borders, Specular Rims & Proximity Glow
 | Token | Value | Usage |
 |---|---|---|
-| `--border` / `--sidebar-border` | `rgba(255, 255, 255, 0.08)` | Default `1px` card, workspace frame, and table hairline |
-| `--input` | `rgba(255, 255, 255, 0.10)` | Default `1px` form input border |
-| `--border-hover` | `rgba(255, 255, 255, 0.15)` | Interactive card / button hover border lift |
-| `--ring` / `--sidebar-ring` | `rgba(255, 255, 255, 0.34)` | Neutral keyboard focus outline (`focus-visible`) |
-| `--shadow-card` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 12px 32px -16px rgba(0, 0, 0, 0.78)` | Card elevation + top specular rim |
-| `--shadow-elevated` | `inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 24px 64px -20px rgba(0, 0, 0, 0.90)` | Modal & checkout container elevation |
+| `--border` / `--sidebar-border` | `rgba(255, 255, 255, 0.08)` | Default `1px` card, frame, and divider hairline |
+| `--input` | `rgba(255, 255, 255, 0.10)` | Default `1px` input field border |
+| `--border-hover` | `rgba(255, 255, 255, 0.115–0.15)` | Card & interactive control hover border |
+| `--ring` / `--sidebar-ring` | `rgba(255, 255, 255, 0.34)` | Keyboard focus outline (`focus-visible`) |
+| Card specular border (`::after`) | `radial-gradient(240px circle at var(--lg-x) var(--lg-y), rgba(244, 244, 246, 0.22), rgba(212, 212, 218, 0.07) 42%, transparent 72%)` | Pointer-tracked `1px` mask glow (`--lg-o`, `136px` proximity radius) |
+| Card shadow | `inset 0 1px 0 0 rgba(255, 255, 255, 0.055), 0 14px 36px -18px rgba(0, 0, 0, 0.84)` | Recessed specular rim + obsidian drop shadow |
 
-### Platinum & Refined Mineral Chart Palette (Dark Mode)
+### Charts & Moderate-Chroma Semantics (Dark Mode)
 | Token | Value | Role |
 |---|---|---|
 | `--chart-1` / `--overview-accent-1` | `#F4F4F5` | Primary series (Brushed Platinum) |
 | `--chart-2` / `--overview-accent-2` | `#6F9CEB` | Secondary series (Steel Sapphire) |
 | `--chart-3` / `--overview-accent-3` | `#52B792` | Tertiary series (Refined Jade) |
-| `--chart-4` | `#D6AE63` | Quaternary series (Warm Gold) |
-| `--chart-5` | `#9B8EC4` | Fifth series (Soft Amethyst) |
-
-### Moderate-Chroma Semantic Status Colors
-| State | CSS Token | Hex Approx. | Foreground |
-|---|---|---|---|
-| **Success** | `oklch(0.73 0.115 162)` | `#48B88A` | `#06130D` |
-| **Warning** | `oklch(0.79 0.125 78)` | `#DFB054` | `#171206` |
-| **Destructive / Error** | `oklch(0.67 0.165 24)` | `#E26860` | `#FAFAFA` |
-| **Info** | `oklch(0.76 0.085 245)` | `#88B8DE` | `#080C12` |
+| `--chart-4` / `--chart-5` | `#D6AE63` / `#9B8EC4` | Warm Gold / Soft Amethyst |
+| `--success` | `oklch(0.73 0.115 162)` (`#06130D` fg) | Active / healthy states |
+| `--warning` | `oklch(0.79 0.125 78)` (`#171206` fg) | Caution / warning states |
+| `--destructive` | `oklch(0.67 0.165 24)` (`#FAFAFA` fg) | Error / destructive states |
+| `--info` | `oklch(0.76 0.085 245)` (`#080C12` fg) | Informational badges |
 
 ---
 
-## 4. Typography & Scale
+## 3. Typography & Scale
 
-- **Primary Sans Font Stack**:
+- **Primary Sans Stack (`--font-ui-sans`)**:
   ```css
-  --font-ui-sans: 'Plus Jakarta Sans', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  'Plus Jakarta Sans', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
   ```
-- **Monospace Stack** (API keys, model IDs, order IDs):
-  `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`
-- **Numeric Style**:
-  `font-variant-numeric: tabular-nums;` on all prices, totals, tax rows, discounts, and currency badges.
-
-| Role | Size / Line Height | Weight | Tracking | Color |
-|---|---|---|---|---|
-| **Checkout Title / Hero** | `24px–32px` / `1.2` | `600–700` | `-0.02em` | `#F4F4F5` |
-| **Order Total / Price** | `20px–28px` / `1.2` | `600` (`tabular-nums`) | `-0.02em` | `#F4F4F5` |
-| **Section Heading** | `16px` / `1.4` | `500–600` | `-0.01em` | `#F4F4F5` |
-| **Body / Form Labels** | `14px` / `1.5` | `400–500` | `0` | `#D4D4D8` / `#F4F4F5` |
-| **Helper / Legal Text** | `12px–13px` / `1.5` | `400` | `0` | `#9A9AA2` |
-| **Sidebar Group Label** | `11px` / `1.2` (`uppercase`) | `500` | `0.08em` | `#74747C` |
-| **Strikethrough Original Price** | `12px` / `1.4` | `400` (`line-through`) | `0` | `#74747C` |
+- **Editorial Serif Stack (`--font-serif`)**: `'Lora Variable'`, `'Lora'`, `'Noto Serif SC'`, CJK/serif fallbacks.
+- **Monospace**: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` for API keys, model IDs, code snippets, and logs.
+- **Tabular Numerals**: `.tabular-nums` / `[data-slot='table'] td` enforce `font-variant-numeric: tabular-nums`.
 
 ---
 
-## 5. Layout, Radius & Spacing System
+## 4. Layout, Header & Geometry
 
-- **Console Shell Geometry**:
-  - **Outer Shell & Sidebar**: `#08080A` (`--sidebar`), desktop sidebar width `14rem` (`3.25rem` collapsed icon rail), header height `3.25rem` (`52px`).
-  - **Framed Workspace Panel (`md:`)**: `#0C0C0E` (`--background`), `rounded-xl` (`12px`), `border rgba(255, 255, 255, 0.07)`, `my-2 mr-2`, top specular rim `inset 0 1px 0 0 rgba(255, 255, 255, 0.06)`.
-  - **Sidebar Rhythm**: `gap-5` (`20px`) between nav groups, `h-9 px-2.5 rounded-lg` menu rows, active row with `rgba(255, 255, 255, 0.06)` pill + `2px` brushed silver gradient left indicator (`#FAFAFA` → `#8E8E96`) + `#F4F4F5` text & icon.
-- **Base Radius (`--radius`)**: `16px` (`1rem`)
-  - **Inputs, Buttons & Nav Items**: `8px` (`0.5rem`, `rounded-lg`)
-  - **Framed Workspace, Pills & Checkout Option Tiles**: `12px` (`0.75rem`, `rounded-xl`) — *recommended single `checkoutBorderRadius` value for Waffo*
-  - **Cards & Checkout Containers**: `16px` (`1rem`, `rounded-2xl`)
-- **Spacing Rhythm**: `4px` base grid; card padding `16px–24px`; vertical stack gap `12px–16px` inside forms, `24px–32px` between major sections.
-- **Checkout Container Width**: Centered single-column or split two-column layout (`max-width: 960px` desktop, `100%` with `16px` gutter mobile).
+- **Radii (`--radius: 1rem` / `16px`)**:
+  - Controls, inputs, nav items: `8px` (`rounded-lg`)
+  - Subtle nested tiles & framed containers: `12px` (`rounded-xl`)
+  - Glass cards, panels, dialogs, data-table frames: `16px` (`rounded-2xl`)
+- **Public Shell (`PublicLayout`)**:
+  - Top bar starts borderless & transparent (`dark:md:bg-transparent`), fading to frosted obsidian (`dark:md:bg-[#08080a]/48` + `backdrop-blur-2xl` + `dark:md:border-white/[0.05]`) once scrolled; full-width 3-slot header (`Logo` — centered links — controls + platinum `Console` CTA).
+- **Console Shell (`AuthenticatedLayout`)**:
+  - Header height `--app-header-height: 3.5rem` (`56px`); sidebar (`#050506` / frosted `rgba(14, 14, 17, 0.56)`) sits alongside transparent `SidebarInset` so `<AmbientBackdrop preset='console' />` shows cleanly through all frosted cards and tables.
+- **Data Tables (`TableHead` / `TableCell`)**:
+  - Both `TableHead` and `TableCell` share `px-3` (`12px`) horizontal padding (`pr-0` when containing `[role=checkbox]`) so selection checkboxes and column headers align vertically across every row.
 
 ---
 
-## 6. Component Specifications (For Checkout UI Parity)
+## 5. Component Specifications
 
-### Primary CTA Button (e.g., "Pay $95.00 USD")
-- **Fill**: Brushed-platinum vertical gradient `linear-gradient(180deg, #FAFAFA 0%, #EBEBEF 52%, #D6D6DB 100%)` (hover: `#FFFFFF` → `#E0E0E5`; flat fallback `#F4F4F5`)
-- **Highlight & Edge**: `1px solid rgba(255, 255, 255, 0.20)`, `inset 0 1px 0 0 rgba(255, 255, 255, 0.90), 0 1px 2px 0 rgba(0, 0, 0, 0.45)`
-- **Text**: `#0A0A0B`, `14px`, `font-weight: 500`, `tabular-nums`
-- **Height**: `36px–44px` (`h-9` to `h-11` for checkout submit)
-- **Radius**: `8px` (`12px` if unified with Waffo setting)
-- **Active Feedback**: `transform: translateY(1px)`
+### Primary Platinum CTA
+- **Gradient**: `bg-gradient-to-b from-[#fafafa] via-[#ebebef] to-[#d6d6db]` (hover `#ffffff → #f2f2f5 → #e0e0e5`)
+- **Border & Rim**: `border-white/20` + `shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_1px_2px_0_rgba(0,0,0,0.45)]`
+- **Text**: `#08080A` / `#0A0A0B`
 
-### Secondary / Outline Button & Payment Method Tiles
-- **Fill**: `#1B1B1F` or `rgba(255, 255, 255, 0.03)` (selected: `rgba(255, 255, 255, 0.06)`)
-- **Border**: `1px solid rgba(255, 255, 255, 0.07)` (selected: `1px solid rgba(255, 255, 255, 0.28)`)
-- **Text**: `#F4F4F5` title, `#9A9AA2` subtitle
-- **Hover**: `background: rgba(27, 27, 31, 0.90)`, `border-color: rgba(255, 255, 255, 0.14)`
+### Cards & Corner Clipping
+- When interactive frosted cards place edge overlays or sheen inside rounded corners (`overflow-hidden transform-gpu`), clip inner sheen layers with `rounded-[inherit]` so corners stay crisp during GPU compositing.
+- Never place a `backdrop-filter` glass child inside a container using animated `opacity`/`filter`/`transform`; place entrance motion on inner non-glass content instead.
 
-### Text Inputs & Card Fields
-- **Fill**: `rgba(255, 255, 255, 0.03)` (`dark:bg-input/30`)
-- **Border**: `1px solid rgba(255, 255, 255, 0.09)`
-- **Focus State**: `border-color: rgba(255, 255, 255, 0.32)` + `box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12)`
-- **Text**: `#F4F4F5`, `14px` desktop (`16px` on mobile `<768px` to prevent iOS auto-zoom)
-- **Placeholder**: `#9A9AA2`
-- **Invalid State**: `border-color: oklch(0.66 0.13 22 / 0.50)` + `ring: oklch(0.66 0.13 22 / 0.25)`
+---
 
-### Order Summary & Surface Cards
-- **Fill**: `#121214` (or `rgba(18, 18, 20, 0.92)` with `backdrop-filter: blur(20px)`)
-- **Border**: `1px solid rgba(255, 255, 255, 0.07)` (hover: `rgba(255, 255, 255, 0.14)`)
-- **Highlight Rim**: `inset 0 1px 0 0 rgba(255, 255, 255, 0.06)`
-- **Dividers**: `1px solid rgba(255, 255, 255, 0.07)`
-- **Discount Badge**: subtle muted-sage pill (`oklch(0.67 0.055 160 / 0.12)` fill, `oklch(0.74 0.055 160)` text, e.g., `5% OFF`)
+## 6. Motion & Backdrop Root Architecture
 
-### Checkout Footer & Legal Disclosure
-- Display subtle `12px` `#9A9AA2` text with `#D4D4D8` underlined links:
-  - `Terms of Service`: `https://tokex.vip/terms`
-  - `Privacy Policy`: `https://tokex.vip/privacy-policy`
-  - `Acceptable Use`: `https://tokex.vip/aup`
-  - Support contact: `support@tokex.vip`
+- **Easing**: `--ease-liquid: cubic-bezier(0.22, 1, 0.36, 1)` (`180ms–420ms` surface transitions); JS motion primitives use `cubic-bezier(0.33, 1, 0.68, 1)` (`150ms–350ms`).
+- **Backdrop Root Rule (Strict)**:
+  - Route `<Outlet />` (`AuthenticatedLayout`) and outer card/layout shells (`OverviewDashboard`, `Pricing`, `Docs`, `HeroSection`, `HomeShowcase`, `LegalDocumentLayout`, etc.) must **never** wrap `.tokex-liquid-card`, `.tokex-console-panel`, `[data-slot='card']`, or `.tokex-glass` in ancestor `opacity`, `filter`, or `transform` transitions. Any ancestor opacity/transform creates a Backdrop Root that breaks `backdrop-filter` sampling against `<AmbientBackdrop />` until the animation completes (causing a transparent-to-frosted flash).
+  - Animation belongs **inside** containers on non-glass content via `.tokex-content-enter` (`0.24s`), `.tokex-content-reveal` (`0.28s` staggered children), `tableRowEnter` (`[data-slot='table'] tbody tr > td:not(.sticky)`), or content-only Motion primitives (`FadeIn`, `StaggerContainer`/`StaggerItem`, `TableStaggerContainer`/`TableStaggerRow`), all releasing transform/opacity upon completion and respecting `prefers-reduced-motion: reduce`.
 
 ---
 
 ## 7. Brand Assets & Iconography
 
-- **Full Logo (Horizontal)**: `https://tokex.vip/logo-tokex.svg` (`226 × 64 px`, SVG)
-- **Square Icon / Favicon**: `https://tokex.vip/favicon.svg` (`64 × 64 px`, SVG)
-- **Icon Style**: `lucide-react` clean `1.75px`–`2px` stroke icons (`#85858D` idle → `#D4D4D8` hover → `#F4F4F5` active; provider brand icons via `@lobehub/icons` keep native marks).
-
----
-
-## 8. Motion & Accessibility
-
-- **Timing Curve**: `cubic-bezier(0.22, 1, 0.36, 1)` (`150ms–300ms`) for hover, focus, and state transitions.
-- **Reduced Motion**: Respect `@media (prefers-reduced-motion: reduce)` by disabling transforms/animations.
-- **Contrast**: Primary `#F4F4F5` on `#0C0C0E` (`17.9:1`) and `#121214` (`16.9:1`) exceeds WCAG AAA; muted `#9A9AA2` on `#121214` (`7.0:1`) exceeds WCAG AA/AAA.
+- **Horizontal Logo**: `https://tokex.vip/logo-tokex.svg`
+- **Favicon**: `https://tokex.vip/favicon.svg`
+- **Icons**: `lucide-react` / `@hugeicons/react` clean monochrome strokes (`#74747C` / `#A1A1AA` → `#FAFAFA`); provider marks via `@lobehub/icons`.

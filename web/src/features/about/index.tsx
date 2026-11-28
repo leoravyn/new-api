@@ -22,7 +22,6 @@ import { CreditCard, FileText, Mail, ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
-import { PageTransition } from '@/components/page-transition'
 import { RichContent } from '@/components/rich-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LEGAL_CONFIG } from '@/features/legal/content/legal-config'
@@ -41,7 +40,7 @@ function AboutOverviewState() {
 
   return (
     <div className='flex min-h-[65vh] items-center justify-center px-4 py-10 sm:px-6'>
-      <div className='tokex-glass-elevated max-w-3xl space-y-7 rounded-2xl border border-white/10 bg-[#0a0a0c]/90 p-7 sm:p-10'>
+      <div className='tokex-liquid-card max-w-3xl space-y-7 p-7 sm:p-10'>
         <div className='flex flex-col items-center space-y-4 text-center'>
           <img
             src='/logo-tokex.svg'
@@ -61,7 +60,7 @@ function AboutOverviewState() {
         </div>
 
         <div className='grid gap-3 text-left sm:grid-cols-3'>
-          <div className='tokex-glass rounded-xl border border-white/10 bg-[#050506]/90 p-4'>
+          <div className='tokex-surface-subtle p-4'>
             <div className='flex items-center gap-2 text-sm font-semibold text-white'>
               <Sparkles className='size-4 text-zinc-300' />
               <span>{isZh ? '预付费计算额度' : 'Prepaid Credits'}</span>
@@ -73,7 +72,7 @@ function AboutOverviewState() {
             </p>
           </div>
 
-          <div className='tokex-glass rounded-xl border border-white/10 bg-[#050506]/90 p-4'>
+          <div className='tokex-surface-subtle p-4'>
             <div className='flex items-center gap-2 text-sm font-semibold text-white'>
               <CreditCard className='size-4 text-zinc-300' />
               <span>{isZh ? '安全便捷支付' : 'Secure Checkout'}</span>
@@ -85,7 +84,7 @@ function AboutOverviewState() {
             </p>
           </div>
 
-          <div className='tokex-glass rounded-xl border border-white/10 bg-[#050506]/90 p-4'>
+          <div className='tokex-surface-subtle p-4'>
             <div className='flex items-center gap-2 text-sm font-semibold text-white'>
               <ShieldCheck className='size-4 text-zinc-300' />
               <span>{isZh ? '安全与支持' : 'Safety & Support'}</span>
@@ -107,28 +106,28 @@ function AboutOverviewState() {
           </Link>
           <Link
             to='/terms'
-            className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3.5 py-1.5 text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+            className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-zinc-300 hover:border-white/20 hover:text-white'
           >
             <FileText className='size-3.5' />
             <span>{isZh ? '服务条款' : 'Terms of Service'}</span>
           </Link>
           <Link
             to='/privacy-policy'
-            className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3.5 py-1.5 text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+            className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-zinc-300 hover:border-white/20 hover:text-white'
           >
             <FileText className='size-3.5' />
             <span>{isZh ? '隐私政策' : 'Privacy Policy'}</span>
           </Link>
           <Link
             to='/aup'
-            className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3.5 py-1.5 text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+            className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-zinc-300 hover:border-white/20 hover:text-white'
           >
             <ShieldCheck className='size-3.5' />
             <span>{isZh ? '可接受使用政策' : 'Acceptable Use'}</span>
           </Link>
           <a
             href={`mailto:${LEGAL_CONFIG.supportEmail}`}
-            className='inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#050506] px-3.5 py-1.5 text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+            className='tokex-surface-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-zinc-300 hover:border-white/20 hover:text-white'
           >
             <Mail className='size-3.5' />
             <span>{LEGAL_CONFIG.supportEmail}</span>
@@ -172,9 +171,7 @@ export function About() {
   if (!hasContent) {
     return (
       <PublicLayout>
-        <PageTransition>
-          <AboutOverviewState />
-        </PageTransition>
+        <AboutOverviewState />
       </PublicLayout>
     )
   }
@@ -184,7 +181,7 @@ export function About() {
       <PublicLayout showMainContainer={false}>
         <iframe
           src={rawContent}
-          className='h-[calc(100vh-3.5rem)] w-full border-0'
+          className='h-[calc(100svh-3.5rem)] w-full border-0'
           title={t('About')}
           sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts'
         />

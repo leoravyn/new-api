@@ -85,9 +85,6 @@ export function Home() {
       if (!isDesktop) return
       const now = Date.now()
       if (now - lastSwitchRef.current < WHEEL_COOLDOWN_MS) {
-        if (activePage === 0) {
-          event.preventDefault()
-        }
         return
       }
 
@@ -110,12 +107,16 @@ export function Home() {
     <PublicLayout
       showMainContainer={false}
       showFooter={false}
+      lockViewport={isDesktop}
       backdropPreset={isDesktop && activePage === 1 ? 'home-1' : 'home-0'}
+      headerProps={
+        isDesktop ? { disableScrollElevation: true } : undefined
+      }
     >
       {isDesktop ? (
         <div
           onWheel={handleWheel}
-          className='relative h-[calc(100svh-3.5rem)] w-full overflow-hidden'
+          className='relative h-svh w-full overflow-hidden'
         >
           {/* Right edge page indicator */}
           <nav
@@ -163,19 +164,19 @@ export function Home() {
                 ? { duration: 0 }
                 : { duration: 0.72, ease: EASE_LIQUID }
             }
-            className='h-[200%] w-full will-change-transform'
+            className='h-[200%] w-full'
           >
             {/* Page 1: Hero */}
-            <div className='h-1/2 w-full overflow-hidden'>
+            <div className='h-1/2 w-full overflow-hidden lg:pt-14'>
               <TokexHeroSection onScrollDown={() => goToPage(1)} />
             </div>
 
             {/* Page 2: Showcase + Footer */}
             <div
               ref={panel2Ref}
-              className='flex h-1/2 w-full flex-col justify-between overflow-y-auto'
+              className='tokex-scrollbar flex h-1/2 w-full flex-col justify-between overflow-y-auto'
             >
-              <div className='flex-1'>
+              <div className='flex-1 lg:pt-14'>
                 <HomeShowcase visible={activePage === 1} />
               </div>
               <Footer />

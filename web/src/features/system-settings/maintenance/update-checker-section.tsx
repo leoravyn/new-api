@@ -41,13 +41,13 @@ export function UpdateCheckerSection(props: UpdateCheckerSectionProps) {
     <SettingsSection title={t('System maintenance')}>
       <div className='space-y-6'>
         <div className='grid gap-4 md:grid-cols-2'>
-          <div className='rounded-lg border p-4'>
+          <div className='tokex-surface-subtle p-4'>
             <div className='text-muted-foreground text-sm'>
               {t('Current version')}
             </div>
             <div className='text-lg font-semibold break-all'>{version}</div>
           </div>
-          <div className='rounded-lg border p-4'>
+          <div className='tokex-surface-subtle p-4'>
             <div className='text-muted-foreground text-sm'>
               {t('Uptime since')}
             </div>

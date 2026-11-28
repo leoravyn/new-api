@@ -58,7 +58,7 @@ export function CommandMenu() {
     <CommandDialog modal open={open} onOpenChange={setOpen}>
       <Command>
         <CommandInput placeholder={t('Type a command or search...')} />
-        <CommandList>
+        <CommandList className='p-1.5'>
           <ScrollArea className='h-72 pe-1'>
             <CommandEmpty>{t('No results found.')}</CommandEmpty>
             {navGroups.map((group) => (

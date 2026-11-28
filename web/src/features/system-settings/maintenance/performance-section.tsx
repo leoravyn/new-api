@@ -586,7 +586,7 @@ export function PerformanceSection(props: Props) {
         {stats && (
           <>
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-              <div className='space-y-2 rounded-lg border p-4'>
+              <div className='tokex-surface-subtle space-y-2 p-4'>
                 <p className='text-sm font-medium'>
                   {t('Request Body Disk Cache')}
                 </p>
@@ -608,7 +608,7 @@ export function PerformanceSection(props: Props) {
                   {t('Disk Hits')}: {stats.cache_stats?.disk_cache_hits ?? 0}
                 </StatusBadge>
               </div>
-              <div className='space-y-2 rounded-lg border p-4'>
+              <div className='tokex-surface-subtle space-y-2 p-4'>
                 <p className='text-sm font-medium'>
                   {t('Request Body Memory Cache')}
                 </p>
@@ -632,7 +632,7 @@ export function PerformanceSection(props: Props) {
             </div>
 
             {stats.disk_space_info && stats.disk_space_info.total > 0 && (
-              <div className='rounded-lg border p-4'>
+              <div className='tokex-surface-subtle p-4'>
                 <p className='mb-2 text-sm font-medium'>
                   {t('Cache Directory Disk Space')}
                 </p>
@@ -654,7 +654,7 @@ export function PerformanceSection(props: Props) {
             )}
 
             {stats.memory_stats && (
-              <div className='rounded-lg border p-4'>
+              <div className='tokex-surface-subtle p-4'>
                 <p className='mb-2 text-sm font-medium'>
                   {t('System Memory Stats')}
                 </p>
@@ -692,7 +692,7 @@ export function PerformanceSection(props: Props) {
             )}
 
             {stats.disk_cache_info && (
-              <div className='rounded-lg border p-4'>
+              <div className='tokex-surface-subtle p-4'>
                 <p className='mb-2 text-sm font-medium'>
                   {t('Cache Directory Info')}
                 </p>

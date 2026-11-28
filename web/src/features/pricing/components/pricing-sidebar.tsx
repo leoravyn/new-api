@@ -235,13 +235,9 @@ export const PricingSidebar = memo(function PricingSidebar(
   ]
 
   return (
-    <aside
-      className={cn(
-        'rounded-2xl border border-white/[0.08] bg-[#0a0a0c] p-3.5',
-        props.className
-      )}
-    >
-      <div className='mb-2.5 flex items-center justify-between gap-2'>
+    <aside className={cn('tokex-liquid-card', props.className)}>
+      <div className='hover-scrollbar max-h-[calc(100dvh-6rem)] overflow-y-auto p-3.5'>
+        <div className='mb-2.5 flex items-center justify-between gap-2'>
         <div>
           <h2 className='text-foreground text-sm font-bold'>{t('Filter')}</h2>
           <p className='text-muted-foreground mt-1 text-xs'>
@@ -296,6 +292,7 @@ export const PricingSidebar = memo(function PricingSidebar(
           options={quotaOptions}
           onChange={props.onQuotaTypeChange}
         />
+        </div>
       </div>
     </aside>
   )

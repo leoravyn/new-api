@@ -19,11 +19,13 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Children,
   isValidElement,
+  useEffect,
   useState,
   type ReactElement,
   type ReactNode,
 } from 'react'
 
+import { useConsoleScrollReporter } from './console-scroll-context'
 import { Main } from './main'
 import { PageFooterProvider } from './page-footer'
 
@@ -59,6 +61,14 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
   const [footerContainer, setFooterContainer] = useState<HTMLDivElement | null>(
     null
   )
+  const reportScrollTop = useConsoleScrollReporter()
+
+  useEffect(() => {
+    reportScrollTop(0)
+    return () => {
+      reportScrollTop(0)
+    }
+  }, [props.fixedContent, reportScrollTop])
 
   let title: ReactNode = null
   let actions: ReactNode = null
@@ -82,8 +92,8 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
     <div
       className={
         props.fixedContent
-          ? 'shrink-0 px-3 pt-4 pb-2.5 sm:px-5 sm:pt-5 sm:pb-3'
-          : 'px-3 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4'
+          ? 'shrink-0 px-3 pt-2 pb-2 sm:px-5 sm:pt-3 sm:pb-2.5'
+          : 'px-3 pt-2 pb-2.5 sm:px-5 sm:pt-3 md:pt-[calc(var(--app-header-height,3.5rem)+0.75rem)] sm:pb-3'
       }
     >
       {breadcrumb != null && (
@@ -112,7 +122,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
 
   return (
     <PageFooterProvider container={footerContainer}>
-      <Main>
+      <Main flushTop={!props.fixedContent}>
         {props.fixedContent ? (
           <>
             {headerBlock}
@@ -121,7 +131,11 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
             </div>
           </>
         ) : (
-          <div className='min-h-0 flex-1 overflow-y-auto'>
+          <div
+            data-testid='console-scroll-container'
+            onScroll={(event) => reportScrollTop(event.currentTarget.scrollTop)}
+            className='tokex-scrollbar min-h-0 flex-1 overflow-y-auto'
+          >
             {headerBlock}
             <div className='px-3 pt-1 pb-6 sm:px-5 sm:pt-1.5 sm:pb-8'>
               {content}
@@ -131,7 +145,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
 
         <div
           ref={setFooterContainer}
-          className='shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0e0e11]/92 px-3 py-2.5 backdrop-blur-md empty:hidden sm:px-5 sm:py-3'
+          className='border-border/50 bg-background/80 shrink-0 border-t px-3 py-2.5 backdrop-blur-xl empty:hidden sm:px-5 sm:py-3 dark:border-white/[0.05] dark:bg-[#07070a]/55'
         />
       </Main>
     </PageFooterProvider>

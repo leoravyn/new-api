@@ -38,10 +38,7 @@ export function ReferralKpiCards({ summary, loading }: ReferralKpiCardsProps) {
     return (
       <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
         {['invited', 'total', 'pending', 'settled'].map((key) => (
-          <div
-            key={key}
-            className='rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)]'
-          >
+          <div key={key} className='tokex-console-panel p-4'>
             <Skeleton className='h-3.5 w-24' />
             <Skeleton className='mt-3 h-7 w-28' />
             <Skeleton className='mt-2 h-3.5 w-32' />
@@ -111,7 +108,7 @@ export function ReferralKpiCards({ summary, loading }: ReferralKpiCardsProps) {
       {cards.map((item) => (
         <div
           key={item.key}
-          className='min-w-0 rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 px-3.5 py-3.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color] duration-200 hover:border-white/[0.14] sm:px-5 sm:py-4'
+          className='tokex-console-panel min-w-0 px-3.5 py-3.5 sm:px-5 sm:py-4'
         >
           <div className='flex items-center gap-2'>
             <IconBadge tone={item.tone} size='stat'>

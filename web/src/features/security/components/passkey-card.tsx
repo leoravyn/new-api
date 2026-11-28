@@ -110,7 +110,7 @@ export function PasskeyCard({ loading: pageLoading }: PasskeyCardProps) {
 
   if (pageLoading || loading) {
     return (
-      <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
+      <Card data-card-hover='false' className='gap-0 py-0'>
         <CardHeader className='p-3 sm:p-5'>
           <Skeleton className='h-6 w-48' />
           <Skeleton className='mt-2 h-4 w-64' />
@@ -163,7 +163,7 @@ export function PasskeyCard({ loading: pageLoading }: PasskeyCardProps) {
 
   return (
     <>
-      <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
+      <Card data-card-hover='false' className='gap-0 py-0'>
         <CardHeader className='border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5'>
           <CardTitle className='text-base font-semibold tracking-tight sm:text-lg'>
             {t('Passkey Login')}

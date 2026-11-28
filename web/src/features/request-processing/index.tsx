@@ -145,8 +145,9 @@ export function RequestProcessing() {
     )
   } else {
     content = (
-      <div className='overflow-x-auto rounded-md border'>
-        <Table aria-label={t('Request processing')}>
+      <div className='tokex-console-panel'>
+        <div className='overflow-x-auto rounded-[inherit]'>
+          <Table aria-label={t('Request processing')}>
           <TableHeader>
             <TableRow>
               <TableHead className='w-24'>{t('Order')}</TableHead>
@@ -275,6 +276,7 @@ export function RequestProcessing() {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     )
   }

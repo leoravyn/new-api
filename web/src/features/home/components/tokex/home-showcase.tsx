@@ -28,7 +28,7 @@ import {
   Terminal,
 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { type MouseEvent, type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
@@ -166,43 +166,41 @@ const WAVE_BARS = [
 function SpotlightCard({
   children,
   className,
+  visible = true,
+  revealDelay = 0,
 }: {
   children: ReactNode
   className?: string
+  visible?: boolean
+  revealDelay?: number
 }) {
-  const [coords, setCoords] = useState<{ x: number; y: number; active: boolean }>(
-    { x: 0, y: 0, active: false }
-  )
-
-  const handleMove = (event: MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    setCoords({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-      active: true,
-    })
-  }
+  const prefersReducedMotion = useReducedMotion()
 
   return (
     <div
-      onMouseMove={handleMove}
-      onMouseLeave={() => setCoords((prev) => ({ ...prev, active: false }))}
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/88 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_16px_40px_-20px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-colors duration-300 hover:border-white/[0.16] sm:p-5',
+        'group tokex-liquid-card relative rounded-2xl p-4 sm:p-5',
         className
       )}
     >
-      <div
-        aria-hidden='true'
-        className='pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300'
-        style={{
-          opacity: coords.active ? 1 : 0,
-          background: `radial-gradient(260px circle at ${coords.x}px ${coords.y}px, rgba(255, 255, 255, 0.08), transparent 70%)`,
+      <motion.div
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+        animate={
+          prefersReducedMotion
+            ? undefined
+            : visible
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: 10 }
+        }
+        transition={{
+          duration: 0.42,
+          delay: visible ? revealDelay : 0,
+          ease: EASE_LIQUID,
         }}
-      />
-      <div className='relative z-10 flex h-full flex-col justify-between'>
+        className='relative z-10 flex h-full flex-col justify-between'
+      >
         {children}
-      </div>
+      </motion.div>
     </div>
   )
 }
@@ -275,19 +273,23 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
   return (
     <div className='relative mx-auto w-full max-w-[1440px] space-y-6 px-6 pt-5 pb-6 md:px-10 lg:space-y-8 lg:px-14 lg:pt-8 lg:pb-8'>
       {/* 1. Interactive Quick Connect Sandbox */}
-      <motion.section
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-        animate={
-          prefersReducedMotion
-            ? undefined
-            : visible
-              ? { opacity: 1, y: 0 }
-              : { opacity: 0, y: 18 }
-        }
-        transition={{ duration: 0.55, delay: visible ? 0.08 : 0, ease: EASE_LIQUID }}
-        className='space-y-4'
-      >
-        <div className='flex flex-wrap items-end justify-between gap-4'>
+      <section className='space-y-4'>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : visible
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 12 }
+          }
+          transition={{
+            duration: 0.45,
+            delay: visible ? 0.08 : 0,
+            ease: EASE_LIQUID,
+          }}
+          className='flex flex-wrap items-end justify-between gap-4'
+        >
           <div>
             <div className='text-xs font-medium tracking-[0.14em] text-zinc-500 uppercase'>
               {isZh ? '即插即用' : 'Quick Connect'}
@@ -304,7 +306,7 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
             <span>{isZh ? '完整接入文档' : 'Read Docs'}</span>
             <ArrowRight className='size-3.5' />
           </Link>
-        </div>
+        </motion.div>
 
         <div className='grid gap-4 lg:grid-cols-12'>
           {/* Left selector tabs with sliding pill */}
@@ -317,10 +319,10 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
                   type='button'
                   onClick={() => setActiveTab(item.id)}
                   className={cn(
-                    'relative flex shrink-0 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-left transition-colors',
+                    'tokex-liquid-card relative flex shrink-0 cursor-pointer items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left transition-colors',
                     selected
                       ? 'border-white/[0.16] text-white'
-                      : 'border-white/[0.06] bg-[#0a0a0c]/60 text-zinc-400 hover:border-white/[0.12] hover:text-zinc-200'
+                      : 'text-zinc-400 hover:text-zinc-200'
                   )}
                 >
                   {selected && (
@@ -333,7 +335,7 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
                   <span className='relative z-10 text-sm font-medium'>
                     {item.label}
                   </span>
-                  <span className='relative z-10 rounded-md border border-white/[0.08] bg-[#141418] px-2 py-0.5 font-mono text-[11px] text-zinc-400'>
+                  <span className='relative z-10 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] text-zinc-400'>
                     {item.tag}
                   </span>
                 </button>
@@ -342,8 +344,8 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
           </div>
 
           {/* Right animated terminal with Simulate trigger */}
-          <div className='overflow-hidden rounded-2xl border border-white/[0.09] bg-[#070709]/92 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_20px_50px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl lg:col-span-8'>
-            <div className='flex items-center justify-between gap-3 border-b border-white/[0.07] bg-[#111114]/95 px-4 py-2'>
+          <div className='tokex-liquid-card rounded-2xl lg:col-span-8'>
+            <div className='flex items-center justify-between gap-3 rounded-t-2xl border-b border-white/[0.07] bg-white/[0.025] px-4 py-2'>
               <div className='flex min-w-0 items-center gap-3'>
                 <div className='flex items-center gap-1.5'>
                   <span className='size-2.5 rounded-full bg-white/15' />
@@ -373,7 +375,22 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
               </div>
             </div>
 
-            <div className='p-4 sm:p-5'>
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={
+                prefersReducedMotion
+                  ? undefined
+                  : visible
+                    ? { opacity: 1, y: 0 }
+                    : { opacity: 0, y: 8 }
+              }
+              transition={{
+                duration: 0.42,
+                delay: visible ? 0.14 : 0,
+                ease: EASE_LIQUID,
+              }}
+              className='p-4 sm:p-5'
+            >
               <AnimatePresence mode='wait'>
                 <motion.pre
                   key={activeSnippet.id}
@@ -413,26 +430,19 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
                   {isZh ? '查看文档 →' : 'Docs →'}
                 </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* 2. Interactive Motion Bento Grid (All bilingual, no unsupported models) */}
-      <motion.section
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-        animate={
-          prefersReducedMotion
-            ? undefined
-            : visible
-              ? { opacity: 1, y: 0 }
-              : { opacity: 0, y: 18 }
-        }
-        transition={{ duration: 0.55, delay: visible ? 0.16 : 0, ease: EASE_LIQUID }}
-        className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'
-      >
+      <section className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         {/* Card 1: Multi-Protocol Active Scanner (distinct from Hero curves) */}
-        <SpotlightCard className='min-h-[186px]'>
+        <SpotlightCard
+          className='min-h-[186px]'
+          visible={visible}
+          revealDelay={0.14}
+        >
           <div className='space-y-2 py-1'>
             {PROTOCOL_LANES.map((lane, idx) => {
               const isCurrent = activeLane === idx
@@ -476,7 +486,11 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
         </SpotlightCard>
 
         {/* Card 2: Ambient Streaming Waveform */}
-        <SpotlightCard className='min-h-[186px]'>
+        <SpotlightCard
+          className='min-h-[186px]'
+          visible={visible}
+          revealDelay={0.18}
+        >
           <div className='relative flex h-24 items-end justify-center gap-1.5 px-2 pb-2'>
             {WAVE_BARS.map((height, idx) => (
               <motion.span
@@ -516,7 +530,11 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
         </SpotlightCard>
 
         {/* Card 3: Genuine Supported Ecosystem Matrix */}
-        <SpotlightCard className='min-h-[186px]'>
+        <SpotlightCard
+          className='min-h-[186px]'
+          visible={visible}
+          revealDelay={0.22}
+        >
           <div className='grid grid-cols-3 gap-2 pt-0.5'>
             {ECOSYSTEM_ENTRIES.map((item) => {
               const isSelected = activeEcoId === item.id
@@ -532,7 +550,7 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
                     'flex h-10 cursor-pointer items-center justify-center rounded-xl border transition-colors',
                     isSelected
                       ? 'border-white/30 bg-white/[0.1] text-white'
-                      : 'border-white/[0.07] bg-[#121215] text-zinc-400 hover:border-white/20 hover:text-white'
+                      : 'border-white/[0.07] bg-white/[0.035] text-zinc-400 hover:border-white/20 hover:bg-white/[0.06] hover:text-white'
                   )}
                   aria-label={item.label}
                 >
@@ -568,7 +586,11 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
         </SpotlightCard>
 
         {/* Card 4: Interactive Shimmer + One-Click Gateway Copy */}
-        <SpotlightCard className='min-h-[186px]'>
+        <SpotlightCard
+          className='min-h-[186px]'
+          visible={visible}
+          revealDelay={0.26}
+        >
           <div className='relative flex h-24 items-center justify-center'>
             <AnimatePresence>
               {rippleTick > 0 && !prefersReducedMotion && (
@@ -626,7 +648,7 @@ export function HomeShowcase({ visible = true }: { visible?: boolean } = {}) {
             </div>
           </div>
         </SpotlightCard>
-      </motion.section>
+      </section>
     </div>
   )
 }

@@ -63,7 +63,7 @@ export function TitledCard({
   return (
     <Card
       data-card-hover={disableHoverEffect ? 'false' : undefined}
-      className={cn('gap-0 overflow-hidden py-0', className)}
+      className={cn('gap-0 py-0', className)}
     >
       <CardHeader
         className={cn(

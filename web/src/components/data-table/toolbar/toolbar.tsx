@@ -137,6 +137,12 @@ export type DataTableToolbarProps<TData> = {
    */
   leftActions?: ReactNode
   /**
+   * Visual surface treatment. Top-level pages pass `'panel'` so filters sit in
+   * a frosted glass toolbar container matching DataTableView; nested tables keep
+   * `'plain'`.
+   */
+  surface?: 'panel' | 'plain'
+  /**
    * Outer wrapper className override.
    */
   className?: string
@@ -376,7 +382,13 @@ export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
 
   if (hasLeftActions) {
     return (
-      <div className={cn('flex flex-col gap-2', props.className)}>
+      <div
+        className={cn(
+          'flex flex-col gap-2',
+          props.surface === 'panel' && 'tokex-console-panel p-2.5 sm:p-3',
+          props.className
+        )}
+      >
         <div className='flex flex-wrap items-center gap-2 sm:gap-3'>
           {props.customSearch !== undefined ? props.customSearch : searchInput}
           {props.additionalSearch}
@@ -410,6 +422,7 @@ export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
     <div
       className={cn(
         'flex flex-wrap items-center gap-2 sm:gap-3',
+        props.surface === 'panel' && 'tokex-console-panel p-2.5 sm:p-3',
         props.className
       )}
     >

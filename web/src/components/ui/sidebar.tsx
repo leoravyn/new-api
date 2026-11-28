@@ -255,7 +255,7 @@ function Sidebar({
           variant === 'floating'
             ? 'p-2.5 pr-0 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
             : variant === 'inset'
-              ? 'px-1.5 py-2 group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[collapsible=icon]:px-1'
+              ? 'pt-2 pb-2.5 pl-2.5 pr-1 group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[collapsible=icon]:px-1'
               : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
           className
         )}
@@ -264,7 +264,7 @@ function Sidebar({
         <div
           data-sidebar='sidebar'
           data-slot='sidebar-inner'
-          className='bg-sidebar flex size-full flex-col overflow-hidden group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-[rgba(255,255,255,0.08)] group-data-[variant=floating]:bg-[#0e0e11]/95 group-data-[variant=floating]:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_32px_-16px_rgba(0,0,0,0.8)] group-data-[variant=floating]:backdrop-blur-xl'
+          className='bg-sidebar flex size-full flex-col overflow-hidden group-data-[variant=inset]:rounded-2xl group-data-[variant=inset]:border group-data-[variant=inset]:border-border/60 dark:group-data-[variant=inset]:border-white/[0.06] dark:group-data-[variant=inset]:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-[rgba(255,255,255,0.08)] group-data-[variant=floating]:bg-[#0e0e11]/95 group-data-[variant=floating]:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_32px_-16px_rgba(0,0,0,0.8)] group-data-[variant=floating]:backdrop-blur-xl'
         >
           {children}
         </div>
@@ -329,7 +329,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
     <main
       data-slot='sidebar-inset'
       className={cn(
-        'bg-background relative flex w-full min-w-0 flex-1 flex-col md:peer-data-[variant=inset]:my-2 md:peer-data-[variant=inset]:mr-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:overflow-hidden md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-[rgba(255,255,255,0.07)] md:peer-data-[variant=inset]:bg-background md:peer-data-[variant=inset]:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] md:peer-data-[variant=inset]:peer-data-[collapsible=offcanvas]:ml-2',
+        'bg-background relative flex w-full min-w-0 flex-1 flex-col md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:overflow-hidden md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:border-0 md:peer-data-[variant=inset]:bg-background md:peer-data-[variant=inset]:shadow-none dark:md:peer-data-[variant=inset]:bg-transparent',
         className
       )}
       {...props}

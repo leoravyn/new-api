@@ -142,6 +142,11 @@ describe('server performance summaries', () => {
       expect(screen.getByText('99.01%')).toBeVisible()
       expect(screen.queryByText('50.00%')).not.toBeInTheDocument()
       expect(screen.getByText('1.01s')).toBeVisible()
+      if (Component === PerformanceHealthPanel) {
+        expect(
+          screen.queryByText('Top models by traffic')
+        ).not.toBeInTheDocument()
+      }
     }
   )
 

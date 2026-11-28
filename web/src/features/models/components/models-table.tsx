@@ -249,10 +249,7 @@ export function ModelsTable() {
       }
       skeletonKeyPrefix='model-skeleton'
       applyHeaderSize
-      pinnedColumns={[
-        { columnId: 'model_name', side: 'left' },
-        { columnId: 'actions', side: 'right' },
-      ]}
+      pinnedColumns={[{ columnId: 'actions', side: 'right' }]}
       toolbarProps={{
         searchPlaceholder: t('Filter by model name...'),
         searchDebounceMs: 500,

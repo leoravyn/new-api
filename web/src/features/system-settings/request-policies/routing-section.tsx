@@ -203,7 +203,7 @@ function AffinitySettings() {
                 className='gap-2 sm:grid-cols-3'
               >
                 {(['off', 'prefer', 'strict'] as const).map((mode) => (
-                  <div key={mode} className='rounded-lg border'>
+                  <div key={mode} className='tokex-surface-subtle'>
                     <Label
                       htmlFor={`global-session-${mode}`}
                       className='hover:bg-muted/30 flex h-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 font-normal'

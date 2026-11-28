@@ -228,7 +228,7 @@ export function SidebarModulesCard() {
   if (!status) return null
 
   return (
-    <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
+    <Card data-card-hover='false' className='gap-0 py-0'>
       <CardHeader className='border-b border-white/[0.08] p-3.5 !pb-3.5 sm:p-5 sm:!pb-5'>
         <div className='flex items-center gap-3'>
           <IconBadge tone='info' size='title'>

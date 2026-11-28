@@ -49,23 +49,25 @@ const MOBILE_SKELETON_KEYS = [
 
 function RedemptionsMobileSkeleton() {
   return (
-    <div className='divide-border overflow-hidden rounded-lg border'>
-      {MOBILE_SKELETON_KEYS.map((key) => (
-        <div
-          key={key}
-          className='space-y-2 border-b px-3 py-2.5 last:border-b-0'
-        >
-          <div className='flex items-center justify-between'>
-            <Skeleton className='h-4 w-32' />
-            <Skeleton className='h-5 w-16 rounded-md' />
+    <div className='tokex-console-panel'>
+      <div className='divide-border overflow-hidden rounded-[inherit] dark:divide-white/[0.07]'>
+        {MOBILE_SKELETON_KEYS.map((key) => (
+          <div
+            key={key}
+            className='space-y-2 border-b px-3 py-2.5 last:border-b-0'
+          >
+            <div className='flex items-center justify-between'>
+              <Skeleton className='h-4 w-32' />
+              <Skeleton className='h-5 w-16 rounded-md' />
+            </div>
+            <div className='flex items-center justify-between gap-3'>
+              <Skeleton className='h-7 w-44' />
+              <Skeleton className='h-8 w-16' />
+            </div>
+            <Skeleton className='h-3 w-28' />
           </div>
-          <div className='flex items-center justify-between gap-3'>
-            <Skeleton className='h-7 w-44' />
-            <Skeleton className='h-8 w-16' />
-          </div>
-          <Skeleton className='h-3 w-28' />
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
@@ -83,7 +85,7 @@ export function RedemptionsMobileList(props: RedemptionsMobileListProps) {
 
   if (!rows.length) {
     return (
-      <div className='rounded-lg border p-8'>
+      <div className='tokex-console-panel p-8'>
         <Empty className='border-none p-0'>
           <EmptyHeader>
             <EmptyMedia variant='icon'>
@@ -102,74 +104,76 @@ export function RedemptionsMobileList(props: RedemptionsMobileListProps) {
   }
 
   return (
-    <div className='divide-border overflow-hidden rounded-lg border'>
-      {rows.map((row) => {
-        const redemption = row.original
-        const expired = isRedemptionExpired(
-          redemption.expired_time,
-          redemption.status
-        )
-        const statusConfig = REDEMPTION_STATUSES[redemption.status]
-        const maskedKey = `${redemption.key.slice(0, 8)}******${redemption.key.slice(-8)}`
+    <div className='tokex-console-panel'>
+      <div className='divide-border overflow-hidden rounded-[inherit] dark:divide-white/[0.07]'>
+        {rows.map((row) => {
+          const redemption = row.original
+          const expired = isRedemptionExpired(
+            redemption.expired_time,
+            redemption.status
+          )
+          const statusConfig = REDEMPTION_STATUSES[redemption.status]
+          const maskedKey = `${redemption.key.slice(0, 8)}******${redemption.key.slice(-8)}`
 
-        return (
-          <div
-            key={row.id}
-            className={cn(
-              'bg-card space-y-2.5 border-b px-3 py-2.5 last:border-b-0',
-              expired || redemption.status !== REDEMPTION_STATUS.ENABLED
-                ? DISABLED_ROW_MOBILE
-                : undefined
-            )}
-          >
-            <div className='flex items-start justify-between gap-3'>
-              <div className='min-w-0'>
-                <div className='truncate text-sm font-semibold'>
-                  {redemption.name}
+          return (
+            <div
+              key={row.id}
+              className={cn(
+                'space-y-2.5 border-b px-3 py-2.5 last:border-b-0',
+                expired || redemption.status !== REDEMPTION_STATUS.ENABLED
+                  ? DISABLED_ROW_MOBILE
+                  : undefined
+              )}
+            >
+              <div className='flex items-start justify-between gap-3'>
+                <div className='min-w-0'>
+                  <div className='truncate text-sm font-semibold'>
+                    {redemption.name}
+                  </div>
+                  <div className='text-muted-foreground text-[11px]'>
+                    {t('Redemption Code')}
+                  </div>
                 </div>
-                <div className='text-muted-foreground text-[11px]'>
-                  {t('Redemption Code')}
-                </div>
-              </div>
-              {expired ? (
-                <StatusBadge
-                  label={t('Expired')}
-                  variant='warning'
-                  copyable={false}
-                />
-              ) : (
-                statusConfig && (
+                {expired ? (
                   <StatusBadge
-                    label={t(statusConfig.labelKey)}
-                    variant={statusConfig.variant}
+                    label={t('Expired')}
+                    variant='warning'
                     copyable={false}
                   />
-                )
-              )}
-            </div>
-
-            <div className='flex min-w-0 items-center justify-between gap-2'>
-              <div className='min-w-0 flex-1 [&_button:first-child]:max-w-full [&_button:first-child]:truncate [&_button:first-child]:px-0'>
-                <MaskedValueDisplay
-                  label={t('Full Code')}
-                  fullValue={redemption.key}
-                  maskedValue={maskedKey}
-                  copyTooltip={t('Copy code')}
-                  copyAriaLabel={t('Copy redemption code')}
-                />
+                ) : (
+                  statusConfig && (
+                    <StatusBadge
+                      label={t(statusConfig.labelKey)}
+                      variant={statusConfig.variant}
+                      copyable={false}
+                    />
+                  )
+                )}
               </div>
-              <DataTableRowActions row={row} />
-            </div>
 
-            <div className='flex items-center justify-between gap-2 text-xs'>
-              <span className='text-muted-foreground'>{t('Quota')}</span>
-              <span className='font-medium tabular-nums'>
-                {formatQuota(redemption.quota)}
-              </span>
+              <div className='flex min-w-0 items-center justify-between gap-2'>
+                <div className='min-w-0 flex-1 [&_button:first-child]:max-w-full [&_button:first-child]:truncate [&_button:first-child]:px-0'>
+                  <MaskedValueDisplay
+                    label={t('Full Code')}
+                    fullValue={redemption.key}
+                    maskedValue={maskedKey}
+                    copyTooltip={t('Copy code')}
+                    copyAriaLabel={t('Copy redemption code')}
+                  />
+                </div>
+                <DataTableRowActions row={row} />
+              </div>
+
+              <div className='flex items-center justify-between gap-2 text-xs'>
+                <span className='text-muted-foreground'>{t('Quota')}</span>
+                <span className='font-medium tabular-nums'>
+                  {formatQuota(redemption.quota)}
+                </span>
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

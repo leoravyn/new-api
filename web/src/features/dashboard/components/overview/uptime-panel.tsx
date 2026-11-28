@@ -108,8 +108,9 @@ export function UptimePanel() {
       loading={loading}
       empty={!groups.length}
       emptyMessage={t('No uptime monitoring configured')}
-      height='h-80'
-      contentClassName='p-0'
+      height='h-72'
+      className='flex h-full flex-col'
+      contentClassName='flex-1 p-0'
       headerActions={
         <Button
           variant='ghost'
@@ -125,16 +126,16 @@ export function UptimePanel() {
         </Button>
       }
     >
-      <ScrollArea className='h-80'>
+      <ScrollArea className='h-72'>
         <div>
           {groups.map((group, groupIdx) => (
             <div key={group.categoryName}>
-              <div className='bg-muted/30 border-border/60 border-b px-3 py-2 sm:px-5'>
+              <div className='bg-muted/30 border-border/60 border-b px-3 py-2 sm:px-5 dark:border-white/[0.06] dark:bg-white/[0.025]'>
                 <div className='flex items-center gap-2'>
                   <h4 className='text-muted-foreground text-xs font-semibold tracking-wider uppercase'>
                     {group.categoryName}
                   </h4>
-                  <span className='text-muted-foreground/40 font-mono text-xs tabular-nums'>
+                  <span className='text-muted-foreground/60 font-mono text-xs tabular-nums'>
                     {group.monitors?.length || 0}
                   </span>
                 </div>
@@ -157,7 +158,7 @@ export function UptimePanel() {
                       <StatusDot status={monitor.status} />
                       <span className='truncate text-sm'>{monitor.name}</span>
                       {monitor.group && (
-                        <span className='text-muted-foreground/40 shrink-0 text-xs'>
+                        <span className='text-muted-foreground/75 shrink-0 text-xs'>
                           ({monitor.group})
                         </span>
                       )}

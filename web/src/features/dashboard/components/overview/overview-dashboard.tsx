@@ -42,10 +42,6 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { SectionPageLayout } from '@/components/layout'
-import {
-  CardStaggerContainer,
-  CardStaggerItem,
-} from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
 import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { fetchTokenKey, getApiKeys } from '@/features/keys/api'
@@ -327,7 +323,7 @@ function RequestPreview(props: {
       initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
       transition={MOTION_TRANSITION.slow}
-      className='relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#050506]/85 p-3.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-xl'
+      className='tokex-surface-subtle relative overflow-hidden rounded-2xl p-3.5'
     >
       {!shouldReduceMotion && (
         <motion.div
@@ -614,9 +610,19 @@ export function OverviewDashboard() {
   const setupStatusReady = apiKeysQuery.isFetched && Boolean(user)
   const setupGuideExpanded =
     manualSetupGuideExpanded ?? (setupStatusReady && !setupComplete)
-  const showLeftContentPanels =
-    isAdmin || showApiInfoPanel || showAnnouncementsPanel || showFAQPanel
-  const showContentPanels = showLeftContentPanels || showUptimePanel
+  const showTelemetryRow = isAdmin || showApiInfoPanel
+  const bottomPanelCount = [
+    showAnnouncementsPanel,
+    showFAQPanel,
+    showUptimePanel,
+  ].filter(Boolean).length
+
+  let bottomGridClass = 'grid grid-cols-1 gap-4'
+  if (bottomPanelCount === 2) {
+    bottomGridClass = 'grid grid-cols-1 gap-4 lg:grid-cols-2'
+  } else if (bottomPanelCount >= 3) {
+    bottomGridClass = 'grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3'
+  }
 
   const handleSetupGuideToggle = () => {
     const nextExpanded = !setupGuideExpanded
@@ -649,9 +655,9 @@ export function OverviewDashboard() {
         <div className='flex flex-col gap-4'>
           <div id={setupGuideId} hidden={!setupGuideExpanded}>
             {setupGuideExpanded && (
-              <CardStaggerContainer className='grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]'>
-                <CardStaggerItem className='h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-white/[0.14]'>
-                  <div className='relative h-full overflow-hidden p-4 sm:p-5'>
+              <div className='grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]'>
+                <div className='tokex-console-panel h-full'>
+                  <div className='relative h-full overflow-hidden rounded-2xl p-4 sm:p-5'>
                     <SetupGuideBackdrop />
                     <div className='relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]'>
                       <div className='flex min-w-0 flex-col gap-5'>
@@ -691,7 +697,7 @@ export function OverviewDashboard() {
                           </div>
                         </div>
 
-                        <ol className='rounded-2xl border border-white/[0.08] bg-[#050506]/70 p-2 backdrop-blur'>
+                        <ol className='tokex-surface-subtle p-2'>
                           {startSteps.map((step, index) => (
                             <StartStepItem
                               key={step.title}
@@ -709,9 +715,9 @@ export function OverviewDashboard() {
                       />
                     </div>
                   </div>
-                </CardStaggerItem>
+                </div>
 
-                <CardStaggerItem className='h-full rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-white/[0.14] sm:p-5'>
+                <div className='tokex-console-panel h-full p-4 sm:p-5'>
                   <div className='flex h-full flex-col gap-4'>
                     <div className='flex flex-col gap-1'>
                       <div className='text-muted-foreground text-xs font-medium tracking-wider uppercase'>
@@ -727,14 +733,13 @@ export function OverviewDashboard() {
                       ))}
                     </div>
                   </div>
-                </CardStaggerItem>
-              </CardStaggerContainer>
+                </div>
+              </div>
             )}
           </div>
           {!setupGuideExpanded && !setupComplete && (
-            <CardStaggerContainer>
-              <CardStaggerItem className='overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 hover:border-white/[0.14]'>
-                <div className='relative overflow-hidden px-4 py-3 sm:px-5'>
+            <div className='tokex-console-panel'>
+              <div className='relative overflow-hidden rounded-2xl px-4 py-3 sm:px-5'>
                   <SetupGuideBackdrop compact />
                   <div className='relative flex flex-wrap items-center justify-between gap-3'>
                     <div className='flex min-w-0 items-center gap-3'>
@@ -783,59 +788,29 @@ export function OverviewDashboard() {
                     </div>
                   </div>
                 </div>
-              </CardStaggerItem>
-            </CardStaggerContainer>
+            </div>
           )}
 
           <SummaryCards />
 
-          {showContentPanels && (
-            <CardStaggerContainer
+          {showTelemetryRow && (
+            <div
               className={cn(
-                'grid grid-cols-1 gap-4',
-                showLeftContentPanels &&
-                  showUptimePanel &&
-                  'xl:grid-cols-[minmax(0,1fr)_22rem]'
+                'grid grid-cols-1 items-stretch gap-4',
+                isAdmin && showApiInfoPanel && 'lg:grid-cols-2'
               )}
             >
-              {showLeftContentPanels && (
-                <div
-                  className={cn(
-                    'grid min-w-0 grid-cols-1 gap-4',
-                    (showApiInfoPanel ||
-                      showAnnouncementsPanel ||
-                      showFAQPanel) &&
-                      'lg:grid-cols-2'
-                  )}
-                >
-                  {isAdmin && (
-                    <CardStaggerItem className='lg:col-span-2'>
-                      <PerformanceHealthPanel />
-                    </CardStaggerItem>
-                  )}
-                  {showApiInfoPanel && (
-                    <CardStaggerItem>
-                      <ApiInfoPanel />
-                    </CardStaggerItem>
-                  )}
-                  {showAnnouncementsPanel && (
-                    <CardStaggerItem>
-                      <AnnouncementsPanel />
-                    </CardStaggerItem>
-                  )}
-                  {showFAQPanel && (
-                    <CardStaggerItem>
-                      <FAQPanel />
-                    </CardStaggerItem>
-                  )}
-                </div>
-              )}
-              {showUptimePanel && (
-                <CardStaggerItem>
-                  <UptimePanel />
-                </CardStaggerItem>
-              )}
-            </CardStaggerContainer>
+              {isAdmin && <PerformanceHealthPanel />}
+              {showApiInfoPanel && <ApiInfoPanel />}
+            </div>
+          )}
+
+          {bottomPanelCount > 0 && (
+            <div className={bottomGridClass}>
+              {showAnnouncementsPanel && <AnnouncementsPanel />}
+              {showFAQPanel && <FAQPanel />}
+              {showUptimePanel && <UptimePanel />}
+            </div>
           )}
         </div>
       </SectionPageLayout.Content>

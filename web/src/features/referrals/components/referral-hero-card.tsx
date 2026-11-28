@@ -61,7 +61,7 @@ export function ReferralHeroCard({
 
   if (loading) {
     return (
-      <div className='rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl sm:p-6'>
+      <div className='tokex-console-panel p-4 sm:p-6'>
         <div className='space-y-4'>
           <div className='space-y-2'>
             <Skeleton className='h-6 w-52' />
@@ -93,7 +93,7 @@ export function ReferralHeroCard({
   const isCopied = Boolean(referralLink) && copiedText === referralLink
 
   return (
-    <div className='rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_32px_-16px_rgba(0,0,0,0.72)] backdrop-blur-xl sm:p-6'>
+    <div className='tokex-console-panel p-4 sm:p-6'>
       <div className='flex flex-col gap-5'>
         {/* Top Row: Heading + Code Pill */}
         <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
@@ -129,7 +129,7 @@ export function ReferralHeroCard({
           </div>
 
           {summary?.aff_code && (
-            <div className='flex shrink-0 items-center gap-2 self-start rounded-xl border border-white/[0.08] bg-[#050506]/90 px-3 py-1.5'>
+            <div className='tokex-surface-subtle flex shrink-0 items-center gap-2 self-start px-3 py-1.5'>
               <span className='text-muted-foreground text-[11px] tracking-wider uppercase'>
                 {t('Invite Code')}
               </span>
@@ -146,7 +146,7 @@ export function ReferralHeroCard({
             value={referralLink}
             readOnly
             aria-label={t('Your Referral Link')}
-            className='h-10 min-w-0 flex-1 rounded-lg border-white/[0.08] bg-[#050506]/90 font-mono text-xs text-zinc-200 sm:text-sm'
+            className='tokex-surface-subtle h-10 min-w-0 flex-1 rounded-lg font-mono text-xs text-zinc-200 sm:text-sm'
           />
           <Button
             type='button'
@@ -175,7 +175,7 @@ export function ReferralHeroCard({
 
         {/* Dynamic Rule Highlights */}
         <div className='grid gap-3 md:grid-cols-3'>
-          <div className='rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3.5'>
+          <div className='tokex-surface-subtle p-3.5'>
             <div className='flex items-center gap-2'>
               <span className='flex size-7 items-center justify-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 text-emerald-400'>
                 <Sparkles className='size-3.5' />
@@ -203,7 +203,7 @@ export function ReferralHeroCard({
             </p>
           </div>
 
-          <div className='rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3.5'>
+          <div className='tokex-surface-subtle p-3.5'>
             <div className='flex items-center gap-2'>
               <span className='flex size-7 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.04] text-zinc-200'>
                 <Percent className='size-3.5' />
@@ -222,7 +222,7 @@ export function ReferralHeroCard({
             </p>
           </div>
 
-          <div className='rounded-xl border border-white/[0.08] bg-[#050506]/80 p-3.5'>
+          <div className='tokex-surface-subtle p-3.5'>
             <div className='flex items-center gap-2'>
               <IconBadge tone='warning' size='sm'>
                 {cooldownDays > 0 ? <Clock /> : <Wallet />}
