@@ -39,7 +39,7 @@ var newAPIReservedKeys = []string{
 	"401", "403", "404", "500", "503", "about", "ali", "api", "assets", "channels", "chat", "chat2link",
 	"console", "dashboard", "errors", "forbidden", "forgot-password", "keys", "login", "mj", "models",
 	"oauth", "otp", "pg", "playground", "pricing", "privacy-policy", "profile", "rankings",
-	"redemption-codes", "register", "request-processing", "reset", "security", "setup", "sign-in",
+	"redemption-codes", "referrals", "register", "request-processing", "reset", "security", "setup", "sign-in",
 	"sign-up", "subscriptions", "suno", "system-info", "system-settings", "task-plugins", "usage-logs",
 	"user", "user-agreement", "users", "v1", "v1beta", "wallet",
 }

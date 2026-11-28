@@ -195,9 +195,13 @@ func modelSquareData[T any](t *testing.T, handler gin.HandlerFunc, path, userGro
 func TestModelSquareGroupVisibility(t *testing.T) {
 	originalGroups := setting.UserUsableGroups2JSONString()
 	originalRatios := ratio_setting.GroupRatio2JSONString()
+	originalSpecialGroups := ratio_setting.GetGroupRatioSetting().GroupSpecialUsableGroup.ReadAll()
 	t.Cleanup(func() {
 		require.NoError(t, setting.UpdateUserUsableGroupsByJSONString(originalGroups))
 		require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(originalRatios))
+		specialGroups := ratio_setting.GetGroupRatioSetting().GroupSpecialUsableGroup
+		specialGroups.Clear()
+		specialGroups.AddAll(originalSpecialGroups)
 	})
 
 	for _, dialect := range []struct{ kind, env string }{{"sqlite", ""}, {"mysql", "TEST_MYSQL_DSN"}, {"postgres", "TEST_POSTGRES_DSN"}} {
@@ -208,6 +212,8 @@ func TestModelSquareGroupVisibility(t *testing.T) {
 			db := modelManagementDB(t, dialect.kind, os.Getenv(dialect.env))
 			require.NoError(t, setting.UpdateUserUsableGroupsByJSONString(`{"default":"Public"}`))
 			require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(`{"default":1,"internal":2}`))
+			specialGroups := ratio_setting.GetGroupRatioSetting().GroupSpecialUsableGroup
+			specialGroups.Clear()
 			require.NoError(t, db.Create(&[]model.Ability{
 				{Model: "shared", Group: "default", ChannelId: 1, Enabled: true},
 				{Model: "shared", Group: "internal", ChannelId: 1, Enabled: true},
@@ -222,6 +228,13 @@ func TestModelSquareGroupVisibility(t *testing.T) {
 			assert.Equal(t, []string{"default"}, guest["shared"].EnableGroup)
 			assert.Equal(t, []string{"all"}, guest["wildcard"].EnableGroup)
 			assert.NotContains(t, guest, "private-only")
+
+			// TOKEX excludes unselectable userGroup unless explicitly granted.
+			ungrantedMember := pricingByModelName(modelSquareData[[]model.Pricing](t, GetPricing, "/api/pricing", "internal"))
+			assert.Equal(t, []string{"default"}, ungrantedMember["shared"].EnableGroup)
+			assert.NotContains(t, ungrantedMember, "private-only")
+
+			specialGroups.Set("internal", map[string]string{"+:internal": "Internal"})
 			member := pricingByModelName(modelSquareData[[]model.Pricing](t, GetPricing, "/api/pricing", "internal"))
 			assert.ElementsMatch(t, []string{"default", "internal"}, member["shared"].EnableGroup)
 			assert.Equal(t, []string{"internal"}, member["private-only"].EnableGroup)
@@ -249,6 +262,7 @@ func TestModelSquareGroupVisibility(t *testing.T) {
 			require.Len(t, allowed.Groups, 1)
 			assert.Equal(t, "internal", allowed.Groups[0].Group)
 
+			specialGroups.Clear()
 			require.NoError(t, setting.UpdateUserUsableGroupsByJSONString(`{}`))
 			assert.Empty(t, modelSquareData[[]model.Pricing](t, GetPricing, "/api/pricing", ""))
 			assert.Empty(t, modelSquareData[perfmetrics.QueryResult](t, GetPerfMetrics, detailPath, "").Groups)
