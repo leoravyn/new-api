@@ -28,10 +28,10 @@
 5. **多币种钱包充值、Epay 回跳路由与后端补丁**：
    - 钱包额度以 `USD` 计价；**Waffo Pancake**（`waffo_pancake`，`USD` 结算，内置 W 图标需将 `icon` 留空）与 **Epay / Zpay**（`CNY` 按 `Price=7` 结算）共存时，前端按 `getPaymentSettlementCurrency` 自动区分展示 `USD`/`CNY`。
    - Epay 支付回跳 `/usage-logs` 时由 `src/routes/_authenticated/usage-logs/index.tsx`（`isEpayReturnQuery`）重定向回 `/wallet`。
-   - 后端保留 `MatchAmountDiscount` 阶梯匹配、全局 `MinTopUp` 下限校验（PR #8437 / #8438）；`model/model_meta.go` 中 `SearchModels` 按 `.Order("models.vendor_id ASC, models.id DESC")` 按供应商聚拢排序。
+   - 后端保留 `MatchAmountDiscount` 阶梯匹配、全局 `MinTopUp` 下限校验（PR #8437 / #8438）；`model/model_meta.go` 中 `SearchModels` 按 `.Order("models.vendor_id ASC, models.id DESC")` 按供应商聚拢排序；[`service/group.go`](file:///home/ubuntu/tokex/service/group.go#L14-L37) 中 `GetUserUsableGroups` 移除自动追加未开放 `userGroup`（`"User group"`）的兜底逻辑，仅返回 `UserUsableGroups` 与 `GroupSpecialUsableGroup` 允许的分组（单测见 [`service/group_usable_test.go`](file:///home/ubuntu/tokex/service/group_usable_test.go)）。
 6. **独立邀请推广中心（`/referrals`）、首充 9 折与 5% 自动入账返佣**：
    - **受邀首充 9 折覆盖**：推荐注册且未完成真实充值的用户，合规确认且 `InviteFirstTopUpDiscount < 1` 时直接覆盖常规阶梯折扣。
-   - **5% 充值返佣与冷静期自动入账**：6 条充值路径同一事务幂等写入 `aff_commissions`，按 `AffCommissionRate`（`0.05`）与 `AffCommissionCooldownDays`（`7` 天）由 `service/aff_commission_task.go` 自动核验入账；页面入口 `/referrals`（`src/features/referrals/`），设置项位于 `/system-settings/billing/quota`。
+   - **5% 充值返佣与冷静期自动入账**：6 条充值路径同一事务幂等写入 `aff_commissions`，按 `AffCommissionRate`（`0.05`）与 `AffCommissionCooldownDays`（`7` 天）由 `service/aff_commission_task.go` 自动核验入账；页面入口 `/referrals`（`src/features/referrals/`，保留路由声明于 [`pkg/jsplugin/routing.go`](file:///home/ubuntu/tokex/pkg/jsplugin/routing.go#L489)），`/api/user/referral/{summary,commissions}` 声明于 [`middleware/access_token_routes.go`](file:///home/ubuntu/tokex/middleware/access_token_routes.go#L84-L85)，设置项位于 `/system-settings/billing/quota`。
 
 ---
 
@@ -41,7 +41,8 @@
 |---|---|---|
 | `/home/ubuntu/tokex/` | **TOKEX 开发仓库** | 维护 `web/`、文档与少量 Go 补丁 |
 | `/home/ubuntu/tokex/web/` | **React 19 + Rsbuild v2 前端工程** | 使用 `bun` 运行类型检查、Vitest 与构建 |
-| `/home/ubuntu/tokex/.github/workflows/tokex-build.yml` | **CI/CD 构建工作流** | `main` 推送自动构建 `web-dist` 与 ARM64 镜像 |
+| `/home/ubuntu/tokex/.github/workflows/tokex-dev-test.yml` | **云端 Go 单测工作流** | `dev` 推送改动 Go 相关文件时自动跑 `go vet` + `make test`（含 `setup-go` 缓存） |
+| `/home/ubuntu/tokex/.github/workflows/tokex-build.yml` | **CI/CD 构建工作流** | `main` 推送构建 `web-dist` 并复用产物 + ARM64 `setup-go` 缓存构建/推送 `tokex-web` 镜像 |
 | `/var/www/tokex/dist/` | **线上 Nginx 静态根目录** | 静态产物直接部署于此目录 |
 | `/opt/tokex/` | **生产容器编排根目录** | `docker-compose.yml`、`.env`、`data/`、`logs/`、`backups/`、`sub2api/` |
 | `/etc/nginx/sites-available/tokex.conf` | **Nginx 主站点配置** | 含 `tokex.vip`、`sub.tokex.vip`、隐藏源站与 `default_server` `444` 兜底 |
@@ -141,6 +142,8 @@ git push origin dev
 git checkout main && git merge dev --no-ff
 git push origin main
 git checkout dev
-# 待 tokex-build.yml 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/ 或拉取 ghcr.io/leoravyn/tokex-web:latest 重启 tokex-web
+# 待 tokex-build.yml 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/，或拉取新镜像更新容器：
+docker pull ghcr.io/leoravyn/tokex-web:latest && docker tag ghcr.io/leoravyn/tokex-web:latest tokex-web:v1.0.0-rc.51-tokex
+cd /opt/tokex && docker compose up -d web
 ```
 *(线上基础冒烟：`curl -sS -o /dev/null -w "%{http_code}\n" https://tokex.vip/`、`https://tokex.vip/api/status`、`https://tokex.vip/pricing`。)*

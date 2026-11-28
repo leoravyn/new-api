@@ -11,6 +11,7 @@ on:
       - 'go.sum'
       - 'relaykit/**'
       - 'tokenkit/**'
+      - 'pluginkit/**'
       - 'makefile'
       - '.github/workflows/tokex-dev-test.yml'
   workflow_dispatch:
@@ -42,17 +43,19 @@ jobs:
             go.sum
             relaykit/go.sum
             tokenkit/go.sum
+            pluginkit/go.sum
 
       - name: Create frontend embed placeholder
         run: |
           mkdir -p web/dist
           touch web/dist/index.html
 
-      - name: Vet root, relaykit, and tokenkit modules
+      - name: Vet root, relaykit, tokenkit, and pluginkit modules
         run: |
           go vet ./...
           (cd relaykit && go vet ./...)
           (cd tokenkit && go vet ./...)
+          (cd pluginkit && go vet ./...)
 
       - name: Run Go unit tests
         run: make test
