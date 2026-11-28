@@ -1,5 +1,7 @@
 # AGENTS.md — Project Conventions for new-api
 
+> **TOKEX Fork Notice**: Before making changes, read [`TOKEX_DEV_GUIDE.md`](TOKEX_DEV_GUIDE.md) (architecture, constraints, validation/release) and [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md) (upstream sync & conflict rules).
+
 Keep replies to what the task needs; leave out unrequested asides and suggestions.
 
 ## Overview

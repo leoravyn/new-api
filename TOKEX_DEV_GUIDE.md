@@ -14,7 +14,7 @@
 - **上游号池管理端**：`https://sub.tokex.vip`
 - **整体架构**：**React 静态托管 + Nginx 反向代理 + Docker 后端**
   - **前端产物**：基于 New API 前端（`/home/ubuntu/tokex/web`）二次开发，Rsbuild 编译后发布至 `/var/www/tokex/dist`，由 Nginx 直接托管。
-  - **后端网关**：`tokex-web`（镜像 `tokex-web:v1.0.0-rc.51-tokex`，由 GitHub Actions 构建 `ghcr.io/leoravyn/tokex-web:latest` 后拉取打标或本地兜底构建，基于 `QuantumNous/new-api` `v1.0.0-rc.51` 并合入 TOKEX 补丁，`127.0.0.1:3000`）。
+  - **后端网关**：`tokex-web`（[`/opt/tokex/docker-compose.yml`](file:///opt/tokex/docker-compose.yml) 通过 `${TOKEX_WEB_IMAGE:-ghcr.io/leoravyn/tokex-web:latest}` 管理，由 GitHub Actions 读取根目录 [`VERSION`](file:///home/ubuntu/tokex/VERSION) 统一注入版本号并推送 `:latest`、`:<short_sha>` 与 `:<VERSION>` 三个标签，当前基于 `QuantumNous/new-api` `v1.0.0-rc.52` 并合入 TOKEX 补丁，`127.0.0.1:3000`）。
   - **数据库与缓存**：`tokex-db`（`postgres:18-alpine`，承载 `newapi` 与 `sub2api` 库，Docker 内网 `tokex-net:5432`）、`tokex-redis`（`redis:8-alpine`，Docker 内网 `tokex-net:6379`）。
   - **上游代理**：`tokex-pool`（`weishaw/sub2api:latest`，`RUN_MODE=simple`，`127.0.0.1:8080` / 内网 `http://tokex-pool:8080`）。
 
@@ -49,8 +49,14 @@
 | `/etc/nginx/conf.d/cloudflare-geo.conf` & `/etc/nginx/snippets/cloudflare-access.conf` | **Cloudflare 源站访问控制** | `geo $realip_remote_addr $cf_allowed` 校验回源 IP；由 `/usr/local/bin/update-cf-nginx.sh` 同步 |
 
 - **Git 分支与远程**（位于 `/home/ubuntu/tokex/`）：
-  - `upstream-base`：`QuantumNous/new-api` 只读对照基线（当前已合并 `v1.0.0-rc.51` `c9c6da2`）；勿向 `upstream` 直接 `push`。
+  - `upstream-base`：`QuantumNous/new-api` 只读对照基线（当前已合并 `v1.0.0-rc.52` `04dfcbb`）；勿向 `upstream` 直接 `push`。
   - `dev` 为日常开发分支，验收后 `--no-ff` 合并到 `main` 并推送 `origin`（`leoravyn/new-api`）。
+  - **上游同步手册**：跨版本同步上游与冲突解决细则见 [UPSTREAM_SYNC.md](file:///home/ubuntu/tokex/UPSTREAM_SYNC.md)（仓库已开启 `git config rerere.enabled true`）。
+
+- **“最小侵入”二次开发准则（仅约束后续增量开发与高频冲突文件渐进解耦，不重构历史代码）**：
+  - **Go 后端**：新增 TOKEX 私有逻辑优先抽离到独立的 `tokex_*.go` 文件或独立 `middleware`，在上游原文件中仅保留最少行数的调用入口，降低后续 `merge` 冲突面。
+  - **Web 前端**：样式覆盖优先通过全局 CSS 变量（`styles/theme.css`、`styles/index.css`）和独立样式表实现，尽量少修改上游业务页面的 JSX 结构（公共视觉与动效接口见第 4 节）。
+  - **规范入口**：[`AGENTS.md`](file:///home/ubuntu/tokex/AGENTS.md) 为上游共有文件，只保留指向本手册与 `UPSTREAM_SYNC.md` 的简短索引，不往其中堆砌长篇私有规范。
 
 ---
 
@@ -142,8 +148,8 @@ git push origin dev
 git checkout main && git merge dev --no-ff
 git push origin main
 git checkout dev
-# 待 tokex-build.yml 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/，或拉取新镜像更新容器：
-docker pull ghcr.io/leoravyn/tokex-web:latest && docker tag ghcr.io/leoravyn/tokex-web:latest tokex-web:v1.0.0-rc.51-tokex
-cd /opt/tokex && docker compose up -d web
+# 待 tokex-build.yml 完成后，按需下载 web-dist 同步至 /var/www/tokex/dist/，并拉取最新镜像重建容器：
+cd /opt/tokex && docker compose pull web && docker compose up -d web
+# 如需回滚或固定特定版本，可在 /opt/tokex/.env 设置 TOKEX_WEB_IMAGE=ghcr.io/leoravyn/tokex-web:<short_sha>（或 :<VERSION>）后再执行 docker compose up -d web
 ```
 *(线上基础冒烟：`curl -sS -o /dev/null -w "%{http_code}\n" https://tokex.vip/`、`https://tokex.vip/api/status`、`https://tokex.vip/pricing`。)*
