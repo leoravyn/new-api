@@ -1063,6 +1063,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
             )}
             {isDynamic && !simpleTaskPricing && (
               <DynamicPricingBreakdown
+                modelName={baseModel.model_name}
                 billingExpr={baseModel.billing_expr}
                 usageSchema={baseModel.billing_usage_schema}
                 taskPriceOptions={{

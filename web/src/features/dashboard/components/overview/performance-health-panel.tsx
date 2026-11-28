@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next'
 
 import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getPerfMetricsSummary } from '@/features/performance-metrics/api'
+import { getDashboardPerfMetricsSummary } from '@/features/performance-metrics/api'
 import {
   formatLatency,
   formatThroughput,
@@ -38,10 +38,10 @@ const PERFORMANCE_WINDOW_HOURS = 24
 export function PerformanceHealthPanel() {
   const { t } = useTranslation()
   const metricsQuery = useQuery({
-    queryKey: ['perf-metrics-summary', PERFORMANCE_WINDOW_HOURS],
+    queryKey: ['dashboard-perf-metrics-summary', PERFORMANCE_WINDOW_HOURS],
     queryFn: async () =>
       requireServerSuccess(
-        await getPerfMetricsSummary(PERFORMANCE_WINDOW_HOURS)
+        await getDashboardPerfMetricsSummary(PERFORMANCE_WINDOW_HOURS)
       ),
     staleTime: 60 * 1000,
     retry: false,
